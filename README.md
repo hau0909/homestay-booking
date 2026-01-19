@@ -1,36 +1,186 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏡 Homestay Booking System
 
-## Getting Started
+A full-stack homestay booking web application built with **Next.js** and **Supabase**, designed with clean architecture, scalability, and real-world workflows in mind.
 
-First, run the development server:
+---
+
+## 📖 Project Overview
+
+The **Homestay Booking System** allows users to browse homestays, view rooms, make bookings, and manage reservations.
+The system supports multiple roles such as **Guest**, **Customer**, **Host**, and **Admin**.
+
+This project follows a **Frontend-centric + Backend-as-a-Service (BaaS)** architecture, where Supabase handles authentication, database, and security.
+
+---
+
+## 🚀 Tech Stack
+
+### Frontend (Web)
+
+* **Framework:** Next.js (App Router)
+* **Language:** TypeScript
+* **UI:** Tailwind CSS / ShadCN UI
+* **State Management:** React Hooks
+
+### Backend (BaaS)
+
+* **Supabase**
+
+  * Authentication
+  * PostgreSQL Database
+  * Row Level Security (RLS)
+  * Storage (images, documents)
+
+---
+
+## ✨ Core Features
+
+* Authentication & Authorization
+* Role-based access control (Customer / Host / Admin)
+* Browse homestays & room listings
+* Booking & reservation management
+* Host dashboard (manage homestays & rooms)
+* Admin management
+* Secure data access using RLS policies
+
+---
+
+## ⚙️ Environment Variables
+
+This project uses environment variables to store sensitive configuration.
+
+### 📌 Naming Rules
+
+* Client-side variables **must** start with `NEXT_PUBLIC_`
+* Never commit real keys to Git
+* Use `.env.local` for local development
+
+---
+
+### 🔐 Required Environment Variables
+
+Create a file named **`.env.local`** in the root directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+#### Explanation
+
+* `NEXT_PUBLIC_SUPABASE_URL`
+  → Supabase project URL
+
+* `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  → Public anonymous key for client-side access
+
+⚠️ These keys are safe **only if Row Level Security (RLS) is enabled**.
+
+---
+
+## ▶️ Getting Started
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Run development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open your browser at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🔒 Security Guidelines
 
-To learn more about Next.js, take a look at the following resources:
+* Enable **Row Level Security (RLS)** on all tables
+* Enforce business rules via RLS policies
+* Never expose `service_role` key to the client
+* Validate permissions based on user role
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌿 Git Workflow & Commit Rules (IMPORTANT)
 
-## Deploy on Vercel
+**Golden rule:** Never push code directly to `main` or `dev`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1️⃣ Start a New Feature
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+git checkout dev
+git pull origin dev
+```
+
+---
+
+### 2️⃣ Create a Feature Branch
+
+```bash
+git checkout -b feature/feature-name
+```
+
+Examples:
+
+* `feature/auth-login`
+* `feature/booking-flow`
+* `feature/admin-dashboard`
+
+---
+
+### 3️⃣ Commit Frequently
+
+```bash
+git add .
+git commit -m "feat(booking): implement booking flow"
+```
+
+Follow **Conventional Commits**:
+
+* `feat`: new feature
+* `fix`: bug fix
+* `refactor`: refactoring
+* `docs`: documentation
+* `chore`: tooling / config
+
+---
+
+### 4️⃣ Push Branch
+
+```bash
+git push origin feature/feature-name
+```
+
+---
+
+### 5️⃣ Create Pull Request (PR)
+
+1. Create PR on GitHub
+2. Base branch: `dev`
+3. Add clear description & screenshots (if UI)
+4. Merge only after review approval
+
+---
+
+## 📌 Development Notes
+
+* Supabase replaces traditional backend API
+* Service functions live in `services/`
+* UI logic stays in components & hooks
+* Types are centralized in `types/`
+
+---
+
+## 📄 License
+
+This project is for academic and learning purposes.
+
+---
