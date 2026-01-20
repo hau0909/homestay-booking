@@ -34,10 +34,10 @@ const GuestItem = ({
   onIncrement,
   onDecrement,
 }: GuestItemProps) => (
-  <div className="flex items-center justify-between py-4 border-b border-gray-200 last:border-b-0">
+  <div className="flex items-center justify-between py-4 border-b border-[#90C67C] last:border-b-0">
     <div>
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-500">{subtitle}</p>
+      <h3 className="text-lg font-semibold text-[#328E6E]">{title}</h3>
+      <p className="text-sm text-[#67AE6E]">{subtitle}</p>
     </div>
     <div className="flex items-center gap-4">
       <button
@@ -45,18 +45,18 @@ const GuestItem = ({
         disabled={value === 0}
         className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
           value === 0
-            ? "border-gray-200 text-gray-300 cursor-not-allowed"
-            : "border-gray-400 text-gray-700 hover:border-gray-900 hover:bg-gray-50"
+            ? "border-[#E1EEBC] text-[#E1EEBC] cursor-not-allowed"
+            : "border-[#67AE6E] text-[#328E6E] hover:border-[#328E6E] hover:bg-[#E1EEBC]"
         }`}
       >
         <Minus size={16} />
       </button>
-      <span className="w-8 text-center text-lg font-medium text-gray-900">
+      <span className="w-8 text-center text-lg font-medium text-[#328E6E]">
         {value}
       </span>
       <button
         onClick={onIncrement}
-        className="w-10 h-10 rounded-full border border-gray-400 text-gray-700 flex items-center justify-center hover:border-gray-900 hover:bg-gray-50 transition-all duration-200"
+        className="w-10 h-10 rounded-full border border-[#67AE6E] text-[#328E6E] flex items-center justify-center hover:border-[#328E6E] hover:bg-[#E1EEBC] transition-all duration-200"
       >
         <Plus size={16} />
       </button>

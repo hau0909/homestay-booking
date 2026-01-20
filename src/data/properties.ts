@@ -13,8 +13,9 @@ export interface PropertyData {
   rating: number;
   image: string;
   avatarImage: string;
-  priceMin?: number;
-  priceMax?: number;
+  price?: number;
+  nights?: number;
+  isGuestFavorite?: boolean;
   amenities?: Amenity[];
 }
 
@@ -29,8 +30,9 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 1997060,
+    nights: 2,
+    isGuestFavorite: true,
    amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },
@@ -52,8 +54,9 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 2478205,
+    nights: 2,
+    isGuestFavorite: true,
     amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },
@@ -72,8 +75,9 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1499916078039-922301b0eb9b?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 1997060,
+    nights: 2,
+    isGuestFavorite: true,
     amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },
@@ -92,8 +96,9 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 1737199,
+    nights: 2,
+    isGuestFavorite: true,
     amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },
@@ -112,8 +117,9 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 2225295,
+    nights: 2,
+    isGuestFavorite: true,
     amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },
@@ -132,8 +138,30 @@ export const propertiesData: PropertyData[] = [
       "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&q=80",
     avatarImage:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-    priceMin: 1000,
-    priceMax: 5000,
+    price: 726750,
+    nights: 2,
+    isGuestFavorite: false,
+    amenities: [
+      { type: "bedrooms", value: 3 },
+      { type: "bathrooms", value: 1 },
+      { type: "parking", value: 2 },
+      { type: "pets", value: 0 },
+      { type: "wifi" },
+    ],
+  },
+   {
+    id: 7,
+    type: "homestay",
+    title: "Cozy Studio",
+    address: "100 Smart Street, LA, USA",
+    rating: 4.7,
+    image:
+      "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&q=80",
+    avatarImage:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+    price: 726750,
+    nights: 2,
+    isGuestFavorite: false,
     amenities: [
       { type: "bedrooms", value: 3 },
       { type: "bathrooms", value: 1 },

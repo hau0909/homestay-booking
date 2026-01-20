@@ -20,10 +20,9 @@ export default function LatestProperties() {
         {/* Section Title */}
         <div className="mb-10 flex justify-between items-start">
           <div>
-            <h2 className="text-4xl font-bold text-gray-900">
+            <h2 className="text-4xl font-bold text-[#328E6E]">
               Latest on the Property Listing
             </h2>
-            <div className="mt-3 h-1 w-24 bg-gray-900"></div>
           </div>
         </div>
 
@@ -39,7 +38,7 @@ export default function LatestProperties() {
             {latestProperties.map((property) => (
               <CarouselItem
                 key={property.id}
-                className="pl-4 md:basis-1/2 lg:basis-1/4"
+                className="pl-4 md:basis-1/3 lg:basis-1/6"
               >
                 <ItemCard
                   type={property.type}
@@ -48,14 +47,17 @@ export default function LatestProperties() {
                   image={property.image}
                   avatarImage={property.avatarImage}
                   rating={property.rating}
-                  showRating={false}
+                  showRating={true}
+                  price={property.price}
+                  nights={property.nights}
+                  isGuestFavorite={property.isGuestFavorite}
                 />
               </CarouselItem>
             ))}
           </CarouselContent>
           <div className="absolute -top-16 right-0 flex gap-3">
-            <CarouselPrevious className="static translate-y-0 bg-transparent border-none hover:bg-transparent text-black hover:text-black" />
-            <CarouselNext className="static translate-y-0 bg-transparent border-none hover:bg-transparent text-black hover:text-black" />
+            <CarouselPrevious className="static translate-y-0 bg-transparent border-none hover:bg-transparent text-[#328E6E] hover:text-[#67AE6E]" />
+            <CarouselNext className="static translate-y-0 bg-transparent border-none hover:bg-transparent text-[#328E6E] hover:text-[#67AE6E]" />
           </div>
         </Carousel>
       </div>
