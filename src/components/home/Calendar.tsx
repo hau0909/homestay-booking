@@ -23,7 +23,7 @@ export default function Calendar({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [direction, setDirection] = useState<"left" | "right">("right");
 
-  const tabs = ["Dates", "Months", "Flexible"];
+  const tabs = ["Dates"];
   const quickDays = [
     "Exact dates",
     "± 1 day",
@@ -99,10 +99,10 @@ export default function Calendar({
           disabled={isPast || isDisabled}
           className={`p-3 text-center transition-all duration-200 relative ${
             isSelected
-              ? "bg-gray-900 text-white rounded-full"
+              ? "bg-[#328E6E] text-white rounded-full"
               : isPast || isDisabled
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-900 hover:bg-gray-100 rounded-full"
+                ? "text-[#E1EEBC] cursor-not-allowed"
+                : "text-[#328E6E] hover:bg-[#E1EEBC] rounded-full"
           }`}
         >
           {day}
@@ -115,14 +115,14 @@ export default function Calendar({
         className={`flex-1 ${direction === "left" ? "animate-slide-left" : "animate-slide-right"}`}
         key={`${date.getFullYear()}-${date.getMonth()}-${monthOffset}`}
       >
-        <h3 className="mb-6 text-center text-xl font-semibold text-black">
+        <h3 className="mb-6 text-center text-xl font-semibold text-[#328E6E]">
           {monthName}
         </h3>
         <div className="grid grid-cols-7 gap-1">
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="p-3 text-center text-sm font-medium text-gray-500"
+              className="p-3 text-center text-sm font-medium text-[#67AE6E]"
             >
               {day}
             </div>
@@ -137,15 +137,15 @@ export default function Calendar({
     <div className="absolute top-full left-0 right-0 mt-4 rounded-3xl bg-white p-8 shadow-2xl z-50">
       {/* Tabs */}
       <div className="mb-8 flex justify-center">
-        <div className="inline-flex rounded-full bg-gray-100 p-1">
+        <div className="inline-flex rounded-full bg-[#E1EEBC] p-1">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`rounded-full px-6 py-2 text-sm font-medium transition-all duration-300 ${
                 activeTab === tab
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text-[#328E6E] shadow-sm"
+                  : "text-[#67AE6E] hover:text-[#328E6E]"
               }`}
             >
               {tab}
@@ -168,7 +168,7 @@ export default function Calendar({
                 ),
               );
             }}
-            className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+            className="rounded-full p-2 hover:bg-[#E1EEBC] transition-colors"
           >
             <ChevronLeft size={24} />
           </button>
@@ -190,27 +190,11 @@ export default function Calendar({
                 ),
               );
             }}
-            className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+            className="rounded-full p-2 hover:bg-[#E1EEBC] transition-colors"
           >
             <ChevronRight size={24} />
           </button>
         </div>
-      </div>
-
-      {/* Quick Select Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        {quickDays.map((label, index) => (
-          <button
-            key={index}
-            className={`rounded-full border px-6 py-2 text-sm font-medium transition-all duration-200 ${
-              index === 0
-                ? "border-gray-900 bg-white text-gray-900 hover:bg-gray-50"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
     </div>
   );
