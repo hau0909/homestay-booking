@@ -19,7 +19,7 @@ export default function Footer() {
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl font-bold text-[#E1EEBC]">NEWSLETTER</h3>
-            <p className="text-[#E1EEBC]">Stay Upto Date</p>
+            <p className="text-[#E1EEBC]">Stay Up to Date</p>
           </div>
           <form onSubmit={handleSubmit} className="relative w-full md:w-auto">
             <input
