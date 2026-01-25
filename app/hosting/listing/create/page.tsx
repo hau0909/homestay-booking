@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -9,9 +10,11 @@ import DetailsStep from "@/src/components/listing/DetailsStep";
 import PricingStep from "@/src/components/listing/PricingStep";
 import ImagesStep from "@/src/components/listing/ImagesStep";
 import PreviewPublishStep from "@/src/components/listing/PreviewPublishStep";
-import { createListing, publishListing } from "@/src/services/listing/createListing";
-
-
+import {
+  createListing,
+  publishListing,
+} from "@/src/services/listing/createListing";
+import { getUser } from "@/src/services/profile/getUserProfile";
 
 /* =======================
    INLINE TYPE
@@ -83,15 +86,18 @@ export default function CreateListingPage() {
     try {
       setLoading(true);
 
+      const { user } = await getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const listing = await createListing({
         listing: {
-          host_id: "0455a007-a7e6-4c44-b667-d3798e648d8c",               // ✅ FIX
+          host_id: user.id,
           category_id: 1,
 
           title: data.title,
           description: data.description,
           listing_type: data.listing_type,
-          status: "DRAFT",            // ✅ FIX
+          status: "DRAFT", // ✅ FIX
 
           province_code: data.province_code,
           district_code: data.district_code,
@@ -112,7 +118,7 @@ export default function CreateListingPage() {
         images: data.images,
       });
 
-await publishListing(listing.id);
+      await publishListing(listing.id);
 
       alert("Create listing success!");
     } catch (err: any) {

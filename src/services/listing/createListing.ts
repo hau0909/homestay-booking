@@ -35,7 +35,7 @@ export async function createListing(payload: CreateListingPayload) {
 
   for (let i = 0; i < payload.images.length; i++) {
     const file = payload.images[i];
-    const path = `listings/${listing.id}/${Date.now()}-${file.name}`;
+    const path = `${listing.id}/${Date.now()}-${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("listing_images") // ✅ ĐÃ SỬA Ở ĐÂY
