@@ -46,6 +46,14 @@ export default function BookingsPage() {
       </div>
     );
 
+  if (bookings.length === 1)
+    return (
+      <div className="bg-white py-10 px-40 pb-20">
+        <p className="text-3xl font-semibold mb-2">Your bookings</p>
+        <p className="text-slate-500">You don&apos;t have any bookings yet</p>
+      </div>
+    );
+
   return (
     <div className="bg-white py-10 px-40 pb-20 space-y-8">
       {/* Header */}
