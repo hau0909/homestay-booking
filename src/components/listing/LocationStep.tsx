@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,8 +14,6 @@ import { getProvinces } from "@/src/services/listing/getProvince";
 import { District, Province, Ward } from "@/src/types/location";
 import { getDistrictsByProvince } from "@/src/services/listing/getDistrict";
 import { getWardsByDistrict } from "@/src/services/listing/getWard";
-
-
 
 /* =======================
    PROPS
@@ -59,9 +56,7 @@ export default function LocationStep({
   /* Load wards when district changes */
   useEffect(() => {
     if (!data.district_code) return;
-    getWardsByDistrict(data.district_code)
-      .then(setWards)
-      .catch(console.error);
+    getWardsByDistrict(data.district_code).then(setWards).catch(console.error);
   }, [data.district_code]);
 
   const canNext =
@@ -154,9 +149,7 @@ export default function LocationStep({
           <Select
             value={data.ward_code}
             disabled={!data.district_code}
-            onValueChange={(value) =>
-              onChange({ ...data, ward_code: value })
-            }
+            onValueChange={(value) => onChange({ ...data, ward_code: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select ward" />
