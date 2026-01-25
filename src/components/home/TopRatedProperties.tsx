@@ -41,14 +41,13 @@ export default function TopRatedProperties() {
                 className="pl-4 md:basis-1/3 lg:basis-1/6"
               >
                 <ItemCard
-                  type={property.type}
+                  type={property.listing_type}
                   title={property.title}
-                  address={property.address}
-                  image={property.image}
-                  avatarImage={property.avatarImage}
+                  address={property.address_detail}
+                  image={property.thumbnail_url}
                   rating={property.rating}
                   showRating={true}
-                  price={property.price}
+                  price={property.price_weekday}
                   nights={property.nights}
                   isGuestFavorite={property.isGuestFavorite}
                 />

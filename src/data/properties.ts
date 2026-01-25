@@ -1,173 +1,124 @@
-export type AmenityType = "bedrooms" | "bathrooms" | "parking" | "pets" | "wifi" ;
+import { ListingType } from "@/src/types/enums";
 
-export interface Amenity {
-  type: AmenityType;
-  value?: number;
-}
-
-export interface PropertyData {
+// Combined type for display purposes (Listing + Home + Images)
+export interface PropertyDisplayData {
+  // From Listing
   id: number;
-  type: "homestay" | "experience" | "service";
   title: string;
-  address: string;
+  address_detail: string;
+  listing_type: ListingType;
+
+  // From Home
+  price_weekday: number;
+  bed_count: number | null;
+  bath_count: number | null;
+
+  // From ListingImage
+  thumbnail_url: string;
+
+  // Display-specific fields
   rating: number;
-  image: string;
-  avatarImage: string;
-  price?: number;
-  nights?: number;
   isGuestFavorite?: boolean;
-  amenities?: Amenity[];
+  nights?: number; // For price calculation display
 }
 
-export const propertiesData: PropertyData[] = [
+export const propertiesData: PropertyDisplayData[] = [
   {
     id: 1,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Well Furnished Apartment",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 5,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80",
-    price: 1997060,
+    price_weekday: 1997060,
+    bed_count: 3,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: true,
-   amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-       { type: "wifi" },
-       { type: "wifi" },
-         { type: "wifi" },
-      
-    ],
   },
   {
     id: 2,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Comfortable Family Flat",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 5,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
-    price: 2478205,
+    price_weekday: 2478205,
+    bed_count: 3,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: true,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
   },
   {
     id: 3,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Beach House Summer",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 4.5,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1499916078039-922301b0eb9b?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
-    price: 1997060,
+    price_weekday: 1997060,
+    bed_count: 3,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: true,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
   },
   {
     id: 4,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Double Size Room",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 5,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
-    price: 1737199,
+    price_weekday: 1737199,
+    bed_count: 3,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: true,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
   },
   {
     id: 5,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Modern Loft",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 4.8,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",
-    price: 2225295,
+    price_weekday: 2225295,
+    bed_count: 3,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: true,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
   },
   {
     id: 6,
-    type: "homestay",
+    listing_type: "HOME",
     title: "Cozy Studio",
-    address: "100 Smart Street, LA, USA",
+    address_detail: "100 Smart Street, LA, USA",
     rating: 4.7,
-    image:
+    thumbnail_url:
       "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-    price: 726750,
+    price_weekday: 726750,
+    bed_count: 1,
+    bath_count: 1,
     nights: 2,
     isGuestFavorite: false,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
   },
-   {
+  {
     id: 7,
-    type: "homestay",
-    title: "Cozy Studio",
-    address: "100 Smart Street, LA, USA",
-    rating: 4.7,
-    image:
+    listing_type: "HOME",
+    title: "Luxury Penthouse",
+    address_detail: "100 Smart Street, LA, USA",
+    rating: 4.9,
+    thumbnail_url:
       "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&q=80",
-    avatarImage:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-    price: 726750,
+    price_weekday: 3500000,
+    bed_count: 4,
+    bath_count: 3,
     nights: 2,
-    isGuestFavorite: false,
-    amenities: [
-      { type: "bedrooms", value: 3 },
-      { type: "bathrooms", value: 1 },
-      { type: "parking", value: 2 },
-      { type: "pets", value: 0 },
-      { type: "wifi" },
-    ],
+    isGuestFavorite: true,
   },
 ];

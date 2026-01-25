@@ -2,15 +2,13 @@
 
 import { Heart, Star } from "lucide-react";
 import { useState } from "react";
-
-export type ItemType = "homestay" | "experience" | "service";
+import { ListingType } from "@/src/types/enums";
 
 interface ItemCardProps {
-  type: ItemType;
+  type: ListingType;
   title: string;
   address: string;
   image?: string;
-  avatarImage?: string;
   rating?: number;
   showRating?: boolean;
   onWishlistToggle?: () => void;
@@ -21,11 +19,8 @@ interface ItemCardProps {
 }
 
 export default function ItemCard({
-  type,
   title,
-  address,
   image,
-  avatarImage,
   rating = 5,
   showRating = true,
   onWishlistToggle,

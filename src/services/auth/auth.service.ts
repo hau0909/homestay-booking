@@ -1,6 +1,6 @@
 import { supabase } from "@/src/lib/supabase";
 import { Profile } from "@/src/types/profile";
-import { access } from "fs";
+
 import {
   validateEmail,
   validatePasswordStrength,

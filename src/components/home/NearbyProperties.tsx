@@ -29,14 +29,13 @@ export default function NearbyProperties() {
           {nearbyProperties.map((property) => (
             <ItemCard
               key={property.id}
-              type={property.type}
+              type={property.listing_type}
               title={property.title}
-              image={property.image}
-              avatarImage={property.avatarImage}
-              address={property.address}
+              image={property.thumbnail_url}
+              address={property.address_detail}
               rating={property.rating}
               showRating={true}
-              price={property.price}
+              price={property.price_weekday}
               nights={property.nights}
               isGuestFavorite={property.isGuestFavorite}
             />
