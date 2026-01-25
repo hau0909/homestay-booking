@@ -9,7 +9,12 @@ export type ListingStatus =
   | "HIDDEN"
   | "BANNED";
 
-export type BookingStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+export type BookingStatus =
+  | "DRAFT"
+  | "PENDING"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 

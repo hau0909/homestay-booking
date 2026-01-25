@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #E1EEBC;
+  --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --radius: 0.625rem;
   --card: oklch(1 0 0);
@@ -138,8 +138,6 @@ body {
 }
 
 @layer utilities {
-
-
   @keyframes slide-left {
     from {
       opacity: 0;
