@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { confirmBooking } from "@/src/services/booking/confirmBooking";
-import { createBookingCalendars } from "@/src/services/listing/createBookingCalendars";
+import { createBookingCalendars } from "@/src/services/booking/createBookingCalendars";
 
 const STEPS = ["Guest Info", "Calendar", "Pricing", "Note"];
 
