@@ -122,7 +122,7 @@ export default function Header() {
         setCurrentViewMode("host");
         localStorage.setItem("viewMode", "host");
         toast.success("Switched to Host mode");
-        router.push("/host/dashboard");
+        router.push("/hosting");
 
         // Background fetch để sync với server
         getUserProfile(user.id).then((updated) => {
@@ -149,7 +149,7 @@ export default function Header() {
       );
 
       if (newMode === "host") {
-        router.push("/host/dashboard");
+        router.push("/hosting");
       } else {
         router.push("/");
       }
@@ -226,14 +226,14 @@ export default function Header() {
             <>
               {/* HOST MODE */}
               <Link
-                href="/host/dashboard"
+                href="/hosting"
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
               >
                 <LayoutDashboard size={30} />
                 Dashboard
               </Link>
               <Link
-                href="/host/listings"
+                href="/hosting/listing"
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
               >
                 <Home size={30} />
