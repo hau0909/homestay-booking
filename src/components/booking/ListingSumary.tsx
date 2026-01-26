@@ -5,12 +5,14 @@
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays } from "date-fns";
 import { Star } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isWeekend } from "@/src/utils/isWeekend";
 import { formatPrice } from "@/src/utils/foormatPrice";
+import { getListingThumbnail } from "@/src/services/listing/getListingThumbnail";
 
 export default function ListingSummary({
   title,
+  listingId,
   address,
   price_weekday,
   price_weekend,
@@ -18,6 +20,7 @@ export default function ListingSummary({
   maxGuest,
 }: {
   title: string;
+  listingId: number;
   address: string;
   price_weekday: number;
   price_weekend: number;
@@ -25,6 +28,8 @@ export default function ListingSummary({
   maxGuest: number;
 }) {
   const MAX_GUESTS = maxGuest;
+
+  const [thumbnailUrl, setThumbnailUrl] = useState("/placeholder-img.png");
 
   const [guests, setGuests] = useState({
     adults: 1,
@@ -71,12 +76,24 @@ export default function ListingSummary({
 
   const total = weekdayCount * price_weekday + weekendCount * price_weekend;
 
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      const listingImage = await getListingThumbnail(listingId);
+
+      if (listingImage) {
+        setThumbnailUrl(listingImage.url);
+      }
+    };
+
+    fetchThumbnail();
+  }, [listingId]);
+
   return (
     <div className="border rounded-2xl p-5 space-y-6 bg-white shadow-sm">
       {/* Listing info */}
       <div className="flex gap-4">
         <img
-          src="https://cf.bstatic.com/xdata/images/hotel/max500/684374106.jpg"
+          src={thumbnailUrl}
           alt=""
           className="w-20 h-20 rounded-xl object-cover"
         />

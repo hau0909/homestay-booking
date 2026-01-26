@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { confirmBooking } from "@/src/services/booking/confirmBooking";
 import { createBookingCalendars } from "@/src/services/booking/createBookingCalendars";
+import { isValidEmail, isValidPhone } from "@/src/utils/validGuestInfo";
 
 const STEPS = ["Guest Info", "Calendar", "Pricing", "Note"];
 
@@ -80,8 +81,8 @@ export default function Page() {
       case 0:
         return (
           guest.fullname.trim() !== "" &&
-          guest.email.trim() !== "" &&
-          guest.phone.trim() !== ""
+          isValidEmail(guest.email) &&
+          isValidPhone(guest.phone)
         );
 
       case 1:
@@ -427,6 +428,7 @@ export default function Page() {
           {/* RIGHT */}
           <div className="w-1/3 sticky top-10 h-fit self-start">
             <ListingSummary
+              listingId={listingId}
               address={address}
               price_weekday={home?.price_weekday}
               price_weekend={home?.price_weekend}

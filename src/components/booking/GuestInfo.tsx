@@ -1,7 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Input } from "@/components/ui/input";
+import { isValidEmail, isValidPhone } from "@/src/utils/validGuestInfo";
 
-export default function GuestInfo({ value, onChange }: any) {
+type Guest = {
+  fullname: string;
+  email: string;
+  phone: string;
+};
+
+type Props = {
+  value: Guest;
+  onChange: (data: Guest) => void;
+};
+
+export default function GuestInfo({ value, onChange }: Props) {
+  const errors = {
+    fullname: value.fullname.trim() === "",
+    email: value.email.trim() === "" || !isValidEmail(value.email),
+    phone: value.phone.trim() === "" || !isValidPhone(value.phone),
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -18,10 +35,12 @@ export default function GuestInfo({ value, onChange }: any) {
         <Input
           placeholder="Lamelo Ball"
           value={value.fullname}
-          required
-          className="rounded-xl h-11 focus-visible:ring-2 focus-visible:ring-black"
+          className="rounded-xl h-11"
           onChange={(e) => onChange({ ...value, fullname: e.target.value })}
         />
+        {errors.fullname && (
+          <p className="text-sm text-red-500">Full name is required</p>
+        )}
       </div>
 
       {/* Email */}
@@ -33,10 +52,12 @@ export default function GuestInfo({ value, onChange }: any) {
           type="email"
           placeholder="lamelo@example.com"
           value={value.email}
-          required
-          className="rounded-xl h-11 focus-visible:ring-2 focus-visible:ring-black"
+          className="rounded-xl h-11"
           onChange={(e) => onChange({ ...value, email: e.target.value })}
         />
+        {errors.email && (
+          <p className="text-sm text-red-500">Invalid email address</p>
+        )}
       </div>
 
       {/* Phone */}
@@ -45,12 +66,16 @@ export default function GuestInfo({ value, onChange }: any) {
           Phone number
         </label>
         <Input
-          placeholder="+84 912 345 678"
+          placeholder="0912345678"
           value={value.phone}
-          required
-          className="rounded-xl h-11 focus-visible:ring-2 focus-visible:ring-black"
+          className="rounded-xl h-11"
           onChange={(e) => onChange({ ...value, phone: e.target.value })}
         />
+        {errors.phone && (
+          <p className="text-sm text-red-500">
+            Phone must contain numbers only
+          </p>
+        )}
       </div>
     </div>
   );
