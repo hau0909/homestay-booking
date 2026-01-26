@@ -4,7 +4,7 @@ export default function HostListingsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#328E6E]">My Listings</h1>
         <a
-          href="/host/listings/create"
+          href="/hosting/listing/create"
           className="bg-[#328E6E] text-white px-4 py-2 rounded-lg"
         >
           Create New Listing
