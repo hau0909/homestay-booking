@@ -1,13 +1,24 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 
 // components/Header.tsx
-import { Menu, User, HouseHeart, Binoculars } from "lucide-react";
+import {
+  Menu,
+  User,
+  HouseHeart,
+  Binoculars,
+  LayoutDashboard,
+  Home,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import SignUpModal from "../auth/SignUpModal";
 import LoginModal from "../auth/LoginModal";
 import { useAuth } from "@/src/hooks/useAuth";
 import { logoutUser } from "@/src/services/auth/auth.service";
+import { getUserProfile } from "@/src/services/profile/getUserProfile";
+import { becomeHost } from "@/src/services/host/becomeHost";
+import { Profile } from "@/src/types/profile";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export default function Header() {
@@ -16,6 +27,139 @@ export default function Header() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [switching, setSwitching] = useState(false);
+  const [currentViewMode, setCurrentViewMode] = useState<"traveller" | "host">(
+    () => {
+      // Khởi tầo từ localStorage hoặc check URL
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("viewMode");
+        if (saved === "host" && window.location.pathname.startsWith("/host")) {
+          return "host";
+        }
+      }
+      return "traveller";
+    },
+  );
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      // Thử load từ cache trước
+      const cachedProfile = localStorage.getItem(`profile_${user.id}`);
+      if (cachedProfile) {
+        try {
+          setProfile(JSON.parse(cachedProfile));
+        } catch (e) {
+          // Invalid cache, ignore
+        }
+      }
+
+      // Fetch fresh data
+      getUserProfile(user.id).then((profileData) => {
+        setProfile(profileData);
+        // Cache profile
+        if (profileData) {
+          localStorage.setItem(
+            `profile_${user.id}`,
+            JSON.stringify(profileData),
+          );
+        }
+      });
+    } else {
+      setProfile(null);
+      setCurrentViewMode("traveller");
+      localStorage.removeItem("viewMode");
+    }
+  }, [user, router]);
+
+  // Auto-detect mode dựa trên URL
+  useEffect(() => {
+    if (typeof window !== "undefined" && user) {
+      // Chỉ auto-detect khi user đã login
+      const isHostPath = window.location.pathname.startsWith("/host");
+      if (isHostPath && profile?.is_host) {
+        // Nếu đang ở /host/* path VÀ có quyền host
+        setCurrentViewMode("host");
+        localStorage.setItem("viewMode", "host");
+      } else if (!isHostPath) {
+        // Nếu không ở /host/* path, set traveller mode
+        setCurrentViewMode("traveller");
+        localStorage.setItem("viewMode", "traveller");
+      }
+    } else if (!user) {
+      // Nếu không có user (logged out), force traveller mode
+      setCurrentViewMode("traveller");
+      localStorage.removeItem("viewMode");
+    }
+  }, [profile, router, user]); // Thêm user vào dependencies
+
+  const handleToggleHostMode = async () => {
+    // Nếu chưa login → hiển thị modal login
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    if (!profile) return;
+
+    // Nếu chưa có quyền host, cần enable host trong DB
+    if (!profile.is_host) {
+      try {
+        setSwitching(true);
+        await becomeHost(true);
+
+        // Optimistic update profile ngay lập tức
+        const optimisticProfile = { ...profile, is_host: true };
+        setProfile(optimisticProfile);
+
+        // Cache ngay lập tức
+        localStorage.setItem(
+          `profile_${user.id}`,
+          JSON.stringify(optimisticProfile),
+        );
+
+        setCurrentViewMode("host");
+        localStorage.setItem("viewMode", "host");
+        toast.success("Switched to Host mode");
+        router.push("/host/dashboard");
+
+        // Background fetch để sync với server
+        getUserProfile(user.id).then((updated) => {
+          setProfile(updated);
+          if (updated) {
+            localStorage.setItem(`profile_${user.id}`, JSON.stringify(updated));
+          }
+        });
+      } catch (error) {
+        toast.error("Failed to switch mode");
+      } finally {
+        setSwitching(false);
+      }
+    } else {
+      // Đã có quyền host, chỉ toggle viewing mode
+      const newMode = currentViewMode === "traveller" ? "host" : "traveller";
+      setCurrentViewMode(newMode);
+      localStorage.setItem("viewMode", newMode);
+
+      toast.success(
+        newMode === "host"
+          ? "Switched to Host mode"
+          : "Switched to Travelling mode",
+      );
+
+      if (newMode === "host") {
+        router.push("/host/dashboard");
+      } else {
+        router.push("/");
+      }
+    }
+  };
+
+  const isHostMode = currentViewMode === "host";
+  const canBeHost = profile?.is_host === true; // Strictly true
+  const isNewUser = profile && profile.is_host !== true; // false or null = new user
+  const isLoadingProfile = loading || (user && !profile); // Loading state
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,9 +179,21 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
+      // Force set về traveller mode TRƯỚC khi logout
+      setCurrentViewMode("traveller");
+      localStorage.removeItem("viewMode");
+
+      // Clear tất cả profile cache
+      if (user?.id) {
+        localStorage.removeItem(`profile_${user.id}`);
+      }
+
       await logoutUser();
       toast.success("Logged out successfully");
       setIsMenuOpen(false);
+
+      // Redirect về trang chủ sau khi logout
+      router.push("/");
     } catch (error) {
       toast.error("Logout failed");
     }
@@ -54,27 +210,73 @@ export default function Header() {
         {/* <img src="/logo.png" alt="logo" className="w-12 h-12" /> */}
         {/* NAVIGATION */}
         <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
-          <a
-            href="/"
-            className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-          >
-            <HouseHeart size={30} />
-            Homestay
-          </a>
-          <a
-            href="#"
-            className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-          >
-            <Binoculars size={30} />
-            Experiences
-          </a>
+          {isLoadingProfile ? (
+            <>
+              {/* Loading skeleton - giữ nguyên layout */}
+              <div className="flex items-center gap-2 opacity-50">
+                <LayoutDashboard size={30} />
+                <span>Loading...</span>
+              </div>
+              <div className="flex items-center gap-2 opacity-50">
+                <Home size={30} />
+                <span>Loading...</span>
+              </div>
+            </>
+          ) : isHostMode ? (
+            <>
+              {/* HOST MODE */}
+              <Link
+                href="/host/dashboard"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <LayoutDashboard size={30} />
+                Dashboard
+              </Link>
+              <Link
+                href="/host/listings"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Home size={30} />
+                Listing
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* TRAVELLER MODE */}
+              <Link
+                href="/"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <HouseHeart size={30} />
+                Homestay
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Binoculars size={30} />
+                Experiences
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-4">
-          {/* Become Host */}
-          <button className="rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium hover:bg-[#67AE6E] transition hover:cursor-pointer">
-            Become A Host
+          {/* Become Host - Always visible */}
+          <button
+            onClick={handleToggleHostMode}
+            disabled={switching}
+            className="rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium 
+               hover:bg-[#67AE6E] transition disabled:opacity-50 hover:cursor-pointer"
+          >
+            {switching
+              ? "Switching..."
+              : isHostMode
+                ? "Switch to Travelling"
+                : canBeHost
+                  ? "Switch to Hosting"
+                  : "Become A Host"}
           </button>
 
           {/* User Menu */}
