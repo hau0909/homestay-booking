@@ -73,6 +73,27 @@ export default function Header() {
     }
   }, [user, router]);
 
+  // // Auto-detect mode dựa trên URL
+  useEffect(() => {
+    if (typeof window !== "undefined" && user) {
+      // Chỉ auto-detect khi user đã login
+      const isHostPath = window.location.pathname.startsWith("/host");
+      if (isHostPath && profile?.is_host) {
+        // Nếu đang ở /host/* path VÀ có quyền host
+        setCurrentViewMode("host");
+        localStorage.setItem("viewMode", "host");
+      } else if (!isHostPath) {
+        // Nếu không ở /host/* path, set traveller mode
+        setCurrentViewMode("traveller");
+        localStorage.setItem("viewMode", "traveller");
+      }
+    } else if (!user) {
+      // Nếu không có user (logged out), force traveller mode
+      setCurrentViewMode("traveller");
+      localStorage.removeItem("viewMode");
+    }
+  }, [profile, router, user]); // Thêm user vào dependencies
+
   const handleToggleHostMode = async () => {
     // Nếu chưa login → hiển thị modal login
     if (!user) {
