@@ -46,7 +46,7 @@ export default function BookingsPage() {
       </div>
     );
 
-  if (bookings.length === 1)
+  if (bookings.length === 0)
     return (
       <div className="bg-white py-10 px-40 pb-20">
         <p className="text-3xl font-semibold mb-2">Your bookings</p>

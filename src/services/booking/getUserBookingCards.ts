@@ -22,12 +22,12 @@ export async function getUserBookingCards(): Promise<BookingCard[]> {
   return Promise.all(
     filteredBookings.map(async (booking) => {
       const listing = await getListingById(booking.listing_id.toString());
-      const thumbnail = await getListingThumbnail(booking.listing_id);
+      const listingImage = await getListingThumbnail(booking.listing_id);
 
       return {
         id: booking.id.toString(),
         listingName: listing.title,
-        thumbnailUrl: thumbnail?.url ?? null,
+        thumbnailUrl: listingImage?.url ?? null,
         dateRange: `${booking.check_in_date} → ${booking.check_out_date}`,
         guestsText: `${booking.total_guests} guests`,
         totalText: `$${booking.total_price} USD`,
