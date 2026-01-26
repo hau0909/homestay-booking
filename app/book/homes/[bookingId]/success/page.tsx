@@ -8,11 +8,16 @@ import { useEffect, useState } from "react";
 import { Booking } from "@/src/types/booking";
 import { getBookingById } from "@/src/services/booking/getBookingById";
 import toast from "react-hot-toast";
+import { Listing } from "@/src/types/listing";
+import { getListingById } from "@/src/services/listing/getListingById";
+import { formatPrice } from "@/src/utils/foormatPrice";
 
 export default function Page() {
   const router = useRouter();
   const { bookingId } = useParams();
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,7 +27,12 @@ export default function Page() {
       try {
         setLoading(true);
         const data = await getBookingById(bookingId);
-        setBooking(data);
+
+        if (data) {
+          const listing = await getListingById(data?.listing_id.toString());
+          setListing(listing);
+          setBooking(data);
+        }
       } catch (error) {
         console.error("Fetch booking error:", error);
         toast.error("Failed to get booking");
@@ -59,11 +69,20 @@ export default function Page() {
           </div>
 
           <div className="border rounded-xl p-4 text-left text-sm space-y-2">
-            <p className="font-medium">Cozy Apartment</p>
-            <p>Jan 20 → Jan 22 · 2 nights</p>
-            <p>Guests: 2 adults</p>
-            <p className="font-semibold">Total: $144.17 AUD</p>
-            <p className="text-orange-600 font-medium">Status: Pending</p>
+            <p className="font-medium">{listing?.title}</p>
+            <p>
+              {booking.check_in_date} · {booking.check_out_date}
+            </p>
+            <p>
+              Guests: {booking.total_guests}{" "}
+              {booking.total_guests > 1 ? "Adults" : "Adult"}
+            </p>
+            <p className="font-semibold">
+              Total: ${formatPrice(booking.total_price)} USD
+            </p>
+            <p className="text-orange-600 font-medium">
+              Status: {booking.status}
+            </p>
           </div>
 
           <div className="flex gap-3">
