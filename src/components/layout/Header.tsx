@@ -325,7 +325,7 @@ export default function Header() {
 
                     {/* Menu Items cho user đã login */}
                     <a
-                      href="#"
+                      href="/profile"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
                       My Profile
