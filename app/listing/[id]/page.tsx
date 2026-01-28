@@ -3,17 +3,29 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CompactSearchBar from "@/src/components/search/CompactSearchBar";
-import { getListingDetail, ListingDetailWithHost } from "@/src/services/listing/getListingDetail";
+import {
+  getListingDetail,
+  ListingDetailWithHost,
+} from "@/src/services/listing/getListingDetail";
 import { getHostInfo, HostInfo } from "@/src/services/profile/getHostInfo";
 import { getHomeByListingId } from "@/src/services/home/getHomeByListingId";
 import { Home } from "@/src/types/home";
-import { Users, Bed, Bath, MapPin, Share2, Heart, Grid3x3, ChevronLeft } from "lucide-react";
+import {
+  Users,
+  Bed,
+  Bath,
+  MapPin,
+  Share2,
+  Heart,
+  Grid3x3,
+  ChevronLeft,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function ListingDetailPage() {
   const params = useParams();
   const listingId = params.id as string;
-  
+
   const [listing, setListing] = useState<ListingDetailWithHost | null>(null);
   const [host, setHost] = useState<HostInfo | null>(null);
   const [home, setHome] = useState<Home | null>(null);
@@ -28,11 +40,11 @@ export default function ListingDetailPage() {
       try {
         const listingData = await getListingDetail(listingId);
         setListing(listingData);
-        
+
         // Fetch home data directly
         const homeData = await getHomeByListingId(listingId);
         setHome(homeData);
-        
+
         if (listingData?.host_id) {
           const hostData = await getHostInfo(listingData.host_id);
           setHost(hostData);
@@ -97,7 +109,7 @@ export default function ListingDetailPage() {
       <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white px-6 py-4 flex items-center justify-between z-10">
-          <button 
+          <button
             onClick={() => setShowGallery(false)}
             className="text-black hover:bg-gray-200 p-2 rounded-full transition-colors"
           >
@@ -108,11 +120,13 @@ export default function ListingDetailPage() {
               <Share2 className="w-4 h-4" />
               <span className="text-sm font-semibold underline">Share</span>
             </button>
-            <button 
+            <button
               onClick={() => setIsLiked(!isLiked)}
               className="flex items-center gap-2 text-black hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors"
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              <Heart
+                className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+              />
               <span className="text-sm font-semibold underline">Save</span>
             </button>
           </div>
@@ -147,18 +161,26 @@ export default function ListingDetailPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Title & Actions */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-extrabold leading-tight text-black">{listing.title}</h1>
+          <h1 className="text-2xl font-extrabold leading-tight text-black">
+            {listing.title}
+          </h1>
           <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
               <Share2 className="w-4 h-4 text-black" />
-              <span className="text-sm font-semibold text-black underline">Share</span>
+              <span className="text-sm font-semibold text-black underline">
+                Share
+              </span>
             </button>
-            <button 
+            <button
               onClick={() => setIsLiked(!isLiked)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-black'}`} />
-              <span className="text-sm font-semibold text-black underline">Save</span>
+              <Heart
+                className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : "text-black"}`}
+              />
+              <span className="text-sm font-semibold text-black underline">
+                Save
+              </span>
             </button>
           </div>
         </div>
@@ -173,10 +195,12 @@ export default function ListingDetailPage() {
                   src={listing.all_images[0]}
                   alt={listing.title}
                   className="w-full h-full object-cover cursor-pointer hover:brightness-90 transition-all"
-                  onClick={() => {/* TODO: Open image gallery */}}
+                  onClick={() => {
+                    /* TODO: Open image gallery */
+                  }}
                 />
               </div>
-              
+
               {/* Right side - 4 smaller images */}
               {listing.all_images.slice(1, 5).map((image, idx) => (
                 <div key={idx} className="relative">
@@ -192,7 +216,9 @@ export default function ListingDetailPage() {
                       className="absolute bottom-4 right-4 bg-white hover:bg-gray-100 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-900 transition-colors text-black"
                     >
                       <Grid3x3 className="w-4 h-4 text-black" />
-                      <span className="text-sm font-semibold text-black">Show all photos</span>
+                      <span className="text-sm font-semibold text-black">
+                        Show all photos
+                      </span>
                     </button>
                   )}
                 </div>
@@ -207,15 +233,27 @@ export default function ListingDetailPage() {
 
         {/* Description and Details Below Images */}
         <div className="mt-4 pb-6">
-          <h2 className="text-xl font-bold mb-3 text-black">{listing.description}</h2>
+          <h2 className="text-xl font-bold mb-3 text-black">
+            {listing.description}
+          </h2>
           <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2">
-            <span><strong>quantity:</strong> {home?.quantity ?? ""}</span>
-            <span><strong>max_guests:</strong> {home?.max_guests ?? ""}</span>
-            <span><strong>room_size:</strong> {home?.room_size ?? ""}</span>
+            <span>
+              <strong>quantity:</strong> {home?.quantity ?? ""}
+            </span>
+            <span>
+              <strong>max_guests:</strong> {home?.max_guests ?? ""}
+            </span>
+            <span>
+              <strong>room_size:</strong> {home?.room_size ?? ""}
+            </span>
           </div>
           <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2 mt-1">
-            <span><strong>bed_count:</strong> {home?.bed_count ?? ""}</span>
-            <span><strong>bath_count:</strong> {home?.bath_count ?? ""}</span>
+            <span>
+              <strong>bed_count:</strong> {home?.bed_count ?? ""}
+            </span>
+            <span>
+              <strong>bath_count:</strong> {home?.bath_count ?? ""}
+            </span>
           </div>
           <div className="w-2/3 border-b border-gray-200 mt-5"></div>
         </div>
@@ -229,13 +267,19 @@ export default function ListingDetailPage() {
               <div className="flex items-center gap-4 mt-6">
                 <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
                   {host?.avatar_url ? (
-                    <img src={host.avatar_url} alt={host.full_name || "Host"} className="w-full h-full rounded-full object-cover" />
+                    <img
+                      src={host.avatar_url}
+                      alt={host.full_name || "Host"}
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   ) : (
                     <Users className="w-6 h-6 text-gray-600" />
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-black">Host: {host?.full_name || ""}</p>
+                  <p className="font-semibold text-black">
+                    Host: {host?.full_name || ""}
+                  </p>
                   <p className="text-sm text-gray-500">New host</p>
                 </div>
               </div>
@@ -246,17 +290,23 @@ export default function ListingDetailPage() {
           <div className="col-span-1">
             <div className="border border-gray-300 rounded-2xl p-6 shadow-lg sticky top-24">
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-2xl font-semibold underline text-black">{formatPrice(listing.price_weekday)}</span>
+                <span className="text-2xl font-semibold underline text-black">
+                  {formatPrice(listing.price_weekday)}
+                </span>
                 <span className="text-black">/ weekday night</span>
               </div>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-2xl font-semibold underline text-black">{formatPrice(listing.price_weekend)}</span>
+                <span className="text-2xl font-semibold underline text-black">
+                  {formatPrice(listing.price_weekend)}
+                </span>
                 <span className="text-black">/ weekend night</span>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
-                Book Now
-              </button>
+              <Link href={`/book/homes?listing=${listingId}`}>
+                <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
+                  Book Now
+                </button>
+              </Link>
 
               <p className="text-center text-sm text-gray-500">
                 You won't be charged yet
