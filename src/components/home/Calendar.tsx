@@ -82,7 +82,7 @@ export default function Calendar({
 
     // Empty cells before first day
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="p-3"></div>);
+      days.push(<div key={`empty-${i}`} className="p-2"></div>);
     }
 
     // Days of the month
@@ -97,12 +97,12 @@ export default function Calendar({
           key={day}
           onClick={() => !isPast && !isDisabled && handleDateClick(currentDate)}
           disabled={isPast || isDisabled}
-          className={`p-3 text-center transition-all duration-200 relative ${
+          className={`p-2 text-center transition-all duration-200 relative min-w-[40px] min-h-[40px] flex items-center justify-center ${
             isSelected
-              ? "bg-[#328E6E] text-white rounded-full"
+              ? "bg-[#328E6E] text-white rounded-full font-semibold"
               : isPast || isDisabled
                 ? "text-[#E1EEBC] cursor-not-allowed"
-                : "text-[#328E6E] hover:bg-[#E1EEBC] rounded-full"
+                : "text-[#328E6E] hover:bg-[#E1EEBC] rounded-full font-medium"
           }`}
         >
           {day}
@@ -118,11 +118,11 @@ export default function Calendar({
         <h3 className="mb-6 text-center text-xl font-semibold text-[#328E6E]">
           {monthName}
         </h3>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2">
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="p-3 text-center text-sm font-medium text-[#67AE6E]"
+              className="p-2 text-center text-sm font-medium text-[#67AE6E]"
             >
               {day}
             </div>
