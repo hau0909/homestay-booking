@@ -10,14 +10,18 @@ import DetailsStep from "@/src/components/listing/DetailsStep";
 import PricingStep from "@/src/components/listing/PricingStep";
 import ImagesStep from "@/src/components/listing/ImagesStep";
 import PreviewPublishStep from "@/src/components/listing/PreviewPublishStep";
-import {
-  createListing,
-  publishListing,
-} from "@/src/services/listing/createListing";
+
+/* ===== services ===== */
+import { createBasicInfo } from "@/src/services/listing/createBasicInfo";
+import { saveLocation } from "@/src/services/listing/saveLocation";
+import { saveDetails } from "@/src/services/listing/saveDetails";
+import { uploadListingImages } from "@/src/services/listing/uploadListingImages";
+import { publishListing } from "@/src/services/listing/publishListing";
+
 import { getUser } from "@/src/services/profile/getUserProfile";
 
 /* =======================
-   INLINE TYPE
+   TYPE
 ======================= */
 export type CreateListingForm = {
   title: string;
@@ -89,35 +93,38 @@ export default function CreateListingPage() {
       const { user } = await getUser();
       if (!user) throw new Error("User not authenticated");
 
-      const listing = await createListing({
-        listing: {
-          host_id: user.id,
-          category_id: 1,
-
-          title: data.title,
-          description: data.description,
-          listing_type: data.listing_type,
-          status: "DRAFT", // ✅ FIX
-
-          province_code: data.province_code,
-          district_code: data.district_code,
-          ward_code: data.ward_code,
-          address_detail: data.address_detail,
-          latitude: null,
-          longitude: null,
-        },
-        home: {
-          quantity: data.quantity,
-          max_guests: data.max_guests,
-          bed_count: data.bed_count,
-          bath_count: data.bath_count,
-          room_size: data.room_size,
-          price_weekday: data.price_weekday,
-          price_weekend: data.price_weekend,
-        },
-        images: data.images,
+      /* BASIC INFO */
+      const listing = await createBasicInfo({
+        host_id: user.id,
+        category_id: 1,
+        title: data.title,
+        description: data.description,
+        listing_type: data.listing_type,
       });
 
+      /* LOCATION */
+      await saveLocation(listing.id, {
+        province_code: data.province_code,
+        district_code: data.district_code,
+        ward_code: data.ward_code,
+        address_detail: data.address_detail,
+      });
+
+      /* HOME DETAILS */
+      await saveDetails(listing.id, {
+        quantity: data.quantity,
+        max_guests: data.max_guests,
+        bed_count: data.bed_count,
+        bath_count: data.bath_count,
+        room_size: data.room_size,
+        price_weekday: data.price_weekday,
+        price_weekend: data.price_weekend,
+      });
+
+      /* IMAGES */
+      await uploadListingImages(listing.id, data.images);
+
+      /* PUBLISH */
       await publishListing(listing.id);
 
       alert("Create listing success!");
