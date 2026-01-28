@@ -19,6 +19,8 @@ import { uploadListingImages } from "@/src/services/listing/uploadListingImages"
 import { publishListing } from "@/src/services/listing/publishListing";
 
 import { getUser } from "@/src/services/profile/getUserProfile";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 /* =======================
    TYPE
@@ -56,6 +58,7 @@ const steps = [
 
 export default function CreateListingPage() {
   const [step, setStep] = useState(0);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const [data, setData] = useState<CreateListingForm>({
@@ -127,7 +130,8 @@ export default function CreateListingPage() {
       /* PUBLISH */
       await publishListing(listing.id);
 
-      alert("Create listing success!");
+      toast.success("Listing created successfully!");
+     router.push("/hosting/listing");  
     } catch (err: any) {
       console.error("CREATE LISTING FAILED:", err);
       alert(err.message || "Create listing failed");
