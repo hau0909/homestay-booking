@@ -1,7 +1,7 @@
 import HeroSection from "@/src/components/home/HeroSection";
 import LatestProperties from "@/src/components/home/LatestProperties";
 import NearbyProperties from "@/src/components/home/NearbyProperties";
-import TopRatedProperties from "@/src/components/home/TopRatedProperties";
+import TopProperties from "@/src/components/home/TopProperties";
 import HostingBanner from "@/src/components/home/HostingBanner";
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
       <HeroSection />
       <LatestProperties />
       <NearbyProperties />
-      <TopRatedProperties />
+      <TopProperties />
       <HostingBanner />
     </div>
   );

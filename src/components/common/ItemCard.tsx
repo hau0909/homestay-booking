@@ -72,6 +72,10 @@ export default function ItemCard({
           src={image}
           alt={title}
           className="h-full w-full rounded-2xl object-cover"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/no-image.png";
+          }}
         />
       </div>
 
