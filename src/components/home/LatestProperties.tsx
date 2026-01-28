@@ -12,7 +12,10 @@ import {
 import { propertiesData } from "@/src/data/properties";
 
 export default function LatestProperties() {
-  const latestProperties = propertiesData;
+  // Sắp xếp giảm dần theo id (id lớn nhất là mới nhất)
+  const latestProperties = [...propertiesData]
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 6);
 
   return (
     <section className="w-full py-16 px-6">
@@ -43,7 +46,7 @@ export default function LatestProperties() {
                 <ItemCard
                   type={property.listing_type}
                   title={property.title}
-                  address={property.address_detail}
+                  address={property.address_detail ?? ""}
                   image={property.thumbnail_url}
                   rating={property.rating}
                   showRating={true}
