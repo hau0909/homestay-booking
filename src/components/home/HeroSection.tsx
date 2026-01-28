@@ -2,12 +2,18 @@
 
 import { Search } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Calendar from "./Calendar";
 import GuestSelector from "./GuestSelector";
+import LocationSelector from "./LocationSelector";
+import { Province } from "@/src/types/location";
+import { getAllProvinces } from "@/src/services/location/getAllProvinces";
 
 export default function HeroSection() {
+  const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestSelector, setShowGuestSelector] = useState(false);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
   const [calendarType, setCalendarType] = useState<"checkIn" | "checkOut">(
     "checkIn",
   );
@@ -19,8 +25,12 @@ export default function HeroSection() {
     infants: 0,
     pets: 0,
   });
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [locationSearch, setLocationSearch] = useState("");
   const calendarRef = useRef<HTMLDivElement>(null);
   const guestRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (date: Date | null) => {
     if (!date) return "";
@@ -76,18 +86,53 @@ export default function HeroSection() {
     setCalendarType("checkIn");
     setShowCalendar(true);
     setShowGuestSelector(false);
+    setShowLocationSelector(false);
   };
 
   const handleCheckOutClick = () => {
     setCalendarType("checkOut");
     setShowCalendar(true);
     setShowGuestSelector(false);
+    setShowLocationSelector(false);
   };
 
   const handleGuestClick = () => {
     setShowGuestSelector(!showGuestSelector);
     setShowCalendar(false);
+    setShowLocationSelector(false);
   };
+
+  const handleLocationClick = () => {
+    setShowLocationSelector(!showLocationSelector);
+    setShowCalendar(false);
+    setShowGuestSelector(false);
+  };
+
+  const handleProvinceSelect = (province: Province) => {
+    setSelectedProvince(province);
+    setLocationSearch(province.name);
+    setShowLocationSelector(false);
+  };
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (selectedProvince) params.set("province", selectedProvince.code);
+    if (checkInDate) params.set("checkIn", checkInDate.toISOString().split("T")[0]);
+    if (checkOutDate) params.set("checkOut", checkOutDate.toISOString().split("T")[0]);
+    const totalGuests = guestCounts.adults + guestCounts.children;
+    if (totalGuests > 0) params.set("guests", totalGuests.toString());
+
+    router.push(`/search?${params.toString()}`);
+  };
+
+  // Fetch provinces on mount
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      const data = await getAllProvinces();
+      setProvinces(data);
+    };
+    fetchProvinces();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -103,16 +148,22 @@ export default function HeroSection() {
       ) {
         setShowGuestSelector(false);
       }
+      if (
+        locationRef.current &&
+        !locationRef.current.contains(event.target as Node)
+      ) {
+        setShowLocationSelector(false);
+      }
     };
 
-    if (showCalendar || showGuestSelector) {
+    if (showCalendar || showGuestSelector || showLocationSelector) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showCalendar, showGuestSelector]);
+  }, [showCalendar, showGuestSelector, showLocationSelector]);
 
   return (
     <section className="relative h-[600px] w-full">
@@ -136,15 +187,39 @@ export default function HeroSection() {
           {/* Search Form */}
           <div className="flex items-center rounded-full bg-white shadow-md">
             {/* Location */}
-            <div className="flex-1 px-6 py-4 transition-all duration-300 hover:bg-gray-200 hover:rounded-full rounded-l-full cursor-pointer">
+            <div 
+              className="relative flex-1 px-6 py-4 transition-all duration-300 hover:bg-gray-200 hover:rounded-full rounded-l-full cursor-pointer"
+              ref={locationRef}
+              onClick={handleLocationClick}
+            >
               <label className="mb-1 block text-sm font-semibold text-black">
                 Location
               </label>
               <input
                 type="text"
                 placeholder="Which city do you prefer?"
+                value={locationSearch}
+                onChange={(e) => {
+                  setLocationSearch(e.target.value);
+                  setShowLocationSelector(true);
+                  setSelectedProvince(null);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLocationClick();
+                }}
                 className="w-full text-sm text-black placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer"
               />
+              
+              {/* Location Selector Dropdown */}
+              {showLocationSelector && (
+                <LocationSelector
+                  provinces={provinces}
+                  onSelect={handleProvinceSelect}
+                  onClose={() => setShowLocationSelector(false)}
+                  searchValue={locationSearch}
+                />
+              )}
             </div>
 
             {/* Divider */}
@@ -210,7 +285,10 @@ export default function HeroSection() {
               </div>
 
               {/* Search Button */}
-              <button className="mr-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#328E6E] text-white transition-all duration-300 hover:bg-[#67AE6E] hover:scale-105">
+              <button 
+                onClick={handleSearch}
+                className="mr-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#328E6E] text-white transition-all duration-300 hover:bg-[#67AE6E] hover:scale-105"
+              >
                 <Search size={24} />
               </button>
 
