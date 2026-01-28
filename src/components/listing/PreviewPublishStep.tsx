@@ -10,7 +10,7 @@ import { getProvinces } from "@/src/services/listing/getProvince";
 import { getDistrictsByProvince } from "@/src/services/listing/getDistrict";
 import { getWardsByDistrict } from "@/src/services/listing/getWard";
 
-// 👉 services (GIỮ NGUYÊN TÊN)
+
 
 type Props = {
   data: CreateListingForm;
