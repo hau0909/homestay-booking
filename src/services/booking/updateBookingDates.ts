@@ -5,7 +5,7 @@ import { getUser } from "../profile/getUserProfile";
 type UpdateBookingDatesPayload = {
   booking_id: number;
   check_in_date: string; // ISO: yyyy-mm-dd
-  check_out_date: string; // ISO: yyyy-mm-dds
+  check_out_date: string; // ISO: yyyy-mm-dd
 };
 
 export async function updateBookingDates(
@@ -21,8 +21,8 @@ export async function updateBookingDates(
       check_out_date: payload.check_out_date,
     })
     .eq("id", payload.booking_id)
-    .eq("user_id", user.id) // 🔒 chỉ owner
-    .eq("status", "DRAFT") // 🔒 chỉ draft
+    .eq("user_id", user.id)
+    .eq("status", "DRAFT")
     .select()
     .single();
 
