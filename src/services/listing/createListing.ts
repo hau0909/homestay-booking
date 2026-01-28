@@ -38,14 +38,12 @@ export async function createListing(payload: CreateListingPayload) {
     const path = `${listing.id}/${Date.now()}-${file.name}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("listing_images") // ✅ ĐÃ SỬA Ở ĐÂY
+      .from("listing_images")
       .upload(path, file);
 
     if (uploadError) throw uploadError;
 
-    const { data } = supabase.storage
-      .from("listing_images") // ✅ VÀ Ở ĐÂY
-      .getPublicUrl(path);
+    const { data } = supabase.storage.from("listing_images").getPublicUrl(path);
 
     imageRows.push({
       listing_id: listing.id,

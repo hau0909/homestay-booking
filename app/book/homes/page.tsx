@@ -15,7 +15,7 @@ import { getUser, getUserProfile } from "@/src/services/profile/getUserProfile";
 import { getListingById } from "@/src/services/listing/getListingById";
 import { Listing } from "@/src/types/listing";
 import { updateProfile } from "@/src/services/profile/updateProfile";
-import { getListingCalendar } from "@/src/services/listing/getListingCalendar";
+import { getListingCalendar } from "@/src/services/booking/getListingCalendar";
 import { DateRange } from "react-day-picker";
 import { getHomeByListingId } from "@/src/services/home/getHomeByListingId";
 import { Home } from "@/src/types/home";
