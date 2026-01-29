@@ -8,6 +8,7 @@ import {
   Binoculars,
   LayoutDashboard,
   Home,
+  ListOrdered,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -238,6 +239,13 @@ export default function Header() {
               >
                 <Home size={30} />
                 Listing
+              </Link>
+              <Link
+                href="/hosting/bookings"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <ListOrdered size={30} />
+                Bookings order
               </Link>
             </>
           ) : (
