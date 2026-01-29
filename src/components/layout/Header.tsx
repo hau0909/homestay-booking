@@ -339,10 +339,10 @@ export default function Header() {
                       My Profile
                     </a>
                     <a
-                      href="#"
+                      href="/bookings"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
-                      Account Setting
+                      My Bookings
                     </a>
 
                     <div className="border-t border-[#90C67C] my-2"></div>
