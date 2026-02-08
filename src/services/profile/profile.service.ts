@@ -1,6 +1,7 @@
 // ...existing code...
 import { supabase } from "@/src/lib/supabase";
 import { Profile } from "@/src/types/profile";
+import { da } from "date-fns/locale";
 
 /**
  * Get user profile by user ID
@@ -29,7 +30,7 @@ export const getProfile = async (userId: string): Promise<Profile> => {
  */
 export const updateProfile = async (
   userId: string,
-  updates: Partial<Profile>
+  updates: Partial<Profile>,
 ): Promise<Profile> => {
   // Remove fields that shouldn't be updated directly
   const { id, email, created_at, role, ...allowedUpdates } = updates;
@@ -64,7 +65,7 @@ export const updateProfile = async (
  */
 export const uploadAvatar = async (
   userId: string,
-  file: File
+  file: File,
 ): Promise<string> => {
   const fileExt = file.name.split(".").pop();
   const fileName = `${userId}-${Date.now()}.${fileExt}`;
@@ -80,14 +81,14 @@ export const uploadAvatar = async (
 
   if (uploadError) {
     console.error("Error uploading avatar:", uploadError);
-    
+
     // If bucket doesn't exist, provide helpful error message
     if (uploadError.message.includes("Bucket not found")) {
       throw new Error(
-        "Storage bucket not configured. Please create 'avatars' bucket in Supabase Dashboard → Storage"
+        "Storage bucket not configured. Please create 'avatars' bucket in Supabase Dashboard → Storage",
       );
     }
-    
+
     throw new Error(`Failed to upload avatar: ${uploadError.message}`);
   }
 
@@ -115,4 +116,36 @@ export const validateIdentityCard = (identityCard: string): boolean => {
   // Vietnamese identity card: 9 or 12 digits
   const idRegex = /^[0-9]{9}$|^[0-9]{12}$/;
   return idRegex.test(identityCard);
+};
+
+export const checkCurrentPassword = async (currentPassword: string) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email) {
+    throw new Error("User not authenticated");
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (error) {
+    throw new Error("Current password is incorrect");
+  }
+
+  return true;
+};
+
+export const changePassword = async (newpassword: string) => {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newpassword,
+  });
+
+  if (error) throw error;
+
+  return data;
 };
