@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { signInWithFacebook } from "@/src/services/auth/auth.service";
 import { validateEmail } from "@/src/utils/validation";
+import Link from "next/link";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -222,12 +223,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
           {/* Forgot Password Link */}
           <div className="text-right">
-            <button
-              type="button"
+            <Link
+              href="/auth/forgot-password"
+              onClick={onClose}
               className="text-sm hover:cursor-pointer text-[#67AE6E] hover:text-[#328E6E] transition-colors"
             >
               Forgot Your Password?
-            </button>
+            </Link>
           </div>
 
           {/* Continue Buttons */}

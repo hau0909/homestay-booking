@@ -201,3 +201,32 @@ export const signInWithFacebook = async () => {
 
   return data;
 };
+
+export const resetPasswordRequest = async (email: string) => {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  });
+
+  if (error) throw error;
+
+  return data;
+};
+
+export const updatePassword = async (password: string) => {
+  const { data, error } = await supabase.auth.updateUser({ password });
+
+  if (error) throw error;
+
+  return data;
+};
+
+export const checkEmailRegistered = async (email: string) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+  if (error || !data) return false;
+  return true;
+};

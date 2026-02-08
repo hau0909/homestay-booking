@@ -18,7 +18,7 @@ const DISPOSABLE_EMAIL_DOMAINS = [
 /**
  * Kiểm tra định dạng email cơ bản
  */
-export const isValidEmailFormat = (email: string): boolean => {
+export const isValidEmailFormat = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
@@ -26,7 +26,7 @@ export const isValidEmailFormat = (email: string): boolean => {
 /**
  * Kiểm tra email có phải là disposable/fake email
  */
-export const isDisposableEmail = (email: string): boolean => {
+export const isDisposableEmail = (email: string) => {
   const domain = email.split("@")[1]?.toLowerCase();
   return DISPOSABLE_EMAIL_DOMAINS.includes(domain);
 };
@@ -34,9 +34,7 @@ export const isDisposableEmail = (email: string): boolean => {
 /**
  * Kiểm tra email có hợp lệ (format + không phải fake)
  */
-export const validateEmail = (
-  email: string,
-): { valid: boolean; error?: string } => {
+export const validateEmail = (email: string) => {
   if (!email || email.trim() === "") {
     return { valid: false, error: "Email is required" };
   }
@@ -63,14 +61,8 @@ export const validateEmail = (
  * - Có số
  * - Có ký tự đặc biệt (optional nhưng recommended)
  */
-export const validatePasswordStrength = (
-  password: string,
-): {
-  valid: boolean;
-  error?: string;
-  strength?: "weak" | "medium" | "strong";
-} => {
-  if (!password || password.trim() === "") {
+export const validatePasswordStrength = (password: string) => {
+  if (!password?.trim()) {
     return { valid: false, error: "Password is required" };
   }
 
@@ -81,35 +73,27 @@ export const validatePasswordStrength = (
     };
   }
 
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const rules = {
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
 
-  if (!hasUpperCase) {
-    return {
-      valid: false,
-      error: "Password must contain at least one uppercase letter",
-    };
-  }
+  if (!rules.upper)
+    return { valid: false, error: "Must contain an uppercase letter" };
 
-  if (!hasLowerCase) {
-    return {
-      valid: false,
-      error: "Password must contain at least one lowercase letter",
-    };
-  }
+  if (!rules.lower)
+    return { valid: false, error: "Must contain a lowercase letter" };
 
-  if (!hasNumber) {
-    return { valid: false, error: "Password must contain at least one number" };
-  }
+  if (!rules.number) return { valid: false, error: "Must contain a number" };
 
-  // Tính strength
+  // 4. Tính độ mạnh
   let strength: "weak" | "medium" | "strong" = "medium";
 
-  if (password.length >= 12 && hasSpecialChar) {
+  if (password.length >= 12 && rules.special) {
     strength = "strong";
-  } else if (password.length < 10 || !hasSpecialChar) {
+  } else if (password.length < 10 || !rules.special) {
     strength = "weak";
   }
 
@@ -122,10 +106,7 @@ export const validatePasswordStrength = (
 export const validatePasswordMatch = (
   password: string,
   confirmPassword: string,
-): {
-  valid: boolean;
-  error?: string;
-} => {
+) => {
   if (password !== confirmPassword) {
     return { valid: false, error: "Passwords do not match" };
   }
