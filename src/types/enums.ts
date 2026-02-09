@@ -20,4 +20,4 @@ export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 
 export type AmenityType = "HOME" | "EXP" | "BOTH";
 
-export type requestHostStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type requestHostStatus = "pending" | "approved" | "rejected";
