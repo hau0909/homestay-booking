@@ -39,7 +39,7 @@ export async function searchListings(params: SearchParams = {}): Promise<{
   listings: ListingWithDetails[];
   total: number;
 }> {
-  const { provinceCode, page = 1, limit = 20 } = params;
+  const { provinceCode, checkIn, checkOut, guests, page = 1, limit = 20 } = params;
   const offset = (page - 1) * limit;
 
   try {
@@ -86,6 +86,79 @@ export async function searchListings(params: SearchParams = {}): Promise<{
     // Filter by province if provided
     if (provinceCode) {
       query = query.eq("province_code", provinceCode);
+    }
+
+    // Filter by guests if provided
+    if (guests && guests > 0) {
+      query = query.gte("homes.max_guests", guests);
+    }
+
+    // Filter by date availability if checkIn and checkOut provided
+    if (checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      // Validate dates
+      if (checkInDate >= checkOutDate) {
+        console.warn("Invalid date range: checkIn >= checkOut");
+        return { listings: [], total: 0 };
+      }
+
+      // Create array of dates from checkIn to checkOut (exclusive checkOut)
+      const dates: string[] = [];
+      const currentDate = new Date(checkInDate);
+      while (currentDate < checkOutDate) {
+        // Use local date format to avoid timezone issues
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      if (dates.length === 0) {
+        console.warn("No dates in range");
+        return { listings: [], total: 0 };
+      }
+
+      console.log(`Checking availability for dates: ${dates.join(', ')}`);
+
+      // Get listing IDs that have availability for all dates in the range
+      const { data: availableListings, error: calendarError } = await supabase
+        .from("calendar")
+        .select("listing_id")
+        .in("date", dates)
+        .gt("available_count", 0);
+
+      if (calendarError) {
+        console.error("Calendar availability check error:", calendarError);
+        return { listings: [], total: 0 };
+      }
+
+      if (!availableListings || availableListings.length === 0) {
+        console.log("No listings available for selected dates");
+        return { listings: [], total: 0 };
+      }
+
+      // Count how many dates each listing is available for
+      const availabilityCount: { [key: number]: number } = {};
+      availableListings.forEach((item: any) => {
+        availabilityCount[item.listing_id] = (availabilityCount[item.listing_id] || 0) + 1;
+      });
+
+      // Filter listings that are available for ALL dates in the range
+      const availableListingIds = Object.keys(availabilityCount)
+        .filter(id => availabilityCount[Number(id)] === dates.length)
+        .map(id => Number(id));
+
+      console.log(`Found ${availableListingIds.length} listings available for all ${dates.length} dates`);
+
+      if (availableListingIds.length === 0) {
+        return { listings: [], total: 0 };
+      }
+
+      // Add filter for available listings
+      query = query.in("id", availableListingIds);
     }
 
     // Order by created date
