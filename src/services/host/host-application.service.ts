@@ -10,6 +10,7 @@ export const sendBecomeHostRequest = async (
     .from("host_applications")
     .select("id")
     .eq("user_id", userId)
+    .eq("status", "pending")
     .single();
 
   if (pending)

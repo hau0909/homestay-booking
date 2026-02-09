@@ -63,6 +63,14 @@ export default function Header() {
     }
   };
 
+  const handleBecomeHost = () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    router.push("/become-host/sendRequestHost");
+  };
+
   const getInitial = (email: string) => {
     return email.charAt(0).toUpperCase();
   };
@@ -93,14 +101,14 @@ export default function Header() {
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-4">
-          {/* Become Host - Always visible */}
-          <Link
-            href="/become-host/sendRequestHost"
+          <button
+            onClick={handleBecomeHost}
             className="rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium 
                hover:bg-[#67AE6E] transition disabled:opacity-50 hover:cursor-pointer"
           >
+            {" "}
             Become a Host
-          </Link>
+          </button>
 
           {/* User Menu */}
           <div className="relative" ref={menuRef}>
