@@ -19,3 +19,5 @@ export type BookingStatus =
 export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 
 export type AmenityType = "HOME" | "EXP" | "BOTH";
+
+export type requestHostStatus = "PENDING" | "APPROVED" | "REJECTED";
