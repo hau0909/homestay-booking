@@ -88,9 +88,30 @@ export async function searchListings(params: SearchParams = {}): Promise<{
       query = query.eq("province_code", provinceCode);
     }
 
-    // Filter by guests if provided
+    // Filter by guests capacity - query homes table first to get valid listing_ids
+    let guestFilteredListingIds: number[] | null = null;
     if (guests && guests > 0) {
-      query = query.gte("homes.max_guests", guests);
+      const { data: validHomes, error: homesError } = await supabase
+        .from("homes")
+        .select("listing_id")
+        .gt("max_guests", 0)
+        .gte("max_guests", guests);
+
+      if (homesError) {
+        console.error("Homes filter error:", homesError);
+        return { listings: [], total: 0 };
+      }
+
+      if (!validHomes || validHomes.length === 0) {
+        console.log("No listings match guest capacity requirement");
+        return { listings: [], total: 0 };
+      }
+
+      guestFilteredListingIds = validHomes.map((h: any) => h.listing_id);
+      console.log(`Found ${guestFilteredListingIds.length} listings with max_guests >= ${guests}`);
+      
+      // Add filter for listings that match guest capacity
+      query = query.in("id", guestFilteredListingIds);
     }
 
     // Filter by date availability if checkIn and checkOut provided
@@ -121,35 +142,64 @@ export async function searchListings(params: SearchParams = {}): Promise<{
         return { listings: [], total: 0 };
       }
 
-      console.log(`Checking availability for dates: ${dates.join(', ')}`);
+      const checkInDateStr = dates[0]; // First date is check-in date
+      console.log(`Checking availability for dates: ${dates.join(', ')}, check-in: ${checkInDateStr}`);
 
-      // Get listing IDs that have availability for all dates in the range
-      const { data: availableListings, error: calendarError } = await supabase
+      // Step 1: Get ALL calendar records for the date range (including available_count = 0)
+      const { data: allCalendarRecords, error: calendarError } = await supabase
         .from("calendar")
-        .select("listing_id")
-        .in("date", dates)
-        .gt("available_count", 0);
+        .select("listing_id, date, available_count")
+        .in("date", dates);
 
       if (calendarError) {
         console.error("Calendar availability check error:", calendarError);
         return { listings: [], total: 0 };
       }
 
-      if (!availableListings || availableListings.length === 0) {
-        console.log("No listings available for selected dates");
+      // Step 2: Build a map of listing_id -> { date -> available_count }
+      const calendarMap: { [listingId: number]: { [date: string]: number } } = {};
+      
+      allCalendarRecords?.forEach((record: any) => {
+        if (!calendarMap[record.listing_id]) {
+          calendarMap[record.listing_id] = {};
+        }
+        calendarMap[record.listing_id][record.date] = record.available_count;
+      });
+
+      // Step 3: Get unique listing_ids that have check-in date with available_count > 0
+      const listingsWithCheckIn = Object.keys(calendarMap)
+        .map(id => Number(id))
+        .filter(listingId => {
+          const checkInRecord = calendarMap[listingId][checkInDateStr];
+          return checkInRecord !== undefined && checkInRecord > 0;
+        });
+
+      if (listingsWithCheckIn.length === 0) {
+        console.log("No listings have availability for check-in date");
         return { listings: [], total: 0 };
       }
 
-      // Count how many dates each listing is available for
-      const availabilityCount: { [key: number]: number } = {};
-      availableListings.forEach((item: any) => {
-        availabilityCount[item.listing_id] = (availabilityCount[item.listing_id] || 0) + 1;
+      // Step 4: Filter listings that are available for ALL dates
+      // Rule: 
+      // - If a date has a record with available_count > 0 -> OK
+      // - If a date has NO record -> OK (not booked yet = available)
+      // - If a date has a record with available_count <= 0 -> NOT OK
+      const availableListingIds = listingsWithCheckIn.filter(listingId => {
+        const listingCalendar = calendarMap[listingId];
+        
+        for (const date of dates) {
+          const availableCount = listingCalendar[date];
+          
+          // If there's a record with available_count <= 0, listing is not available
+          if (availableCount !== undefined && availableCount <= 0) {
+            return false;
+          }
+          // If no record exists for this date, it's available (not booked yet)
+          // If record exists with available_count > 0, it's available
+        }
+        
+        return true;
       });
-
-      // Filter listings that are available for ALL dates in the range
-      const availableListingIds = Object.keys(availabilityCount)
-        .filter(id => availabilityCount[Number(id)] === dates.length)
-        .map(id => Number(id));
 
       console.log(`Found ${availableListingIds.length} listings available for all ${dates.length} dates`);
 
