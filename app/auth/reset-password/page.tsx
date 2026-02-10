@@ -190,7 +190,7 @@ const Page = () => {
             <button
               type="submit"
               disabled={lodaing}
-              className="w-full rounded-lg bg-[#328E6E] py-3 text-base font-semibold text-white shadow-sm hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="w-full hover:cursor-pointer rounded-lg bg-[#328E6E] py-3 text-base font-semibold text-white shadow-sm hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               {lodaing ? "Resetting..." : "Reset Password"}
             </button>
