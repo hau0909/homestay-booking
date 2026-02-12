@@ -38,13 +38,19 @@ export async function createBookingCalendars(payload: CreateCalendarsPayload) {
 
   // 3️⃣ Update / Insert calendar
   for (const date of days) {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = `${date.getFullYear()}-${String(
+      date.getMonth() + 1,
+    ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
     const existed = calendars?.find((c) => c.date === dateStr);
 
     if (existed) {
       if (existed.available_count <= 0) {
         throw new Error(`Date ${dateStr} is fully booked`);
+      }
+
+      if (existed.is_block) {
+        throw new Error(`Date ${dateStr} is blocked`);
       }
 
       const { error } = await supabase

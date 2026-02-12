@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/src/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
 import HeaderWrapper from "@/src/components/layout/HeaderWrapper";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <HeaderWrapper />
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
+
         <Footer />
 
         <Toaster position="top-center" reverseOrder={false} />
