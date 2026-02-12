@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { signInWithFacebook } from "@/src/services/auth/auth.service";
 import { validateEmail } from "@/src/utils/validation";
 import Link from "next/link";
+import { getHostStatus } from "@/src/services/host/getHostStatus.service";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -104,10 +105,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       await loginUser(email, password);
 
+      const isHost = await getHostStatus(user.id);
+
       toast.success("Login successfully");
       onClose();
-      router.refresh();
-
+      if (isHost) {
+        router.replace("/hosting");
+      } else {
+        router.replace("/");
+      }
       setEmail("");
       setPassword("");
       setEmailError("");
