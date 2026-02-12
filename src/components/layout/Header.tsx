@@ -19,6 +19,7 @@ import { logoutUser } from "@/src/services/auth/auth.service";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getHostStatus } from "@/src/services/host/getHostStatus.service";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const isHostMode = host && mode === "host";
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,10 +74,8 @@ export default function Header() {
         const status = await getHostStatus(user.id);
         setHost(status);
 
-        if (status) {
-          router.push("/hosting");
-        } else {
-          router.push("/");
+        if (status && pathname === "/") {
+          router.replace("/hosting");
         }
       } catch (error) {
         console.log(error);
