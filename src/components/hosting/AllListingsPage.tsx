@@ -1,4 +1,7 @@
+
 "use client";
+// trietcmce180982_sprint2
+
 import { useEffect, useState } from "react";
 import { getHostListings } from "@/src/services/listing/getHostListings";
 import { getListingMainImages } from "@/src/services/listing/getListingMainImages";
@@ -26,7 +29,6 @@ export default function AllListingsPage() {
             // Nếu lỗi lấy ảnh thì không set gì, sẽ fallback ảnh mặc định phía dưới
           }
         }
-        // Đảm bảo mọi listing đều có ảnh, nếu không có thì set ảnh mặc định
         ids.forEach(id => {
           if (!imgMap[id]) {
             imgMap[id] = "/placeholder-img.png";
@@ -41,7 +43,6 @@ export default function AllListingsPage() {
   if (loading) return <div className="p-8">Loading...</div>;
   if (error) return <div className="p-8 text-red-500">{error}</div>;
 
-  // Toggle status handler
   const handleToggleStatus = async (listing: Listing) => {
     const newStatus = listing.status === "ACTIVE" ? "HIDDEN" : "ACTIVE";
     try {
@@ -58,7 +59,12 @@ export default function AllListingsPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-6">
-      <h1 className="text-3xl font-bold mb-6">All Listings</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#328E6E]">My Listings</h1>
+      <div className="flex justify-end mb-6">
+        <Link href="/hosting/listing/create" className="bg-[#328E6E] text-white px-4 py-2 rounded shadow hover:bg-[#256d52]">
+          Create New Listing
+        </Link>
+      </div>
       {listings.length === 0 ? (
         <div className="text-gray-500">No listings found.</div>
       ) : (
