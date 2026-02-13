@@ -106,8 +106,8 @@ export default function CompactSearchBar() {
     if (selectedProvince) params.set("province", selectedProvince.code);
     if (checkInDate) params.set("checkIn", checkInDate.toISOString().split("T")[0]);
     if (checkOutDate) params.set("checkOut", checkOutDate.toISOString().split("T")[0]);
-    const totalGuests = guestCounts.adults + guestCounts.children;
-    if (totalGuests > 0) params.set("guests", totalGuests.toString());
+    // Chỉ dùng số lượng Adults để filter theo max_guests
+    if (guestCounts.adults > 0) params.set("guests", guestCounts.adults.toString());
 
     router.push(`/search?${params.toString()}`);
   };

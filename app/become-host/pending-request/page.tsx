@@ -1,9 +1,17 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const Page = () => {
   const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace("/");
+    }, 3000);
+
+    return () => clearTimeout(timer); // cleanup tránh memory leak
+  }, [router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6">
@@ -21,12 +29,11 @@ const Page = () => {
             Verification in progress
           </h1>
           <p className="mt-3 text-neutral-600 leading-relaxed">
-            Thank you for submitting your documents. Our team is reviewing your
-            information to make sure everything is in order.
+            Thank you for submitting your documents.
           </p>
 
           <p className="mt-4 text-sm text-neutral-500">
-            This usually takes less than <strong>24 hours</strong>.
+            Redirecting to homepage in <strong>3 seconds...</strong>
           </p>
         </div>
 
@@ -39,28 +46,6 @@ const Page = () => {
             </span>
           </div>
         </div>
-
-        {/* Actions */}
-        <div className="mt-10 flex flex-col gap-3">
-          <button
-            onClick={() => router.push("/")}
-            className="w-full rounded-xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 cursor-pointer"
-          >
-            Back to homepage
-          </button>
-
-          <button
-            onClick={() => router.push("/support")}
-            className="w-full rounded-xl border border-neutral-300 px-6 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 cursor-pointer"
-          >
-            Contact support
-          </button>
-        </div>
-
-        {/* Footer note */}
-        <p className="mt-6 text-center text-xs text-neutral-400">
-          You’ll receive an email once your verification is complete.
-        </p>
       </div>
     </div>
   );

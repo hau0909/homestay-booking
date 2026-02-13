@@ -150,7 +150,7 @@ export default function CreateListingPage() {
       await publishListing(listing.id);
 
       toast.success("Listing created successfully!");
-     router.push("/hosting/listing");  
+      router.push("/hosting/listing");
     } catch (err: any) {
       console.error("CREATE LISTING FAILED:", err);
       alert(err.message || "Create listing failed");

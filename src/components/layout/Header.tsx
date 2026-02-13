@@ -18,14 +18,20 @@ import { useAuth } from "@/src/hooks/useAuth";
 import { logoutUser } from "@/src/services/auth/auth.service";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getHostStatus } from "@/src/services/host/getHostStatus.service";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const { user, loading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [mode, setMode] = useState<"travelling" | "host">("host");
+  const [host, setHost] = useState<boolean | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const isHostMode = host && mode === "host";
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,23 +51,39 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      // Force set về traveller mode TRƯỚC khi logout
-
-      // Clear tất cả profile cache
       if (user?.id) {
         localStorage.removeItem(`profile_${user.id}`);
       }
 
       await logoutUser();
       toast.success("Logged out successfully");
+      setHost(false);
       setIsMenuOpen(false);
 
-      // Redirect về trang chủ sau khi logout
       router.push("/");
     } catch (error) {
       toast.error("Logout failed");
     }
   };
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const checkHostStatus = async () => {
+      try {
+        const status = await getHostStatus(user.id);
+        setHost(status);
+
+        if (status && pathname === "/") {
+          router.replace("/hosting");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    checkHostStatus();
+  }, [user?.id]);
 
   const handleBecomeHost = () => {
     if (!user) {
@@ -69,6 +91,16 @@ export default function Header() {
       return;
     }
     router.push("/become-host/sendRequestHost");
+  };
+
+  const handleHostMode = () => {
+    setMode("host");
+    router.push("/hosting");
+  };
+
+  const handleTravellingMode = () => {
+    setMode("travelling");
+    router.push("/");
   };
 
   const getInitial = (email: string) => {
@@ -81,34 +113,71 @@ export default function Header() {
         {/* LOGO */}
         {/* <img src="/logo.png" alt="logo" className="w-12 h-12" /> */}
         {/* NAVIGATION */}
-        <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
-          {/* TRAVELLER MODE */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-          >
-            <HouseHeart size={30} />
-            Homestay
-          </Link>
-          <Link
-            href="#"
-            className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-          >
-            <Binoculars size={30} />
-            Experiences
-          </Link>
-        </nav>
+        {isHostMode ? (
+          <>
+            {/* HOST MODE */}
+            <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
+              <Link
+                href="/hosting"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <LayoutDashboard size={30} />
+                Dashboard
+              </Link>
+              <Link
+                href="/hosting/listing"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Home size={30} />
+                Listing
+              </Link>
+              <Link
+                href="/hosting/bookings"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <ListOrdered size={30} />
+                Bookings order
+              </Link>
+            </nav>
+          </>
+        ) : (
+          <>
+            <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
+              <Link
+                href="/"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <HouseHeart size={30} />
+                Homestay
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Binoculars size={30} />
+                Experiences
+              </Link>
+            </nav>
+          </>
+        )}
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={handleBecomeHost}
-            className="rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium 
-               hover:bg-[#67AE6E] transition disabled:opacity-50 hover:cursor-pointer"
-          >
-            {" "}
-            Become a Host
-          </button>
+          {host ? (
+            <button
+              onClick={mode === "host" ? handleTravellingMode : handleHostMode}
+              className="cursor-pointer rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium hover:bg-[#67AE6E] transition"
+            >
+              {mode === "host" ? "Switch to Travelling" : "Switch to Hosting"}
+            </button>
+          ) : (
+            <button
+              onClick={handleBecomeHost}
+              className="cursor-pointer rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium hover:bg-[#67AE6E] transition"
+            >
+              Become a Host
+            </button>
+          )}
 
           {/* User Menu */}
           <div className="relative" ref={menuRef}>
