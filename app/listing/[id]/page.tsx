@@ -21,6 +21,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
+import ListingRatings from "@/src/components/listing/ListingRatings";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -156,7 +157,6 @@ export default function ListingDetailPage() {
           <CompactSearchBar />
         </div>
       </header>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Title & Actions */}
@@ -309,12 +309,22 @@ export default function ListingDetailPage() {
               </Link>
 
               <p className="text-center text-sm text-gray-500">
-                You won't be charged yet
+                You won&apos;t be charged yet
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <hr className="mx-auto w-200 my-10" />
+
+      {/* Lisiting avg ratings */}
+      <div className="my-10">
+        <ListingRatings listingId={Number(listingId)} />
+      </div>
+
+      {/* reiews */}
+      <div></div>
     </div>
   );
 }
