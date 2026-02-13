@@ -6,11 +6,9 @@ const Page = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       router.replace("/");
-    }, 3000);
-
-    return () => clearTimeout(timer); // cleanup tránh memory leak
+    }, 4000);
   }, [router]);
 
   return (
