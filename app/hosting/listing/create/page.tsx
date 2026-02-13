@@ -10,6 +10,9 @@ import DetailsStep from "@/src/components/listing/DetailsStep";
 import PricingStep from "@/src/components/listing/PricingStep";
 import ImagesStep from "@/src/components/listing/ImagesStep";
 import PreviewPublishStep from "@/src/components/listing/PreviewPublishStep";
+import AmenitiesStep from "@/src/components/listing/AmenitiesStep";
+
+
 
 /* ===== services ===== */
 import { createBasicInfo } from "@/src/services/listing/createBasicInfo";
@@ -17,10 +20,14 @@ import { saveLocation } from "@/src/services/listing/saveLocation";
 import { saveDetails } from "@/src/services/listing/saveDetails";
 import { uploadListingImages } from "@/src/services/listing/uploadListingImages";
 import { publishListing } from "@/src/services/listing/publishListing";
+import { saveAmenities } from "@/src/services/listing/saveAmenities";
+import { saveFees } from "@/src/services/listing/saveFees";
 
-import { getUser } from "@/src/services/profile/getUserProfile";
+
+import { getUser } from "@/src/services/profile/getUserProfile"; 
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import ExtraFeesStep from "@/src/components/listing/ExtraFeesStep";
 
 /* =======================
    TYPE
@@ -45,18 +52,26 @@ export type CreateListingForm = {
   price_weekend: number;
 
   images: File[];
+  amenity_ids: number[];
+  fees: {
+    title: string;
+    price: number;
+  }[];
+ 
 };
 
 const steps = [
   "Basic Info",
   "Location",
   "Details",
+  "Amenities",
+  "Extra Fees",
   "Pricing",
   "Images",
   "Preview",
 ];
 
-export default function CreateListingPage() {
+export default function CreateListingPage() {      
   const [step, setStep] = useState(0);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -81,9 +96,11 @@ export default function CreateListingPage() {
     price_weekend: 0,
 
     images: [],
+    amenity_ids: [],
+    fees: [],
   });
 
-  const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
+  const next = () => setStep((s) => Math.min(s + 1, steps.length - 1)); 
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   /* =======================
@@ -123,6 +140,8 @@ export default function CreateListingPage() {
         price_weekday: data.price_weekday,
         price_weekend: data.price_weekend,
       });
+      await saveAmenities(listing.id, data.amenity_ids);
+      await saveFees(listing.id, data.fees); 
 
       /* IMAGES */
       await uploadListingImages(listing.id, data.images);
@@ -144,10 +163,10 @@ export default function CreateListingPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Create Listing</h1>
 
-      <Progress value={((step + 1) / steps.length) * 100} />
+      <Progress value={((step + 1) / steps.length) * 100} />   
 
       {step === 0 && (
-        <BasicInfoStep data={data} onChange={setData} onNext={next} />
+        <BasicInfoStep data={data} onChange={setData} onNext={next} />   //cho component con nhận data, cho conpoment con sửa data
       )}
 
       {step === 1 && (
@@ -167,8 +186,25 @@ export default function CreateListingPage() {
           onBack={back}
         />
       )}
-
       {step === 3 && (
+  <AmenitiesStep
+    data={data}
+    onChange={setData}
+    onNext={next}
+    onBack={back}
+  />
+)}
+{step === 4 && (
+  <ExtraFeesStep
+    data={data}
+    onChange={setData}
+    onNext={next}
+    onBack={back}
+  />
+)}
+
+
+      {step === 5 && (
         <PricingStep
           data={data}
           onChange={setData}
@@ -177,7 +213,7 @@ export default function CreateListingPage() {
         />
       )}
 
-      {step === 4 && (
+      {step === 6 && (
         <ImagesStep
           data={data}
           onChange={setData}
@@ -186,12 +222,13 @@ export default function CreateListingPage() {
         />
       )}
 
-      {step === 5 && (
+      {step === 7 && (
         <PreviewPublishStep
           data={data}
           onBack={back}
           onPublish={handlePublish}
-          // loading={loading}
+           loading={loading}
+          
         />
       )}
     </div>
