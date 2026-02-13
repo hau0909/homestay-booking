@@ -117,6 +117,26 @@ export default function EditListingPage() {
             >
               Cancel
             </button>
+            <button
+              type="button"
+              className={`px-6 py-2 rounded font-semibold text-white ${
+                listing.status === "ACTIVE"
+                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
+              onClick={async () => {
+                const newStatus = listing.status === "ACTIVE" ? "HIDDEN" : "ACTIVE";
+                try {
+                  await updateListing(listing.id, { status: newStatus });
+                  setListing({ ...listing, status: newStatus });
+                  toast.success(`Listing is now ${newStatus === "ACTIVE" ? "visible" : "hidden"}`);
+                } catch (err: any) {
+                  toast.error("Failed to update listing status");
+                }
+              }}
+            >
+              {listing.status === "ACTIVE" ? "Hide Listing" : "Show Listing"}
+            </button>
           </div>
         </form>
       ) : (
