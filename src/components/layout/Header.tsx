@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Home,
   ListOrdered,
+  CalendarCheck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -137,6 +138,13 @@ export default function Header() {
               >
                 <ListOrdered size={30} />
                 Bookings order
+              </Link>
+              <Link
+                href="/hosting/calendar"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <CalendarCheck size={30} />
+                Calendar
               </Link>
             </nav>
           </>
