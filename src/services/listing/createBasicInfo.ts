@@ -13,8 +13,8 @@ export async function createBasicInfo(data: {
       ...data,
       status: "DRAFT",
     })
-    .select()
-    .single();
+    .select()  //“Sau khi insert, trả về bản ghi vừa tạo”
+    .single();  //trả về 1 oject chứ k mảng
 
   if (error) throw error;
   return listing;
