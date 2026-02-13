@@ -23,7 +23,10 @@ import {
 import Link from "next/link";
 import ListingRatings from "@/src/components/listing/ListingRatings";
 import { supabase } from "@/src/lib/supabase";
+
 import HostResponseForm from "@/src/components/listing/HostResponseForm";
+import { getHostResponseByReviewId } from "@/src/services/listing/getHostResponseByReviewId";
+
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -338,33 +341,62 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   const [canReview, setCanReview] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [hostId, setHostId] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Lấy user hiện tại
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
-      // Lấy reviews
+      // Lấy hostId của listing
+      const { data: listingData } = await supabase
+        .from("listings")
+        .select("host_id")
+        .eq("id", listingId)
+        .single();
+      setHostId(listingData?.host_id || null);
+      // Lấy is_host của user hiện tại
+      let isHostFlag = false;
+      if (user) {
+        const { getHostInfo } = await import("@/src/services/profile/getHostInfo");
+        const hostProfile = await getHostInfo(user.id);
+        isHostFlag = !!hostProfile?.is_host;
+      }
+      setIsHost(isHostFlag);
       const { data: reviewsData } = await supabase
         .from("reviews")
         .select("*, profiles(full_name, avatar_url)")
         .eq("listing_id", listingId)
         .order("created_at", { ascending: false });
-      setReviews(reviewsData || []);
-      // Kiểm tra quyền review
+      // Lấy ảnh và host response cho từng review
+      const reviewsWithExtras = await Promise.all(
+        (reviewsData || []).map(async (review: any) => {
+          const { data: imagesData } = await supabase
+            .from("review_images")
+            .select("url")
+            .eq("review_id", review.id);
+          // Lấy host response
+          const response = await getHostResponseByReviewId(review.id);
+          return {
+            ...review,
+            images: imagesData ? imagesData.map((img: any) => img.url) : [],
+            hostResponse: response,
+          };
+        })
+      );
+      setReviews(reviewsWithExtras);
       if (user) {
-        // Đã review chưa
-        const reviewed = (reviewsData || []).some((r: any) => r.user_id === user.id);
+        const reviewed = (reviewsWithExtras || []).some((r: any) => r.user_id === user.id);
         setHasReviewed(reviewed);
-        // Đã booking và completed chưa
         const { data: bookings } = await supabase
           .from("bookings")
-          .select("id")
+          .select("id, status")
           .eq("listing_id", listingId)
-          .eq("user_id", user.id)
-          .eq("status", "completed");
-        setCanReview(!reviewed && Array.isArray(bookings) && bookings.length > 0);
+          .eq("user_id", user.id);
+        const confirmedBooking = Array.isArray(bookings) && bookings.some((b: any) => b.status === "confirmed");
+        setCanReview(!reviewed && confirmedBooking);
       }
       setLoading(false);
     };
@@ -374,7 +406,17 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   return (
     <div className="mt-10">
       <h2 className="text-xl font-bold mb-4">Reviews</h2>
-      {user && canReview && !hasReviewed && <ReviewForm listingId={listingId} userId={user.id} onSuccess={() => window.location.reload()} />}
+      {user && canReview && !hasReviewed && !showReviewForm && (
+        <button
+          className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52] mb-4"
+          onClick={() => setShowReviewForm(true)}
+        >
+          Viết đánh giá
+        </button>
+      )}
+      {user && canReview && !hasReviewed && showReviewForm && (
+        <ReviewForm listingId={listingId} userId={user.id} onSuccess={() => window.location.reload()} />
+      )}
       {user && hasReviewed && (
         <div className="mb-4 text-green-600">Bạn đã đánh giá homestay này.</div>
       )}
@@ -391,7 +433,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
               <span className="font-semibold">{review.profiles?.full_name || "User"}</span>
               <span className="ml-2 text-yellow-500">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
             </div>
-            <div className="mb-2">{review.content}</div>
+            {/* Hiển thị comment */}
+            <div className="mb-2">{review.comment || review.content}</div>
+            {/* Hiển thị ảnh upload */}
             {review.images && review.images.length > 0 && (
               <div className="flex gap-2 mt-2">
                 {review.images.map((img: string, idx: number) => (
@@ -400,6 +444,20 @@ function ReviewsSection({ listingId }: { listingId: string }) {
               </div>
             )}
             <div className="text-xs text-gray-400 mt-1">{new Date(review.created_at).toLocaleString()}</div>
+            {/* Hiển thị phản hồi của chủ nhà */}
+            {review.hostResponse ? (
+              <div className="mt-3 ml-6 p-3 border-l-4 border-green-400 bg-green-50 rounded">
+                <div className="font-semibold text-green-700 mb-1">Phản hồi của chủ nhà:</div>
+                <div>{review.hostResponse.content}</div>
+                <div className="text-xs text-gray-400 mt-1">{new Date(review.hostResponse.created_at).toLocaleString()}</div>
+              </div>
+            ) : (
+              user && hostId && user.id === hostId && isHost && (
+                <div className="mt-3 ml-6">
+                  <HostResponseForm reviewId={String(review.id)} hostId={hostId} onSuccess={() => window.location.reload()} />
+                </div>
+              )
+            )}
           </div>
         ))}
       </div>

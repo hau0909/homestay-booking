@@ -11,6 +11,8 @@ export interface BookingCard {
   guestsText: string;
   totalText: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  listingId: string;
+  userId: string;
 }
 
 export async function getUserBookingCards(): Promise<BookingCard[]> {
@@ -32,6 +34,8 @@ export async function getUserBookingCards(): Promise<BookingCard[]> {
         guestsText: `${booking.total_guests} guests`,
         totalText: `$${booking.total_price} USD`,
         status: booking.status as "PENDING" | "CONFIRMED" | "CANCELLED",
+        listingId: booking.listing_id.toString(),
+        userId: booking.user_id.toString(),
       };
     }),
   );
