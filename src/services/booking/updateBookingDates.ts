@@ -4,8 +4,8 @@ import { getUser } from "../profile/getUserProfile";
 
 type UpdateBookingDatesPayload = {
   booking_id: number;
-  check_in_date: string; // ISO: yyyy-mm-dd
-  check_out_date: string; // ISO: yyyy-mm-dd
+  check_in_date: string;
+  check_out_date: string;
 };
 
 export async function updateBookingDates(

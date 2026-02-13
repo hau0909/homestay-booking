@@ -24,7 +24,6 @@ import { getDistrictByCode } from "@/src/services/location/getDistrictByCode";
 import { getWardByCode } from "@/src/services/location/getWardByCode";
 import { createDraftBooking } from "@/src/services/booking/createDraftBooking";
 import { updateBookingDates } from "@/src/services/booking/updateBookingDates";
-import { toISODate } from "@/src/utils/toISODate";
 import { updateBookingTotalPrice } from "@/src/services/booking/updateBookingTotalPrice";
 import { updateBookingNote } from "@/src/services/booking/updateBookingNote";
 import {
@@ -40,6 +39,7 @@ import {
 import { confirmBooking } from "@/src/services/booking/confirmBooking";
 import { createBookingCalendars } from "@/src/services/booking/createBookingCalendars";
 import { isValidEmail, isValidPhone } from "@/src/utils/validGuestInfo";
+import { formatDateLocal } from "@/src/utils/fomartDateLocal";
 
 const STEPS = ["Guest Info", "Calendar", "Pricing", "Note"];
 
@@ -161,8 +161,8 @@ export default function Page() {
       try {
         await updateBookingDates({
           booking_id: bookingId,
-          check_in_date: toISODate(dateRange.from),
-          check_out_date: toISODate(dateRange.to),
+          check_in_date: formatDateLocal(dateRange.from),
+          check_out_date: formatDateLocal(dateRange.to),
         });
       } catch (err) {
         toast.error("Failed to update booking dates");
@@ -307,7 +307,7 @@ export default function Page() {
 
       // disable các ngày hết chỗ
       const disabled = calendarData
-        .filter((d) => d.available_count < 1)
+        .filter((d) => d.available_count < 1 || d.is_block)
         .map((d) => new Date(d.date + "T00:00:00"));
       setDisabledDates(disabled);
     };

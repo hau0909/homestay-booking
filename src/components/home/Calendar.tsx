@@ -86,11 +86,20 @@ export default function Calendar({
     }
 
     // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
-      const isPast = currentDate < new Date(2026, 0, 4);
-      const isSelected = isSelectedDate(currentDate);
-      const isDisabled = isDisabledDate(currentDate);
+   for (let day = 1; day <= daysInMonth; day++) {
+  const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
+  // Thay vì 0, 0, 0, 0 hãy đặt là 12, 0, 0, 0
+  currentDate.setHours(12, 0, 0, 0); 
+
+  const today = new Date();
+  today.setHours(12, 0, 0, 0); 
+  
+  const isPast = currentDate < today;
+  const isSelected = isSelectedDate(currentDate);
+  const isDisabled = isDisabledDate(currentDate);
+
+  // Khi gửi dữ liệu đi hoặc log ra:
+  console.log(currentDate.toISOString().split('T')[0]);
 
       days.push(
         <button

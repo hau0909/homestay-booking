@@ -1,8 +1,17 @@
 "use client";
 
 import { Profile } from "@/src/types/profile";
-import { User, Mail, Phone, CreditCard, Calendar, Shield, Edit } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  Calendar,
+  Shield,
+  Edit,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface ProfileViewProps {
   profile: Profile;
@@ -36,7 +45,6 @@ export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
   };
 
   return (
-
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       {/* Header */}
       <div className="bg-black h-32"></div>
@@ -73,11 +81,17 @@ export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
             </div>
           </div>
 
-          <div className="mt-4 sm:mt-0">
-            <Button onClick={onEdit} className="flex items-center gap-2">
+          <div className="flex flex-col gap-4 sm:mt-0 ">
+            <Button onClick={onEdit} className="flex items-center">
               <Edit className="w-4 h-4" />
               Edit Profile
             </Button>
+            <Link
+              href="/profile/change-password"
+              className="flex items-center text-white bg-black px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors duration-300 cursor-pointer"
+            >
+              Change Password
+            </Link>
           </div>
         </div>
 

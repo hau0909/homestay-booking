@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { CreateListingForm } from "@/app/hosting/listing/create/page";
 
-type Props = {
+type Props = {                               
   data: CreateListingForm;
-  onChange: (next: CreateListingForm) => void;
+  onChange: (next: CreateListingForm) => void;  
   onNext: () => void;
 };
 
@@ -15,7 +15,7 @@ export default function BasicInfoStep({
   data,
   onChange,
   onNext,
-}: Props) {
+}: Props) {   //Gán props từ CHA vào biến
   return (
     <div className="space-y-8 rounded-2xl border p-8 shadow-sm">
       {/* HEADER */}
