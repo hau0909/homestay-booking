@@ -3,8 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
+import { SlidersHorizontal } from "lucide-react";
 import CompactSearchBar from "@/src/components/search/CompactSearchBar";
 import ListingCard from "@/src/components/search/ListingCard";
+import FilterModal, { FilterState } from "@/src/components/search/FilterModal";
+import SortDropdown, { SortOption } from "@/src/components/search/SortDropdown";
 import {
   searchListings,
   ListingWithDetails,
@@ -17,6 +20,14 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [carouselPage, setCarouselPage] = useState(1);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    minPrice: 0,
+    maxPrice: 1000,
+    selectedAmenities: [],
+  });
+  const [sortBy, setSortBy] = useState<SortOption[]>([]);
+  
   const limit = 12;
   const itemsPerCarouselPage = 4; // Show 4 items (2 cols x 2 rows) per carousel page
 
@@ -57,11 +68,18 @@ export default function SearchPage() {
     const fetchListings = async () => {
       setLoading(true);
       try {
+        // Only apply price filter if user has modified the default values
+        const shouldApplyPriceFilter = filters.minPrice > 0 || filters.maxPrice < 1000;
+        
         const result = await searchListings({
           provinceCode,
           checkIn,
           checkOut,
           guests,
+          minPrice: shouldApplyPriceFilter ? filters.minPrice : undefined,
+          maxPrice: shouldApplyPriceFilter ? filters.maxPrice : undefined,
+          amenityIds: filters.selectedAmenities.length > 0 ? filters.selectedAmenities : undefined,
+          sortBy,
           page: currentPage,
           limit,
         });
@@ -75,7 +93,7 @@ export default function SearchPage() {
     };
 
     fetchListings();
-  }, [provinceCode, checkIn, checkOut, guests, currentPage]);
+  }, [provinceCode, checkIn, checkOut, guests, currentPage, filters, sortBy]);
 
   const totalPages = Math.ceil(total / limit);
   const totalCarouselPages = Math.ceil(listings.length / itemsPerCarouselPage);
@@ -84,10 +102,30 @@ export default function SearchPage() {
     <div className="min-h-screen bg-white">
       {/* Header with Compact Search */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3">
-        <div className="max-w-[1920px] mx-auto">
+        <div className="max-w-[1920px] mx-auto flex items-center justify-center gap-4">
           <CompactSearchBar />
+          
+          {/* Filter Button */}
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full hover:shadow-md transition-shadow bg-white"
+          >
+            <SlidersHorizontal size={16} />
+            <span className="text-sm font-medium">Filters</span>
+          </button>
+          
+          {/* Sort Dropdown */}
+          <SortDropdown value={sortBy} onChange={setSortBy} />
         </div>
       </header>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        total={total}
+        onApplyFilters={setFilters}
+      />
 
       {/* Main Content */}
       <div className="flex">
