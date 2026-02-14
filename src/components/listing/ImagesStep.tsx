@@ -16,6 +16,7 @@ type Props = {
   onBack: () => void;
 };
 
+//Khai báo component
 export default function ImagesStep({
   data,
   onChange,
@@ -24,7 +25,7 @@ export default function ImagesStep({
 }: Props) {
   const images = data.images;
   const canFinish = images.length === REQUIRED_IMAGES;
-
+//hàm chọn ảnh
   const handleSelectImages = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -36,10 +37,10 @@ export default function ImagesStep({
 
     onChange({
       ...data,
-      images: [...images, ...selectedFiles.slice(0, remaining)],
+      images: [...images, ...selectedFiles.slice(0, remaining)], //Nếu user chọn nhiều hơn số còn thiếu
     });
 
-    e.target.value = "";
+    e.target.value = "";  //Cho phép chọn lại cùng file
   };
 
   const removeImage = (index: number) => {

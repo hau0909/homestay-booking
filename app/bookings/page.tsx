@@ -1,3 +1,4 @@
+// trietcmce180982_sprint2
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
@@ -8,6 +9,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { BookingStatus } from "@/src/types/enums";
 import { Loader2 } from "lucide-react";
+import ReviewBookingButton from "@/src/components/booking/ReviewBookingButton";
+import { supabase } from "@/src/lib/supabase";
 
 function StatusBadge({ status }: { status: BookingStatus }) {
   if (status === "CONFIRMED") {
@@ -88,6 +91,15 @@ export default function BookingsPage() {
                 Guests: {booking.guestsText}
               </p>
               <p className="font-medium">Total: {booking.totalText}</p>
+
+              {/* Hiện nút review nếu status là CONFIRMED */}
+              {booking.status === "CONFIRMED" && (
+                  <ReviewBookingButton
+                    listingId={String((booking as any).listingId || booking.id)}
+                    userId={String((booking as any).userId || "")}
+                    bookingId={String(booking.id)}
+                  />
+              )}
             </div>
           </div>
         ))}
