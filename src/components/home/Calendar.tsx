@@ -46,10 +46,10 @@ export default function Calendar({
   const isDisabledDate = (date: Date) => {
     // Disable ngày đã chọn ở phía còn lại
     if (calendarType === "checkIn" && checkOutDate) {
-      return date.getTime() === checkOutDate.getTime();
+      return date >= checkOutDate;
     }
     if (calendarType === "checkOut" && checkInDate) {
-      return date.getTime() === checkInDate.getTime();
+      return date <= checkInDate;
     }
     return false;
   };
