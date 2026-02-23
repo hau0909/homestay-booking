@@ -1,112 +1,87 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+import { CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { DateRange } from "react-day-picker";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Booking } from "@/src/types/booking";
+import { getBookingById } from "@/src/services/booking/getBookingById";
 import toast from "react-hot-toast";
 
-interface Props {
-  value: DateRange | undefined;
-  onChange: (range: DateRange | undefined) => void;
-  disabledDates: Date[];
-  availableCount?: number;
-}
+export default function Page() {
+  const router = useRouter();
+  const { bookingId } = useParams();
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const isRangeBlocked = (from: Date, to: Date, disabledDates: Date[]) => {
-  const start = new Date(from);
-  const end = new Date(to);
+  useEffect(() => {
+    const fetchBooking = async () => {
+      if (!bookingId || Array.isArray(bookingId)) return;
 
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
+      try {
+        setLoading(true);
+        const data = await getBookingById(bookingId);
+        setBooking(data);
+      } catch (error) {
+        console.error("Fetch booking error:", error);
+        toast.error("Failed to get booking");
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return disabledDates.some((d) => {
-    const date = new Date(d);
-    date.setHours(0, 0, 0, 0);
+    fetchBooking();
+  }, [bookingId]);
 
-    return date >= start && date <= end;
-  });
-};
-
-  value,
-  onChange,
-  disabledDates,
-  availableCount,
-}: Props) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (availableCount === 0) {
+  if (loading)
     return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-2xl font-semibold">Select dates</p>
-          <p className="text-sm text-slate-500">Không còn phòng khả dụng cho thời gian này.</p>
+      <div>
+        <Loader2
+          className="animate-spin my-30 mx-auto text-teal-500"
+          size={50}
+        />
+      </div>
+    );
+
+  if (booking)
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="max-w-md w-full border rounded-2xl p-8 text-center space-y-6 shadow-md">
+          <CheckCircle className="mx-auto text-green-600" size={60} />
+
+          <div>
+            <p className="text-2xl font-semibold">Booking request sent</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Waiting for host approval
+            </p>
+          </div>
+
+          <div className="border rounded-xl p-4 text-left text-sm space-y-2">
+            <p className="font-medium">Cozy Apartment</p>
+            <p>Jan 20 → Jan 22 · 2 nights</p>
+            <p>Guests: 2 adults</p>
+            <p className="font-semibold">Total: $144.17 AUD</p>
+            <p className="text-orange-600 font-medium">Status: Pending</p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => router.push("/")}
+            >
+              Back to home
+            </Button>
+
+            <Button className="flex-1" onClick={() => router.push(`/bookings`)}>
+              View my bookings
+            </Button>
+          </div>
         </div>
       </div>
     );
-  }
 
-  return (
-    <div className="space-y-6">
-      {/* Title */}
-      <div>
-        <p className="text-2xl font-semibold">Select dates</p>
-        <p className="text-sm text-slate-500">
-          Choose your check-in and check-out dates
-        </p>
-      </div>
-
-      {/* Calendar */}
-      <div className="border rounded-2xl p-4 w-fit bg-white">
-        <Calendar
-          mode="range"
-          className="w-2xl"
-          numberOfMonths={2}
-          selected={value}
-          disabled={[{ before: today }, ...disabledDates]}
-          onSelect={(range) => {
-            // Chưa chọn đủ from/to → cho qua
-            if (!range?.from || !range?.to) {
-              onChange(range);
-              return;
-            }
-
-            // Validate range
-            const blocked = isRangeBlocked(range.from, range.to, disabledDates);
-
-            if (blocked) {
-              toast.error("Selected dates include unavailable days");
-
-              // Giữ from, reset to
-              onChange({
-                from: range.from,
-                to: undefined,
-              });
-              return;
-            }
-
-            // Range hợp lệ
-            onChange(range);
-          }}
-        />
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500">
-          Unavailable dates are disabled automatically
-        </p>
-
-        {(value?.from || value?.to) && (
-          <Button
-            variant="destructive"
-            onClick={() => onChange(undefined)}
-            className="text-sm"
-          >
-            Clear dates
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+  return null;
 }
