@@ -27,7 +27,7 @@ export default function SearchPage() {
     selectedAmenities: [],
   });
   const [sortBy, setSortBy] = useState<SortOption[]>([]);
-  
+
   const limit = 12;
   const itemsPerCarouselPage = 4; // Show 4 items (2 cols x 2 rows) per carousel page
 
@@ -46,16 +46,21 @@ export default function SearchPage() {
   const scrollNext = useCallback(() => {
     if (emblaApi) {
       emblaApi.scrollNext();
-      setCarouselPage((p) => Math.min(Math.ceil(listings.length / itemsPerCarouselPage), p + 1));
+      setCarouselPage((p) =>
+        Math.min(Math.ceil(listings.length / itemsPerCarouselPage), p + 1),
+      );
     }
   }, [emblaApi, listings.length]);
 
-  const scrollToPage = useCallback((page: number) => {
-    if (emblaApi) {
-      emblaApi.scrollTo(page - 1);
-      setCarouselPage(page);
-    }
-  }, [emblaApi]);
+  const scrollToPage = useCallback(
+    (page: number) => {
+      if (emblaApi) {
+        emblaApi.scrollTo(page - 1);
+        setCarouselPage(page);
+      }
+    },
+    [emblaApi],
+  );
 
   const provinceCode = searchParams.get("province") || undefined;
   const checkIn = searchParams.get("checkIn") || undefined;
@@ -69,8 +74,9 @@ export default function SearchPage() {
       setLoading(true);
       try {
         // Only apply price filter if user has modified the default values
-        const shouldApplyPriceFilter = filters.minPrice > 0 || filters.maxPrice < 1000;
-        
+        const shouldApplyPriceFilter =
+          filters.minPrice > 0 || filters.maxPrice < 1000;
+
         const result = await searchListings({
           provinceCode,
           checkIn,
@@ -78,7 +84,10 @@ export default function SearchPage() {
           guests,
           minPrice: shouldApplyPriceFilter ? filters.minPrice : undefined,
           maxPrice: shouldApplyPriceFilter ? filters.maxPrice : undefined,
-          amenityIds: filters.selectedAmenities.length > 0 ? filters.selectedAmenities : undefined,
+          amenityIds:
+            filters.selectedAmenities.length > 0
+              ? filters.selectedAmenities
+              : undefined,
           sortBy,
           page: currentPage,
           limit,
@@ -104,7 +113,7 @@ export default function SearchPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3">
         <div className="max-w-[1920px] mx-auto flex items-center justify-center gap-4">
           <CompactSearchBar />
-          
+
           {/* Filter Button */}
           <button
             onClick={() => setShowFilterModal(true)}
@@ -113,7 +122,7 @@ export default function SearchPage() {
             <SlidersHorizontal size={16} />
             <span className="text-sm font-medium">Filters</span>
           </button>
-          
+
           {/* Sort Dropdown */}
           <SortDropdown value={sortBy} onChange={setSortBy} />
         </div>
@@ -156,20 +165,25 @@ export default function SearchPage() {
               <div className="relative mb-8">
                 <div className="overflow-hidden" ref={emblaRef}>
                   <div className="flex">
-                    {Array.from({ length: totalCarouselPages }).map((_, pageIdx) => (
-                      <div key={pageIdx} className="flex-[0_0_100%] min-w-0">
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-8">
-                          {listings
-                            .slice(
-                              pageIdx * itemsPerCarouselPage,
-                              (pageIdx + 1) * itemsPerCarouselPage
-                            )
-                            .map((listing) => (
-                              <ListingCard key={listing.id} listing={listing} />
-                            ))}
+                    {Array.from({ length: totalCarouselPages }).map(
+                      (_, pageIdx) => (
+                        <div key={pageIdx} className="flex-[0_0_100%] min-w-0">
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-8">
+                            {listings
+                              .slice(
+                                pageIdx * itemsPerCarouselPage,
+                                (pageIdx + 1) * itemsPerCarouselPage,
+                              )
+                              .map((listing) => (
+                                <ListingCard
+                                  key={listing.id}
+                                  listing={listing}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -205,44 +219,47 @@ export default function SearchPage() {
                     <span className="text-black text-lg font-bold">←</span>
                   </button>
 
-                  {Array.from({ length: Math.min(5, totalCarouselPages) }).map((_, i) => {
-                    let pageNum: number;
-                    if (totalCarouselPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (carouselPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (carouselPage >= totalCarouselPages - 2) {
-                      pageNum = totalCarouselPages - 4 + i;
-                    } else {
-                      pageNum = carouselPage - 2 + i;
-                    }
+                  {Array.from({ length: Math.min(5, totalCarouselPages) }).map(
+                    (_, i) => {
+                      let pageNum: number;
+                      if (totalCarouselPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (carouselPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (carouselPage >= totalCarouselPages - 2) {
+                        pageNum = totalCarouselPages - 4 + i;
+                      } else {
+                        pageNum = carouselPage - 2 + i;
+                      }
 
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => scrollToPage(pageNum)}
-                        className={`w-10 h-10 rounded-full font-medium transition-colors ${
-                          carouselPage === pageNum
-                            ? "bg-black text-white"
-                            : "bg-white hover:bg-gray-100 text-gray-900"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  {totalCarouselPages > 5 && carouselPage < totalCarouselPages - 2 && (
-                    <>
-                      <span className="px-2 text-gray-500">...</span>
-                      <button
-                        onClick={() => scrollToPage(totalCarouselPages)}
-                        className="w-10 h-10 rounded-full font-medium bg-white hover:bg-gray-100 text-gray-900"
-                      >
-                        {totalCarouselPages}
-                      </button>
-                    </>
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => scrollToPage(pageNum)}
+                          className={`w-10 h-10 rounded-full font-medium transition-colors ${
+                            carouselPage === pageNum
+                              ? "bg-black text-white"
+                              : "bg-white hover:bg-gray-100 text-gray-900"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    },
                   )}
+
+                  {totalCarouselPages > 5 &&
+                    carouselPage < totalCarouselPages - 2 && (
+                      <>
+                        <span className="px-2 text-gray-500">...</span>
+                        <button
+                          onClick={() => scrollToPage(totalCarouselPages)}
+                          className="w-10 h-10 rounded-full font-medium bg-white hover:bg-gray-100 text-gray-900"
+                        >
+                          {totalCarouselPages}
+                        </button>
+                      </>
+                    )}
 
                   <button
                     onClick={scrollNext}
