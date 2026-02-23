@@ -119,7 +119,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
             <div className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 fill-current text-black" />
-              <span className="text-sm font-medium">5.00</span>
+              <span className="text-sm font-medium">
+                {listing.average_rating !== undefined && listing.average_rating !== null
+                  ? listing.average_rating.toFixed(2)
+                  : 'N/A'}
+              </span>
             </div>
           </div>
 

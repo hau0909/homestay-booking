@@ -21,6 +21,12 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
+import ListingRatings from "@/src/components/listing/ListingRatings";
+import { supabase } from "@/src/lib/supabase";
+
+import HostResponseForm from "@/src/components/listing/HostResponseForm";
+import { getHostResponseByReviewId } from "@/src/services/listing/getHostResponseByReviewId";
+
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -156,7 +162,6 @@ export default function ListingDetailPage() {
           <CompactSearchBar />
         </div>
       </header>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Title & Actions */}
@@ -309,12 +314,253 @@ export default function ListingDetailPage() {
               </Link>
 
               <p className="text-center text-sm text-gray-500">
-                You won't be charged yet
+                You won&apos;t be charged yet
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <hr className="mx-auto w-200 my-10" />
+
+      {/* Lisiting avg ratings */}
+      <div className="my-10">
+        <ListingRatings listingId={Number(listingId)} />
+      </div>
+
+      {/* trietcmce180982_sprint2 */}        
+      {/* reiews */}
+      <ReviewsSection listingId={listingId} />
     </div>
+  );
+}
+
+function ReviewsSection({ listingId }: { listingId: string }) {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [canReview, setCanReview] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [hostId, setHostId] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      // Lấy hostId của listing
+      const { data: listingData } = await supabase
+        .from("listings")
+        .select("host_id")
+        .eq("id", listingId)
+        .single();
+      setHostId(listingData?.host_id || null);
+      // Lấy is_host của user hiện tại
+      let isHostFlag = false;
+      if (user) {
+        const { getHostInfo } = await import("@/src/services/profile/getHostInfo");
+        const hostProfile = await getHostInfo(user.id);
+        isHostFlag = !!hostProfile?.is_host;
+      }
+      setIsHost(isHostFlag);
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select("*, profiles(full_name, avatar_url)")
+        .eq("listing_id", listingId)
+        .order("created_at", { ascending: false });
+      // Lấy ảnh và host response cho từng review
+      const reviewsWithExtras = await Promise.all(
+        (reviewsData || []).map(async (review: any) => {
+          const { data: imagesData } = await supabase
+            .from("review_images")
+            .select("url")
+            .eq("review_id", review.id);
+          // Lấy host response
+          const response = await getHostResponseByReviewId(review.id);
+          return {
+            ...review,
+            images: imagesData ? imagesData.map((img: any) => img.url) : [],
+            hostResponse: response,
+          };
+        })
+      );
+      setReviews(reviewsWithExtras);
+      if (user) {
+        const reviewed = (reviewsWithExtras || []).some((r: any) => r.user_id === user.id);
+        setHasReviewed(reviewed);
+        const { data: bookings } = await supabase
+          .from("bookings")
+          .select("id, status")
+          .eq("listing_id", listingId)
+          .eq("user_id", user.id);
+        const confirmedBooking = Array.isArray(bookings) && bookings.some((b: any) => b.status === "confirmed");
+        setCanReview(!reviewed && confirmedBooking);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, [listingId]);
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-xl font-bold mb-4">Reviews</h2>
+      {user && canReview && !hasReviewed && !showReviewForm && (
+        <button
+          className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52] mb-4"
+          onClick={() => setShowReviewForm(true)}
+        >
+          Viết đánh giá
+        </button>
+      )}
+      {user && canReview && !hasReviewed && showReviewForm && (
+        <ReviewForm listingId={listingId} userId={user.id} onSuccess={() => window.location.reload()} />
+      )}
+      {user && hasReviewed && (
+        <div className="mb-4 text-green-600">Bạn đã đánh giá homestay này.</div>
+      )}
+      {reviews.length === 0 && <div>Chưa có đánh giá nào.</div>}
+      <div className="space-y-6">
+        {reviews.map((review) => (
+          <div key={review.id} className="border rounded-lg p-4">
+            <div className="flex items-center gap-3 mb-2">
+              {review.profiles?.avatar_url ? (
+                <img src={review.profiles.avatar_url} alt="avatar" className="w-8 h-8 rounded-full" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-300" />
+              )}
+              <span className="font-semibold">{review.profiles?.full_name || "User"}</span>
+              <span className="ml-2 text-yellow-500">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+            </div>
+            {/* Hiển thị comment */}
+            <div className="mb-2">{review.comment || review.content}</div>
+            {/* Hiển thị ảnh upload */}
+            {review.images && review.images.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {review.images.map((img: string, idx: number) => (
+                  <img key={idx} src={img} alt="review-img" className="w-20 h-20 object-cover rounded" />
+                ))}
+              </div>
+            )}
+            <div className="text-xs text-gray-400 mt-1">{new Date(review.created_at).toLocaleString()}</div>
+            {/* Hiển thị phản hồi của chủ nhà */}
+            {review.hostResponse ? (
+              <div className="mt-3 ml-6 p-3 border-l-4 border-green-400 bg-green-50 rounded">
+                <div className="font-semibold text-green-700 mb-1">Phản hồi của chủ nhà:</div>
+                <div>{review.hostResponse.content}</div>
+                <div className="text-xs text-gray-400 mt-1">{new Date(review.hostResponse.created_at).toLocaleString()}</div>
+              </div>
+            ) : (
+              user && hostId && user.id === hostId && isHost && (
+                <div className="mt-3 ml-6">
+                  <HostResponseForm reviewId={String(review.id)} hostId={hostId} onSuccess={() => window.location.reload()} />
+                </div>
+              )
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userId: string; onSuccess?: () => void }) {
+  const [rating, setRating] = useState<number>(0);
+  const [content, setContent] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      // Upload images
+      let imageUrls: string[] = [];
+      if (images.length > 0) {
+        for (const file of images) {
+          const { data, error } = await supabase.storage
+            .from("review-images")
+            .upload(`${listingId}/${userId}/${file.name}`, file);
+          if (error) throw error;
+          imageUrls.push(data.path);
+        }
+      }
+      // Insert review
+      const { error: reviewError } = await supabase
+        .from("reviews")
+        .insert([
+          {
+            listing_id: listingId,
+            user_id: userId,
+            rating,
+            content,
+            images: imageUrls,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      if (reviewError) throw reviewError;
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      let msg = "Lỗi gửi đánh giá";
+      if (err && typeof err === "object" && "message" in err) {
+        msg = (err as any).message || msg;
+      }
+      setError(msg);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
+      <div className="mb-2">
+        <label className="block font-semibold mb-1">Đánh giá:</label>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              type="button"
+              key={star}
+              className={
+                star <= rating
+                  ? "text-yellow-500 text-2xl"
+                  : "text-gray-300 text-2xl"
+              }
+              onClick={() => setRating(star)}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mb-2">
+        <label className="block font-semibold mb-1">Nội dung đánh giá:</label>
+        <textarea
+          className="w-full border rounded p-2"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          required
+        />
+      </div>
+      <div className="mb-2">
+        <label className="block font-semibold mb-1">Ảnh kèm theo:</label>
+        <input type="file" multiple accept="image/*" onChange={handleImageChange} />
+      </div>
+      {error && <div className="text-red-500 mb-2">{error}</div>}
+      <button
+        type="submit"
+        className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52]"
+        disabled={loading}
+      >
+        {loading ? "Đang gửi..." : "Gửi đánh giá"}
+      </button>
+    </form>
   );
 }

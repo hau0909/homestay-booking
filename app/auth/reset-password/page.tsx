@@ -82,8 +82,6 @@ const Page = () => {
       setLoading(true);
       await updatePassword(password);
       toast.success("Reset password successfully!");
-      await logoutUser();
-      router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
