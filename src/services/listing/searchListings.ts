@@ -27,6 +27,8 @@ export interface ListingWithDetails {
   // Added for sorting/filtering
   average_rating?: number | null;
   created_at?: string;
+  is_bookable?: boolean;
+  is_blocked?: boolean;
 }
 
 export interface SearchParams {
@@ -179,8 +181,13 @@ export async function searchListings(params: SearchParams = {}): Promise<{
       hasRatingSort = sortBy.includes("rating");
       hasPriceSort = sortBy.includes("price_low") || sortBy.includes("price_high");
       hasNewestSort = sortBy.includes("newest");
-      // Chỉ order theo created_at ở query (newest), các sort khác sẽ sort ở client
-      if (hasNewestSort || (!hasPriceSort && !hasRatingSort)) {
+      // Prefer server-side ordering when possible so pagination is correct.
+      // Order by home price on the DB when user requests price sorting.
+      if (hasPriceSort) {
+        const asc = sortBy.includes("price_low");
+        // order by homes.price_weekday via foreignTable to ensure DB-side ordering
+        query = query.order("price_weekday", { ascending: asc, foreignTable: "homes" });
+      } else if (hasNewestSort || (!hasPriceSort && !hasRatingSort)) {
         query = query.order("created_at", { ascending: false });
       }
     } else {
@@ -229,15 +236,42 @@ export async function searchListings(params: SearchParams = {}): Promise<{
       };
     });
 
-    // Lọc listings: loại bỏ listing có available_count = 0 ở bất kỳ ngày nào
+    // Determine if the user has applied any filters/sort that should hide unavailable/blocked listings
+    const isFiltered = Boolean(
+      provinceCode ||
+      checkIn ||
+      checkOut ||
+      guests ||
+      (minPrice !== undefined) ||
+      (maxPrice !== undefined) ||
+      (amenityIds && amenityIds.length > 0) ||
+      (sortBy && sortBy.length > 0)
+    );
+
+    // Fetch calendar data to determine availability and blocked status per listing
     const { data: calendarData, error: calendarError } = await supabase
       .from("calendar")
-      .select("listing_id, available_count");
+      .select("listing_id, available_count, is_block");
+
+    let listingIdsWithZeroAvailable = new Set<number>();
+    let listingIdsWithBlocked = new Set<number>();
     if (!calendarError && calendarData) {
-      const listingIdsWithZeroAvailable = new Set(
-        calendarData.filter((c: any) => c.available_count === 0).map((c: any) => c.listing_id)
-      );
-      listings = listings.filter(l => !listingIdsWithZeroAvailable.has(l.id));
+      calendarData.forEach((c: any) => {
+        if (c.available_count === 0) listingIdsWithZeroAvailable.add(c.listing_id);
+        if (c.is_block === true) listingIdsWithBlocked.add(c.listing_id);
+      });
+    }
+
+    // If user has filters active, hide listings that have zero availability or are blocked.
+    // Otherwise (no filters), show them but mark as not bookable.
+    if (isFiltered) {
+      listings = listings.filter(l => !listingIdsWithZeroAvailable.has(l.id) && !listingIdsWithBlocked.has(l.id));
+    } else {
+      listings = listings.map(l => ({
+        ...l,
+        is_blocked: listingIdsWithBlocked.has(l.id),
+        is_bookable: !(listingIdsWithZeroAvailable.has(l.id) || listingIdsWithBlocked.has(l.id)),
+      }));
     }
 
     // Sort lại ở phía client nếu có price/rating
@@ -295,7 +329,8 @@ export async function searchListings(params: SearchParams = {}): Promise<{
 
     return {
       listings,
-      total: count || 0,
+      // Return total as the number of listings after final filtering so UI counts match
+      total: listings.length,
     };
   } catch (error) {
     console.error("searchListings unexpected error:", error);
