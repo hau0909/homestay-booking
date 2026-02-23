@@ -10,6 +10,7 @@ import { signInWithFacebook } from "@/src/services/auth/auth.service";
 import { validateEmail } from "@/src/utils/validation";
 import Link from "next/link";
 import { getHostStatus } from "@/src/services/host/getHostStatus.service";
+import { getUser } from "@/src/services/profile/getUserProfile";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       await loginUser(email, password);
 
-      const isHost = await getHostStatus(user.id);
+      const isHost = await getHostStatus();
 
       toast.success("Login successfully");
       onClose();
@@ -127,6 +128,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       } else if (errorMessage.includes("verify your email")) {
         toast.error("Please verify your email before logging in.");
       } else {
+        console.log(error);
         toast.error(errorMessage);
       }
     } finally {
