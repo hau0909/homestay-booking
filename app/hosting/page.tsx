@@ -34,16 +34,11 @@ export default function HostDashboardPage() {
     load();
   }, []);
 
- const totalRevenue = useMemo(() => {
-  return bookings
-    .filter(
-      b =>
-        b.status !== "CANCELLED" &&
-        b.payment_status === "PAID"
-    )
-    .reduce((sum, b) => sum + (b.total_price || 0), 0);
-}, [bookings]);
-
+  const totalRevenue = useMemo(() => {
+    return bookings
+      .filter((b) => b.status !== "CANCELLED" && b.payment_status === "PAID")
+      .reduce((sum, b) => sum + (b.total_price || 0), 0);
+  }, [bookings]);
 
   if (loading) {
     return <div className="p-6 text-gray-500">Loading dashboard...</div>;
@@ -58,7 +53,7 @@ export default function HostDashboardPage() {
         <StatCard title="Total Listings" value={listings.length} />
         <StatCard
           title="Active Listings"
-          value={listings.filter(l => l.status === "ACTIVE").length}
+          value={listings.filter((l) => l.status === "ACTIVE").length}
         />
         <StatCard title="Total Bookings" value={bookings.length} />
         <StatCard
@@ -75,12 +70,14 @@ export default function HostDashboardPage() {
       >
         <Table
           headers={["Title", "Type", "Status", "Created"]}
-          rows={listings.slice(0, 5).map(l => [
-            l.title,
-            l.listing_type,
-            <StatusBadge key={l.id} value={l.status} />,
-            new Date(l.created_at).toLocaleDateString(),
-          ])}
+          rows={listings
+            .slice(0, 5)
+            .map((l) => [
+              l.title,
+              l.listing_type,
+              <StatusBadge key={l.id} value={l.status} />,
+              new Date(l.created_at).toLocaleDateString(),
+            ])}
         />
       </Section>
 
@@ -91,13 +88,15 @@ export default function HostDashboardPage() {
       >
         <Table
           headers={["Listing ID", "Check-in", "Check-out", "Status", "Total"]}
-          rows={bookings.slice(0, 3).map(b => [
-            b.listing_id,
-            b.check_in_date,
-            b.check_out_date,
-            <StatusBadge key={b.id} value={b.status} />,
-            `$${b.total_price}`,
-          ])}
+          rows={bookings
+            .slice(0, 3)
+            .map((b) => [
+              b.listing_id,
+              b.check_in_date,
+              b.check_out_date,
+              <StatusBadge key={b.id} value={b.status} />,
+              `$${b.total_price}`,
+            ])}
         />
       </Section>
     </div>
@@ -141,21 +140,19 @@ function Section({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{title}</h2>
         {onViewMore && (
-   <button
-  onClick={onViewMore}
-  className="
+          <button
+            onClick={onViewMore}
+            className="
     inline-flex items-center gap-1
     rounded-lg border px-3 py-1.5
     text-sm font-medium text-gray-700
     hover:bg-gray-50 hover:text-gray-900
     transition
   "
->
-  Xem thêm
-  <span className="text-base">→</span>
-</button>
-
-
+          >
+            Xem thêm
+            <span className="text-base">→</span>
+          </button>
         )}
       </div>
       {children}
@@ -163,19 +160,13 @@ function Section({
   );
 }
 
-function Table({
-  headers,
-  rows,
-}: {
-  headers: string[];
-  rows: any[][];
-}) {
+function Table({ headers, rows }: { headers: string[]; rows: any[][] }) {
   return (
     <div className="overflow-x-auto rounded-xl border bg-white">
       <table className="w-full text-sm">
         <thead className="bg-gray-50">
           <tr>
-            {headers.map(h => (
+            {headers.map((h) => (
               <th
                 key={h}
                 className="px-3 py-2 text-left font-medium text-gray-600"
@@ -187,10 +178,7 @@ function Table({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr
-              key={i}
-              className="border-t hover:bg-gray-50 transition"
-            >
+            <tr key={i} className="border-t hover:bg-gray-50 transition">
               {row.map((cell, j) => (
                 <td key={j} className="px-3 py-2">
                   {cell}
@@ -209,8 +197,8 @@ function StatusBadge({ value }: { value: string }) {
     value === "ACTIVE" || value === "COMPLETED"
       ? "bg-green-100 text-green-700"
       : value === "PENDING"
-      ? "bg-yellow-100 text-yellow-700"
-      : "bg-gray-100 text-gray-600";
+        ? "bg-yellow-100 text-yellow-700"
+        : "bg-gray-100 text-gray-600";
 
   return (
     <span
