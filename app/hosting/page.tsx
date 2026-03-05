@@ -220,13 +220,7 @@ function Section({
   );
 }
 
-function Table({
-  headers,
-  rows,
-}: {
-  headers: string[];
-  rows: any[][];
-}) {
+function Table({ headers, rows }: { headers: string[]; rows: any[][] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">

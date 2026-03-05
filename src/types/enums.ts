@@ -7,6 +7,7 @@ export type ListingStatus =
   | "PENDING"
   | "ACTIVE"
   | "HIDDEN"
+  | "REJECTED"
   | "BANNED";
 
 export type BookingStatus =
