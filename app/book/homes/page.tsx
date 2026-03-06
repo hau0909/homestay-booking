@@ -351,6 +351,14 @@ export default function Page() {
       setOpenConfirmDialog(false);
 
       router.push(`/book/homes/${booking.id}/success`);
+
+      await fetch("/api/new-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: bookingId,
+        }),
+      });
     } catch (err) {
       toast.error("Failed to confirm booking");
       console.error(err);
