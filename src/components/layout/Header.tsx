@@ -10,6 +10,7 @@ import {
   Home,
   ListOrdered,
   CalendarCheck,
+  Heart,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -164,6 +165,13 @@ export default function Header() {
               >
                 <Binoculars size={30} />
                 Experiences
+              </Link>
+              <Link
+                href="/wishlist"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Heart size={30} />
+                Wishlist
               </Link>
             </nav>
           </>
