@@ -36,6 +36,7 @@ export default function ProfilePage() {
       setLoading(true);
       const profileData = await getProfile(user!.id);
       setProfile(profileData);
+      console.log("RESEND KEY:", process.env.NEXT_PUBLIC_RESEND_API_KEY);
     } catch (error) {
       console.error("Error loading profile:", error);
       toast.error("Failed to load profile");
