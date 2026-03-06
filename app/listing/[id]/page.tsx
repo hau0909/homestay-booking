@@ -447,7 +447,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             {/* Hiển thị phản hồi của chủ nhà */}
             {review.hostResponse ? (
               <div className="mt-3 ml-6 p-3 border-l-4 border-green-400 bg-green-50 rounded">
-                <div className="font-semibold text-green-700 mb-1">Phản hồi của chủ nhà:</div>
+                <div className="font-semibold text-green-700 mb-1">Host response:</div>
                 <div>{review.hostResponse.content}</div>
                 <div className="text-xs text-gray-400 mt-1">{new Date(review.hostResponse.created_at).toLocaleString()}</div>
               </div>
@@ -522,7 +522,7 @@ function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userI
   return (
     <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Đánh giá:</label>
+        <label className="block font-semibold mb-1">Comment:</label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
