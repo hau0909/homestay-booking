@@ -10,18 +10,52 @@ import { Badge } from "@/components/ui/badge";
 import { BookingStatus } from "@/src/types/enums";
 import { Loader2 } from "lucide-react";
 import ReviewBookingButton from "@/src/components/booking/ReviewBookingButton";
-import { supabase } from "@/src/lib/supabase";
+import toast from "react-hot-toast";
+import CancelBookingModal from "@/src/components/booking/CancelBookingModal";
 
-function StatusBadge({ status }: { status: BookingStatus }) {
+function StatusBadge({
+  status,
+  bookingId,
+  userId,
+  onCancelSuccess,
+}: {
+  status: BookingStatus;
+  bookingId: number;
+  userId: string;
+  onCancelSuccess: (bookingId: number) => void;
+}) {
+  const [openModal, setOpenModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState<BookingCard[]>([]);
+
+  const handleCancelBooking = async (reason: string) => {
+    onCancelSuccess(bookingId);
+  };
   if (status === "CONFIRMED") {
     return <Badge className="bg-green-600">Confirmed</Badge>;
   }
 
   if (status === "PENDING") {
     return (
-      <Badge variant="outline" className="text-orange-600 border-orange-600">
-        Pending
-      </Badge>
+      <div className="flex flex-col gap-4">
+        {" "}
+        <Badge variant="outline" className="text-orange-600 border-orange-600">
+          Pending
+        </Badge>
+        <button
+          onClick={() => setOpenModal(true)}
+          className="py-2 px-4 border rounded-2xl border-red-400 text-red-400 font-bold hover:bg-red-400 hover:text-white transition-colors duration-300 cursor-pointer"
+        >
+          Cancel Booking
+        </button>
+        <CancelBookingModal
+          isOpen={openModal}
+          onClose={() => setOpenModal(false)}
+          userId={userId}
+          onConfirm={handleCancelBooking}
+          bookingId={bookingId}
+        />
+      </div>
     );
   }
 
@@ -31,6 +65,14 @@ function StatusBadge({ status }: { status: BookingStatus }) {
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingCard[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleCancelSuccess = (bookingId: number) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === String(bookingId) ? { ...b, status: "CANCELLED" } : b,
+      ),
+    );
+  };
 
   useEffect(() => {
     getUserBookingCards().then((data) => {
@@ -83,7 +125,12 @@ export default function BookingsPage() {
             <div className="flex-1 space-y-2">
               <div className="flex justify-between items-start">
                 <p className="text-lg font-semibold">{booking.listingName}</p>
-                <StatusBadge status={booking.status} />
+                <StatusBadge
+                  status={booking.status}
+                  bookingId={booking.id}
+                  userId={booking.userId}
+                  onCancelSuccess={handleCancelSuccess}
+                />
               </div>
 
               <p className="text-sm text-slate-600">{booking.dateRange}</p>
@@ -94,11 +141,11 @@ export default function BookingsPage() {
 
               {/* Hiện nút review nếu status là CONFIRMED */}
               {booking.status === "CONFIRMED" && (
-                  <ReviewBookingButton
-                    listingId={String((booking as any).listingId || booking.id)}
-                    userId={String((booking as any).userId || "")}
-                    bookingId={String(booking.id)}
-                  />
+                <ReviewBookingButton
+                  listingId={String((booking as any).listingId || booking.id)}
+                  userId={String((booking as any).userId || "")}
+                  bookingId={String(booking.id)}
+                />
               )}
             </div>
           </div>
