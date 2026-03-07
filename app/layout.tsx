@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import HeaderWrapper from "@/src/components/layout/HeaderWrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileStatusProvider from "@/src/components/context/ProfileStatusProvider";
+import { WishlistProvider } from "@/src/context/WishlistContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,10 +35,11 @@ export default function RootLayout({
       >
         <HeaderWrapper />
         <ProfileStatusProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <WishlistProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </WishlistProvider>
         </ProfileStatusProvider>
         <Footer />
-
         <Toaster position="top-center" reverseOrder={false} />
       </body>
     </html>

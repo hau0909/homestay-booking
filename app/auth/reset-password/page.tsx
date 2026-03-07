@@ -73,10 +73,9 @@ const Page = () => {
     }
   };
 
-  useEffect(() => {});
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Đã validate realtime, chỉ check lại trước khi submit
+
     if (passwordError || confirmError || !password || !newPassword) return;
     try {
       setLoading(true);

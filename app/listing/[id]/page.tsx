@@ -26,6 +26,8 @@ import { supabase } from "@/src/lib/supabase";
 
 import HostResponseForm from "@/src/components/listing/HostResponseForm";
 import { getHostResponseByReviewId } from "@/src/services/listing/getHostResponseByReviewId";
+import { getListingRules } from "@/src/services/listing/getListingRules";
+import { Rule } from "@/src/types/rule";
 
 
 export default function ListingDetailPage() {
@@ -35,6 +37,7 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<ListingDetailWithHost | null>(null);
   const [host, setHost] = useState<HostInfo | null>(null);
   const [home, setHome] = useState<Home | null>(null);
+  const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -50,6 +53,10 @@ export default function ListingDetailPage() {
         // Fetch home data directly
         const homeData = await getHomeByListingId(listingId);
         setHome(homeData);
+
+        // Fetch rules
+        const rulesData = await getListingRules(parseInt(listingId));
+        setRules(rulesData);
 
         if (listingData?.host_id) {
           const hostData = await getHostInfo(listingData.host_id);
@@ -236,58 +243,49 @@ export default function ListingDetailPage() {
           )}
         </div>
 
-        {/* Description and Details Below Images */}
-        <div className="mt-4 pb-6">
-          <h2 className="text-xl font-bold mb-3 text-black">
-            {listing.description}
-          </h2>
-          <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2">
-            <span>
-              <strong>quantity:</strong> {home?.quantity ?? ""}
-            </span>
-            <span>
-              <strong>max_guests:</strong> {home?.max_guests ?? ""}
-            </span>
-            <span>
-              <strong>room_size:</strong> {home?.room_size ?? ""}
-            </span>
-          </div>
-          <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2 mt-1">
-            <span>
-              <strong>bed_count:</strong> {home?.bed_count ?? ""}
-            </span>
-            <span>
-              <strong>bath_count:</strong> {home?.bath_count ?? ""}
-            </span>
-          </div>
-          <div className="w-2/3 border-b border-gray-200 mt-5"></div>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-3 gap-12">
-          {/* Left Column - Details */}
+        {/* Description, Details with Booking Card Grid */}
+        <div className="grid grid-cols-3 gap-12 mt-4">
+          {/* Left Column - Description and Details */}
           <div className="col-span-2">
-            {/* Host Info */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-4 mt-6">
-                <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                  {host?.avatar_url ? (
-                    <img
-                      src={host.avatar_url}
-                      alt={host.full_name || "Host"}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <Users className="w-6 h-6 text-gray-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-black">
-                    Host: {host?.full_name || ""}
-                  </p>
-                  <p className="text-sm text-gray-500">New host</p>
-                </div>
-              </div>
+            <h2 className="text-xl font-bold mb-3 text-black">
+              {listing.description}
+            </h2>
+            <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2">
+              <span>
+                <strong>quantity:</strong> {home?.quantity ?? ""}
+              </span>
+              <span>
+                <strong>max_guests:</strong> {home?.max_guests ?? ""}
+              </span>
+              <span>
+                <strong>room_size:</strong> {home?.room_size ?? ""}
+              </span>
+            </div>
+            <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2 mt-1">
+              <span>
+                <strong>bed_count:</strong> {home?.bed_count ?? ""}
+              </span>
+              <span>
+                <strong>bath_count:</strong> {home?.bath_count ?? ""}
+              </span>
+            </div>
+            <div className="w-2/3 border-b border-gray-200 mt-5"></div>
+
+            {/* House Rules Section */}
+            <div className="mt-6">
+              <h3 className="text-lg font-bold mb-4 text-black">House Rules</h3>
+              {rules.length > 0 ? (
+                <ul className="space-y-2">
+                  {rules.map((rule) => (
+                    <li key={rule.id} className="text-sm text-gray-700 flex items-start gap-3">
+                      <span className="text-gray-400 mt-1">✔</span>
+                      <span>{rule.content}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No house rules</p>
+              )}
             </div>
           </div>
 
@@ -316,6 +314,31 @@ export default function ListingDetailPage() {
               <p className="text-center text-sm text-gray-500">
                 You won&apos;t be charged yet
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Host Info Section */}
+        <div className="mt-12 mr-auto w-2/3">
+          <div className="pb-6 border-b border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                {host?.avatar_url ? (
+                  <img
+                    src={host.avatar_url}
+                    alt={host.full_name || "Host"}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <Users className="w-6 h-6 text-gray-600" />
+                )}
+              </div>
+              <div>
+                <p className="font-semibold text-black">
+                  Host: {host?.full_name || ""}
+                </p>
+                <p className="text-sm text-gray-500">New host</p>
+              </div>
             </div>
           </div>
         </div>
@@ -447,7 +470,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             {/* Hiển thị phản hồi của chủ nhà */}
             {review.hostResponse ? (
               <div className="mt-3 ml-6 p-3 border-l-4 border-green-400 bg-green-50 rounded">
-                <div className="font-semibold text-green-700 mb-1">Phản hồi của chủ nhà:</div>
+                <div className="font-semibold text-green-700 mb-1">Host response:</div>
                 <div>{review.hostResponse.content}</div>
                 <div className="text-xs text-gray-400 mt-1">{new Date(review.hostResponse.created_at).toLocaleString()}</div>
               </div>
@@ -522,7 +545,7 @@ function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userI
   return (
     <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Đánh giá:</label>
+        <label className="block font-semibold mb-1">Comment:</label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button

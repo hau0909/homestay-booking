@@ -26,7 +26,7 @@ interface Booking {
 
 
 export default function Page() {
-  const [editModal, setEditModal] = useState<{ open: boolean; bookingId?: string } | null>(null);
+  const [editModal, setEditModal] = useState<{ open: boolean; bookingId?: string; status?: string; listing_id?: string; total_price?: number } | null>(null);
   const [viewModal, setViewModal] = useState<{ open: boolean; booking: Booking | null; listing: any | null } | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
@@ -36,15 +36,19 @@ export default function Page() {
   const statusOptions = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
 
   // Hàm cập nhật trạng thái booking lên DB
-  const handleUpdateStatus = async (bookingId: string, newStatus: string) => {
+  const handleUpdateStatus = async (bookingId: string, newStatus: string, totalPrice?: number) => {
     // Gọi API update trạng thái booking
+    const updateData: any = { status: newStatus };
+    if (totalPrice !== undefined) {
+      updateData.total_price = totalPrice;
+    }
     const { error } = await supabase
       .from("bookings")
-      .update({ status: newStatus })
+      .update(updateData)
       .eq("id", bookingId);
     if (!error) {
-      setFilteredBookings((prev: Booking[]) => prev.map((b: Booking) => b.id === bookingId ? { ...b, status: newStatus } : b));
-      setBookings((prev: Booking[]) => prev.map((b: Booking) => b.id === bookingId ? { ...b, status: newStatus } : b));
+      setFilteredBookings((prev: Booking[]) => prev.map((b: Booking) => b.id === bookingId ? { ...b, status: newStatus, total_price: totalPrice ?? b.total_price } : b));
+      setBookings((prev: Booking[]) => prev.map((b: Booking) => b.id === bookingId ? { ...b, status: newStatus, total_price: totalPrice ?? b.total_price } : b));
     } else {
       alert("Cập nhật trạng thái thất bại!");
     }
@@ -139,7 +143,7 @@ export default function Page() {
           </button>
         ))}
       </div>
-      
+
       {loading && <div>Loading...</div>}
       {error && <div style={{ color: "red", marginBottom: 16 }}>{error}</div>}
       <div style={{ overflowX: 'auto', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1.5px solid #e3e8ee', padding: 8 }}>
@@ -179,12 +183,12 @@ export default function Page() {
                       booking.status === 'CONFIRMED'
                         ? '#219653'
                         : booking.status === 'CANCELLED'
-                        ? '#d32f2f'
-                        : booking.status === 'COMPLETED'
-                        ? '#1976d2'
-                        : booking.status === 'PENDING'
-                        ? '#ff9800'
-                        : '#555',
+                          ? '#d32f2f'
+                          : booking.status === 'COMPLETED'
+                            ? '#1976d2'
+                            : booking.status === 'PENDING'
+                              ? '#ff9800'
+                              : '#555',
                     fontWeight: 700,
                     letterSpacing: 0.5,
                   }}>{booking.status}</span>
@@ -206,10 +210,10 @@ export default function Page() {
                         .eq("listing_id", booking.listing_id)
                         .single();
                       // Lấy thông tin user từ DB (bảng profiles)
-                      let userInfo = {};
+                      let userInfo: Record<string, any> = {};
                       const { data: userProfile } = await supabase
                         .from("profiles")
-                        .select("full_name, email, phone, address")
+                        .select("full_name, email, phone")
                         .eq("id", booking.user_id)
                         .single();
                       if (userProfile) {
@@ -217,7 +221,7 @@ export default function Page() {
                           guest_name: userProfile.full_name,
                           guest_email: userProfile.email,
                           guest_phone: userProfile.phone,
-                          guest_address: userProfile.address,
+                          guest_address: undefined, // Address không có trong bảng profiles
                         };
                       }
                       setViewModal({
@@ -237,7 +241,7 @@ export default function Page() {
                         },
                       });
                     }}
-                    onEdit={booking.status === 'PENDING' ? (() => setEditModal({ open: true, bookingId: booking.id })) : undefined}
+                    onEdit={(booking.status === 'PENDING' || booking.status === 'CONFIRMED') ? (() => setEditModal({ open: true, bookingId: booking.id, status: booking.status, listing_id: booking.listing_id, total_price: booking.total_price })) : undefined}
                   />
                 </td>
               </tr>
@@ -250,7 +254,10 @@ export default function Page() {
       <EditBookingStatusModal
         open={!!editModal?.open}
         onClose={() => setEditModal(null)}
-        onSelect={(status) => editModal?.bookingId && handleUpdateStatus(editModal.bookingId, status)}
+        onSelect={(status, totalPrice) => editModal?.bookingId && handleUpdateStatus(editModal.bookingId, status, totalPrice)}
+        currentStatus={editModal?.status}
+        listing_id={editModal?.listing_id}
+        total_price={editModal?.total_price}
       />
       {/* Modal xem chi tiết booking */}
       <BookingViewModal
