@@ -6,6 +6,7 @@ import { getMessage } from "@/src/services/chat/getMessage";
 import { sendMessage } from "@/src/services/chat/sendMessage";
 import { markAsReadMessage } from "@/src/services/chat/markAsReadMessage";
 import { supabase } from "@/src/lib/supabase";
+import { uploadChatImage } from "@/src/services/chat/uploadChatImage";
 
 type Chat = {
   conversation_id: string;
@@ -20,6 +21,7 @@ type Message = {
   content: string;
   created_at?: string;
   is_read?: boolean;
+  image_url?: string;
 };
 
 interface ChatModalProps {
@@ -33,6 +35,8 @@ export default function ChatModal({ chat, onClose }: ChatModalProps) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -46,6 +50,15 @@ export default function ChatModal({ chat, onClose }: ChatModalProps) {
 
     getUser();
   }, []);
+
+  const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+
+    const file = e.target.files[0];
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const scrollToBottom = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,6 +78,19 @@ export default function ChatModal({ chat, onClose }: ChatModalProps) {
   }, [messages]);
 
   const handleSend = async () => {
+    if (!currentUserId) return;
+
+    if (imageFile) {
+      const imageUrl = await uploadChatImage(imageFile, currentUserId);
+
+      if (!imageUrl) return;
+
+      await sendMessage(chat.conversation_id, currentUserId, "", imageUrl);
+
+      setImageFile(null);
+      setImagePreview(null);
+    }
+
     if (!newMessage.trim() || !currentUserId) return;
 
     await sendMessage(chat.conversation_id, currentUserId, newMessage);
@@ -209,7 +235,14 @@ export default function ChatModal({ chat, onClose }: ChatModalProps) {
                       : "bg-gray-200 text-gray-900"
                   }`}
                 >
-                  {msg.content}
+                  {msg.image_url ? (
+                    <img
+                      src={msg.image_url}
+                      className="rounded-lg max-w-[200px]"
+                    />
+                  ) : (
+                    msg.content
+                  )}
                 </div>
 
                 <span className="text-[10px] text-gray-400 mt-1">
@@ -229,11 +262,38 @@ export default function ChatModal({ chat, onClose }: ChatModalProps) {
         <div ref={messageEndRef} />
       </div>
 
+      {imagePreview && (
+        <div className="relative p-2 border-t">
+          <img src={imagePreview} className="max-h-32 rounded-lg" />
+
+          <button
+            onClick={() => {
+              setImagePreview(null);
+              setImageFile(null);
+            }}
+            className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-3 border-t flex gap-2">
-        <button className="hover:text-gray-500 cursor-pointer transition-colors duration-300">
-          <ImageUp />
-        </button>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id="imageUpload"
+          onChange={handleUploadImage}
+        />
+
+        <label
+          htmlFor="imageUpload"
+          className="cursor-pointer hover:text-gray-500"
+        >
+          <ImageUp className="mt-2" />
+        </label>
 
         <input
           type="text"

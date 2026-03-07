@@ -28,7 +28,13 @@ export const getConversations = async (userId: string) => {
       )
     `,
     )
-    .or(`host_id.eq.${userId},guest_id.eq.${userId}`);
+    .or(`host_id.eq.${userId},guest_id.eq.${userId}`)
+    .order("created_at", {
+      foreignTable: "messages",
+      ascending: false,
+    })
+    .limit(1, { foreignTable: "messages" })
+    .order(" updated_at", { ascending: false });
 
   if (error) {
     console.error("getConversations error:", error);
