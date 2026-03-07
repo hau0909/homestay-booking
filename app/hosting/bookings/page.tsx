@@ -48,6 +48,7 @@ export default function Page() {
     } else {
       alert("Cập nhật trạng thái thất bại!");
     }
+    
     setEditModal(null);
   };
 

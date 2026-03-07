@@ -23,10 +23,12 @@ import {
 import Link from "next/link";
 import ListingRatings from "@/src/components/listing/ListingRatings";
 import { supabase } from "@/src/lib/supabase";
-
+import { MessageCircleMore } from "lucide-react";
 import HostResponseForm from "@/src/components/listing/HostResponseForm";
 import { getHostResponseByReviewId } from "@/src/services/listing/getHostResponseByReviewId";
-
+import ChatModal from "@/src/components/home/chatModal";
+import { getOrCreateConversation } from "@/src/services/chat/getOrCreateConversation";
+import toast from "react-hot-toast";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -39,11 +41,45 @@ export default function ListingDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  type ActiveChat = {
+    id?: string;
+    conversation_id: string;
+    full_name: string;
+    avatar: string;
+    last_message?: string;
+    last_message_sender_id?: number;
+    is_read?: boolean;
+  };
+  const [activeChat, setActiveChat] = useState<ActiveChat | null>(null);
+
+  const handleChatClick = async () => {
+    if (!user) {
+      toast.error("Please login to chat with host!");
+      return;
+    }
+
+    if (!host) return;
+
+    const conversation = await getOrCreateConversation(host.id, user.id);
+
+    setActiveChat({
+      conversation_id: conversation.id,
+      full_name: host.full_name ?? "",
+      avatar: host.avatar_url ?? "",
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        setUser(currentUser);
+
         const listingData = await getListingDetail(listingId);
         setListing(listingData);
 
@@ -287,6 +323,14 @@ export default function ListingDetailPage() {
                   </p>
                   <p className="text-sm text-gray-500">New host</p>
                 </div>
+                {user?.id !== host?.id && (
+                  <button
+                    className="hover:text-gray-600 cursor-pointer hover:-translate-y-1 transition-all duration-300"
+                    onClick={handleChatClick}
+                  >
+                    <MessageCircleMore size={30} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -328,9 +372,14 @@ export default function ListingDetailPage() {
         <ListingRatings listingId={Number(listingId)} />
       </div>
 
-      {/* trietcmce180982_sprint2 */}        
+      {/* trietcmce180982_sprint2 */}
       {/* reiews */}
       <ReviewsSection listingId={listingId} />
+
+      {/* Chat Modal */}
+      {activeChat && (
+        <ChatModal chat={activeChat} onClose={() => setActiveChat(null)} />
+      )}
     </div>
   );
 }
@@ -348,7 +397,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
       // Lấy hostId của listing
       const { data: listingData } = await supabase
@@ -360,7 +411,8 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       // Lấy is_host của user hiện tại
       let isHostFlag = false;
       if (user) {
-        const { getHostInfo } = await import("@/src/services/profile/getHostInfo");
+        const { getHostInfo } =
+          await import("@/src/services/profile/getHostInfo");
         const hostProfile = await getHostInfo(user.id);
         isHostFlag = !!hostProfile?.is_host;
       }
@@ -384,18 +436,22 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             images: imagesData ? imagesData.map((img: any) => img.url) : [],
             hostResponse: response,
           };
-        })
+        }),
       );
       setReviews(reviewsWithExtras);
       if (user) {
-        const reviewed = (reviewsWithExtras || []).some((r: any) => r.user_id === user.id);
+        const reviewed = (reviewsWithExtras || []).some(
+          (r: any) => r.user_id === user.id,
+        );
         setHasReviewed(reviewed);
         const { data: bookings } = await supabase
           .from("bookings")
           .select("id, status")
           .eq("listing_id", listingId)
           .eq("user_id", user.id);
-        const confirmedBooking = Array.isArray(bookings) && bookings.some((b: any) => b.status === "confirmed");
+        const confirmedBooking =
+          Array.isArray(bookings) &&
+          bookings.some((b: any) => b.status === "confirmed");
         setCanReview(!reviewed && confirmedBooking);
       }
       setLoading(false);
@@ -415,7 +471,11 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         </button>
       )}
       {user && canReview && !hasReviewed && showReviewForm && (
-        <ReviewForm listingId={listingId} userId={user.id} onSuccess={() => window.location.reload()} />
+        <ReviewForm
+          listingId={listingId}
+          userId={user.id}
+          onSuccess={() => window.location.reload()}
+        />
       )}
       {user && hasReviewed && (
         <div className="mb-4 text-green-600">Bạn đã đánh giá homestay này.</div>
@@ -426,12 +486,21 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           <div key={review.id} className="border rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
               {review.profiles?.avatar_url ? (
-                <img src={review.profiles.avatar_url} alt="avatar" className="w-8 h-8 rounded-full" />
+                <img
+                  src={review.profiles.avatar_url}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full"
+                />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-300" />
               )}
-              <span className="font-semibold">{review.profiles?.full_name || "User"}</span>
-              <span className="ml-2 text-yellow-500">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+              <span className="font-semibold">
+                {review.profiles?.full_name || "User"}
+              </span>
+              <span className="ml-2 text-yellow-500">
+                {"★".repeat(review.rating)}
+                {"☆".repeat(5 - review.rating)}
+              </span>
             </div>
             {/* Hiển thị comment */}
             <div className="mb-2">{review.comment || review.content}</div>
@@ -439,22 +508,40 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             {review.images && review.images.length > 0 && (
               <div className="flex gap-2 mt-2">
                 {review.images.map((img: string, idx: number) => (
-                  <img key={idx} src={img} alt="review-img" className="w-20 h-20 object-cover rounded" />
+                  <img
+                    key={idx}
+                    src={img}
+                    alt="review-img"
+                    className="w-20 h-20 object-cover rounded"
+                  />
                 ))}
               </div>
             )}
-            <div className="text-xs text-gray-400 mt-1">{new Date(review.created_at).toLocaleString()}</div>
+            <div className="text-xs text-gray-400 mt-1">
+              {new Date(review.created_at).toLocaleString()}
+            </div>
             {/* Hiển thị phản hồi của chủ nhà */}
             {review.hostResponse ? (
               <div className="mt-3 ml-6 p-3 border-l-4 border-green-400 bg-green-50 rounded">
-                <div className="font-semibold text-green-700 mb-1">Phản hồi của chủ nhà:</div>
+                <div className="font-semibold text-green-700 mb-1">
+                  Phản hồi của chủ nhà:
+                </div>
                 <div>{review.hostResponse.content}</div>
-                <div className="text-xs text-gray-400 mt-1">{new Date(review.hostResponse.created_at).toLocaleString()}</div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(review.hostResponse.created_at).toLocaleString()}
+                </div>
               </div>
             ) : (
-              user && hostId && user.id === hostId && isHost && (
+              user &&
+              hostId &&
+              user.id === hostId &&
+              isHost && (
                 <div className="mt-3 ml-6">
-                  <HostResponseForm reviewId={String(review.id)} hostId={hostId} onSuccess={() => window.location.reload()} />
+                  <HostResponseForm
+                    reviewId={String(review.id)}
+                    hostId={hostId}
+                    onSuccess={() => window.location.reload()}
+                  />
                 </div>
               )
             )}
@@ -465,7 +552,15 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   );
 }
 
-function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userId: string; onSuccess?: () => void }) {
+function ReviewForm({
+  listingId,
+  userId,
+  onSuccess,
+}: {
+  listingId: string;
+  userId: string;
+  onSuccess?: () => void;
+}) {
   const [rating, setRating] = useState<number>(0);
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -495,18 +590,16 @@ function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userI
         }
       }
       // Insert review
-      const { error: reviewError } = await supabase
-        .from("reviews")
-        .insert([
-          {
-            listing_id: listingId,
-            user_id: userId,
-            rating,
-            content,
-            images: imageUrls,
-            created_at: new Date().toISOString(),
-          },
-        ]);
+      const { error: reviewError } = await supabase.from("reviews").insert([
+        {
+          listing_id: listingId,
+          user_id: userId,
+          rating,
+          content,
+          images: imageUrls,
+          created_at: new Date().toISOString(),
+        },
+      ]);
       if (reviewError) throw reviewError;
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -520,7 +613,10 @@ function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userI
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
+    <form
+      onSubmit={handleSubmit}
+      className="mb-6 p-4 border rounded-lg bg-gray-50"
+    >
       <div className="mb-2">
         <label className="block font-semibold mb-1">Đánh giá:</label>
         <div className="flex gap-1">
@@ -551,7 +647,12 @@ function ReviewForm({ listingId, userId, onSuccess }: { listingId: string; userI
       </div>
       <div className="mb-2">
         <label className="block font-semibold mb-1">Ảnh kèm theo:</label>
-        <input type="file" multiple accept="image/*" onChange={handleImageChange} />
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleImageChange}
+        />
       </div>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       <button

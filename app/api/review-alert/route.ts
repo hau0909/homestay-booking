@@ -3,4 +3,4 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export const 
+export async function POST(req: Request) {}
