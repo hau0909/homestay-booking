@@ -9,7 +9,7 @@ interface BookingActionsProps {
 const BookingActions: React.FC<BookingActionsProps> = ({ status, onView, onEdit }) => {
   return (
     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-      {status === 'PENDING' && onEdit && (
+      {(status === 'PENDING' || status === 'CONFIRMED') && onEdit && (
         <button
           style={{
             padding: '4px 14px',
