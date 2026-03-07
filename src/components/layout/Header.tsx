@@ -73,7 +73,7 @@ export default function Header() {
 
     const checkHostStatus = async () => {
       try {
-        const status = await getHostStatus(user.id);
+        const status = await getHostStatus();
         setHost(status);
 
         if (status && pathname === "/") {
