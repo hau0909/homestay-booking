@@ -147,6 +147,13 @@ export default function Header() {
                 <CalendarCheck size={30} />
                 Calendar
               </Link>
+              <Link
+                href="/hosting/experience-manager"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Binoculars size={30} />
+                Host Experience Manager
+              </Link>
             </nav>
           </>
         ) : (
@@ -160,7 +167,7 @@ export default function Header() {
                 Homestay
               </Link>
               <Link
-                href="#"
+                href="/experience-listings"
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
               >
                 <Binoculars size={30} />
