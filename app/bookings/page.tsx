@@ -35,6 +35,10 @@ function StatusBadge({
     return <Badge className="bg-green-600">Confirmed</Badge>;
   }
 
+  if (status === "COMPLETED") {
+    return <Badge className="bg-green-600">COMPLETED</Badge>;
+  }
+
   if (status === "PENDING") {
     return (
       <div className="flex flex-col gap-4">
@@ -140,7 +144,7 @@ export default function BookingsPage() {
               <p className="font-medium">Total: {booking.totalText}</p>
 
               {/* Hiện nút review nếu status là CONFIRMED */}
-              {booking.status === "CONFIRMED" && (
+              {booking.status === "COMPLETED" && (
                 <ReviewBookingButton
                   listingId={String((booking as any).listingId || booking.id)}
                   userId={String((booking as any).userId || "")}
