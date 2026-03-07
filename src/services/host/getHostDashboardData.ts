@@ -17,7 +17,13 @@ export async function getHostDashboardData(userId: string) {
   if (listingIds.length > 0) {
     const { data, error } = await supabase
       .from("bookings")
-      .select("*")
+      .select(`
+    *,
+    profiles (
+      full_name,
+      avatar_url
+    )
+  `)
       .in("listing_id", listingIds)
       .order("created_at", { ascending: false });
 

@@ -13,6 +13,8 @@ import { getDistrictsByProvince } from "@/src/services/listing/getDistrict";
 import { getWardsByDistrict } from "@/src/services/listing/getWard";
 import { getAmenities } from "@/src/services/listing/getAmenities";
 import { Amenity } from "@/src/types/amenity";
+import { getRules } from "@/src/services/listing/getRules";
+import { Rule } from "@/src/types/rule";
 
 type Props = {
   data: CreateListingForm;
@@ -36,6 +38,7 @@ export default function PreviewPublishStep({
 
   /* ===== AMENITIES ===== */
   const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [rules, setRules] = useState<Rule[]>([]);
 
   const images = data.images ?? [];
   const mainImage = images[0];
@@ -86,6 +89,19 @@ export default function PreviewPublishStep({
   const selectedAmenities = amenities.filter((a) =>
     data.amenity_ids.includes(a.id)
   );
+
+  useEffect(() => {
+  async function fetchRules() {
+    const res = await getRules();
+    setRules(res);
+  }
+
+  fetchRules();
+}, []);
+
+const selectedRules = rules.filter((r) =>
+  data.rule_ids.includes(r.id)
+);
 
   return (
     <div className="space-y-10">
@@ -185,6 +201,24 @@ export default function PreviewPublishStep({
   </section>
 )}
 
+{/* HOUSE RULES */}
+{selectedRules.length > 0 && (
+  <section>
+    <h2 className="text-xl font-semibold">House Rules</h2>
+
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+      {selectedRules.map((rule) => (
+        <div
+          key={rule.id}
+          className="flex items-center gap-3 text-sm text-slate-700"
+        >
+          <div className="w-2 h-2 rounded-full bg-black" />
+          <span>{rule.content}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
 
           {/* CONFIRM */}
           <div className="border rounded-xl px-5 py-4">
