@@ -193,7 +193,7 @@ export default function ChatButton() {
         <div className="fixed bottom-24 right-6 w-80 h-[420px] bg-white rounded-xl shadow-xl border z-50 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-lg">Messages</h3>
+            <h3 className="font-bold text-2xl">Chats</h3>
 
             <button
               className="hover:bg-gray-200 p-1 cursor-pointer transition rounded-full"
@@ -272,9 +272,11 @@ export default function ChatButton() {
                             : "text-gray-500"
                         }`}
                       >
-                        {chat.last_message_sender_id === currentUserId &&
-                          "You: "}
-                        {chat.last_message}
+                        {`${chat.last_message_sender_id === currentUserId ? "You: " : ""}${
+                          chat.last_message === "Sent an image"
+                            ? "Sent an image"
+                            : (chat.last_message ?? "")
+                        }`}
                       </span>
                     </div>
                   </div>

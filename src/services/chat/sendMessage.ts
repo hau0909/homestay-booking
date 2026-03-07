@@ -4,6 +4,7 @@ export const sendMessage = async (
   conversationId: string,
   senderId: string,
   content: string,
+  imageUrl?: string,
 ) => {
   const { data, error } = await supabase
     .from("messages")
@@ -11,6 +12,7 @@ export const sendMessage = async (
       conversation_id: conversationId,
       sender_id: senderId,
       content,
+      image_url: imageUrl || null,
     })
     .select()
     .single();
@@ -23,7 +25,7 @@ export const sendMessage = async (
   const { error: updateError } = await supabase
     .from("conversations")
     .update({
-      last_message_content: content,
+      last_message_content: imageUrl ? "Sent an image" : content,
       updated_at: new Date().toISOString(),
     })
     .eq("id", conversationId);
