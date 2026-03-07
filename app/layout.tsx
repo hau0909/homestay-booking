@@ -5,6 +5,7 @@ import Footer from "@/src/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
 import HeaderWrapper from "@/src/components/layout/HeaderWrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ChatButton from "@/src/components/home/chatButtonModal";
 import { WishlistProvider } from "@/src/context/WishlistContext";
 
 const geistSans = Geist({
@@ -37,6 +38,9 @@ export default function RootLayout({
           <TooltipProvider>{children}</TooltipProvider>
         </WishlistProvider>
         <Footer />
+
+        <ChatButton />
+
         <Toaster position="top-center" reverseOrder={false} />
       </body>
     </html>
