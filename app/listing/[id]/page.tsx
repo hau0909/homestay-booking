@@ -29,6 +29,8 @@ import { getHostResponseByReviewId } from "@/src/services/listing/getHostRespons
 import ChatModal from "@/src/components/home/chatModal";
 import { getOrCreateConversation } from "@/src/services/chat/getOrCreateConversation";
 import toast from "react-hot-toast";
+import { getListingRules } from "@/src/services/listing/getListingRules";
+import { Rule } from "@/src/types/rule";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -370,7 +372,7 @@ export default function ListingDetailPage() {
         </div>
 
         {/* Host Info Section */}
-        <div className="mt-12 mr-auto w-2/3">
+        {/* <div className="mt-12 mr-auto w-2/3">
           <div className="pb-6 border-b border-gray-200">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
@@ -384,15 +386,9 @@ export default function ListingDetailPage() {
                   <Users className="w-6 h-6 text-gray-600" />
                 )}
               </div>
-              <div>
-                <p className="font-semibold text-black">
-                  Host: {host?.full_name || ""}
-                </p>
-                <p className="text-sm text-gray-500">New host</p>
-              </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <hr className="mx-auto w-200 my-10" />
