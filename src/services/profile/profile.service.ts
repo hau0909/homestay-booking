@@ -57,6 +57,13 @@ export const updateProfile = async (
     throw new Error("Profile update failed");
   }
 
+  // Sync avatar_url to Supabase Auth user_metadata so Header re-renders immediately
+  if (allowedUpdates.avatar_url !== undefined) {
+    await supabase.auth.updateUser({
+      data: { avatar_url: allowedUpdates.avatar_url },
+    });
+  }
+
   return data;
 };
 

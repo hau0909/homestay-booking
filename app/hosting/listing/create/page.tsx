@@ -21,6 +21,7 @@ import { saveDetails } from "@/src/services/listing/saveDetails";
 import { uploadListingImages } from "@/src/services/listing/uploadListingImages";
 import { publishListing } from "@/src/services/listing/publishListing";
 import { saveAmenities } from "@/src/services/listing/saveAmenities";
+import { saveRules } from "@/src/services/listing/saveRules";
 import { saveFees } from "@/src/services/listing/saveFees";
 
 
@@ -28,6 +29,7 @@ import { getUser } from "@/src/services/profile/getUserProfile";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import ExtraFeesStep from "@/src/components/listing/ExtraFeesStep";
+import HouseRulesStep from "@/src/components/listing/HouseRulesStep";
 
 /* =======================
    TYPE
@@ -53,6 +55,7 @@ export type CreateListingForm = {
 
   images: File[];
   amenity_ids: number[];
+  rule_ids: number[];
   fees: {
     title: string;
     price: number;
@@ -65,6 +68,7 @@ const steps = [
   "Location",
   "Details",
   "Amenities",
+  "House Rules",
   "Extra Fees",
   "Pricing",
   "Images",
@@ -97,6 +101,7 @@ export default function CreateListingPage() {
 
     images: [],
     amenity_ids: [],
+    rule_ids: [],
     fees: [],
   });
 
@@ -141,6 +146,7 @@ export default function CreateListingPage() {
         price_weekend: data.price_weekend,
       });
       await saveAmenities(listing.id, data.amenity_ids);
+      await saveRules(listing.id, data.rule_ids);
       await saveFees(listing.id, data.fees); 
 
       /* IMAGES */
@@ -195,6 +201,14 @@ export default function CreateListingPage() {
   />
 )}
 {step === 4 && (
+  <HouseRulesStep
+    data={data}
+    onChange={setData}
+    onNext={next}
+    onBack={back}
+  />
+)}
+{step === 5 && (
   <ExtraFeesStep
     data={data}
     onChange={setData}
@@ -204,7 +218,7 @@ export default function CreateListingPage() {
 )}
 
 
-      {step === 5 && (
+      {step === 6 && (
         <PricingStep
           data={data}
           onChange={setData}
@@ -213,7 +227,7 @@ export default function CreateListingPage() {
         />
       )}
 
-      {step === 6 && (
+      {step === 7 && (
         <ImagesStep
           data={data}
           onChange={setData}
@@ -222,7 +236,7 @@ export default function CreateListingPage() {
         />
       )}
 
-      {step === 7 && (
+      {step === 8 && (
         <PreviewPublishStep
           data={data}
           onBack={back}

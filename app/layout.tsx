@@ -5,6 +5,8 @@ import Footer from "@/src/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
 import HeaderWrapper from "@/src/components/layout/HeaderWrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ProfileStatusProvider from "@/src/components/context/ProfileStatusProvider";
+import ChatButton from "@/src/components/home/chatButtonModal";
 import { WishlistProvider } from "@/src/context/WishlistContext";
 
 const geistSans = Geist({
@@ -33,10 +35,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <HeaderWrapper />
-        <WishlistProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-        </WishlistProvider>
+        <ProfileStatusProvider>
+          <WishlistProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </WishlistProvider>
+        </ProfileStatusProvider>
         <Footer />
+
+        <ChatButton />
+
         <Toaster position="top-center" reverseOrder={false} />
       </body>
     </html>
