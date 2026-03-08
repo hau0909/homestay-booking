@@ -5,6 +5,7 @@ import { getUser } from "../profile/getUserProfile";
 type UpdateBookingPricePayload = {
   booking_id: number;
   total_price: number;
+  total_guests?: number;
 };
 
 export async function updateBookingTotalPrice(
@@ -21,6 +22,7 @@ export async function updateBookingTotalPrice(
     .from("bookings")
     .update({
       total_price: payload.total_price,
+      ...(payload.total_guests && { total_guests: payload.total_guests }),
     })
     .eq("id", payload.booking_id)
     .eq("user_id", user.id) // 🔒 owner only

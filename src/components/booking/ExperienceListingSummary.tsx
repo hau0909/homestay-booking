@@ -45,6 +45,11 @@ export default function ExperienceListingSummary({
   // Format the time nicely (e.g. 14:00:00 -> 2:00 PM)
   const formatTime = (timeString: string) => {
     try {
+      if (timeString.includes("T") || timeString.includes("-")) {
+        const date = new Date(timeString);
+        return format(date, "h:mm a");
+      }
+
       const [hours, minutes] = timeString.split(":");
       const d = new Date();
       d.setHours(parseInt(hours, 10));

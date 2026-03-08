@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { ExperienceSlot } from "@/src/types/experienceSlot";
 import toast from "react-hot-toast";
+import { format } from "date-fns";
 
 type Props = {
   value: ExperienceSlot[];
@@ -70,6 +71,11 @@ export default function ExperienceSlotStep({ value, onChange }: Props) {
   // Helper to format time nicely (e.g., 09:00 -> 9:00 AM)
   const formatTime = (timeString: string) => {
     try {
+      if (timeString.includes("T") || timeString.includes("-")) {
+        const date = new Date(timeString);
+        return format(date, "h:mm a");
+      }
+
       const [hours, minutes] = timeString.split(":");
       const hour = parseInt(hours, 10);
       const ampm = hour >= 12 ? "PM" : "AM";

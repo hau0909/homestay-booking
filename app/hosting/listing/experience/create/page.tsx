@@ -295,12 +295,8 @@ export default function Page() {
       const today = new Date().toISOString().split("T")[0];
 
       const formattedSlots = slots.map((slot) => {
-        const startDateTime = new Date(
-          `${today}T${slot.start_time}:00+07:00`,
-        ).toISOString();
-        const endDateTime = new Date(
-          `${today}T${slot.end_time}:00+07:00`,
-        ).toISOString();
+        const startDateTime = `${today}T${slot.start_time}:00`;
+        const endDateTime = `${today}T${slot.end_time}:00`;
 
         return {
           experience_id: experience.id,

@@ -6,6 +6,7 @@ type UpdateBookingDatesPayload = {
   booking_id: number;
   check_in_date: string;
   check_out_date: string;
+  experience_slot_id?: number;
 };
 
 export async function updateBookingDates(
@@ -19,6 +20,7 @@ export async function updateBookingDates(
     .update({
       check_in_date: payload.check_in_date,
       check_out_date: payload.check_out_date,
+      ...(payload.experience_slot_id && { experience_slot_id: payload.experience_slot_id }),
     })
     .eq("id", payload.booking_id)
     .eq("user_id", user.id)
