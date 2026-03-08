@@ -11,6 +11,7 @@ import {
   ListOrdered,
   CalendarCheck,
   Heart,
+  ListCheck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -148,11 +149,20 @@ export default function Header() {
                 Calendar
               </Link>
               <Link
-                href="/hosting/experience-manager"
+                href="/hosting/bookings"
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+                style={{ marginLeft: 16 }}
               >
-                <Binoculars size={30} />
-                Host Experience Manager
+                <ListOrdered size={30} />
+                Booking Experience
+              </Link>
+              <Link
+                href="/hosting/booking-experience"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+                style={{ marginLeft: 16 }}
+              >
+                <ListCheck size={30} />
+                Booking Experience
               </Link>
             </nav>
           </>
