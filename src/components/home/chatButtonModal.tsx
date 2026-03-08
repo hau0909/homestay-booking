@@ -136,6 +136,41 @@ export default function ChatButton() {
           });
         },
       )
+
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversations",
+        },
+        async () => {
+          const data = await getConversations(currentUserId);
+
+          if (!data) return;
+
+          const formatted = data.map((conv: any) => {
+            const otherUser =
+              conv.host.id === currentUserId ? conv.guest : conv.host;
+
+            const lastMessage = conv.messages?.[0];
+
+            return {
+              conversation_id: conv.id,
+              full_name: otherUser.full_name || "User",
+              avatar: otherUser.avatar_url,
+              last_message: conv.last_message_content,
+              last_message_sender_id: lastMessage?.sender_id,
+              last_message_time: lastMessage?.created_at,
+              is_read: lastMessage?.is_read ?? true,
+              is_host: conv.host_id === currentUserId,
+            };
+          });
+
+          setConversations(formatted);
+        },
+      )
+
       .subscribe();
 
     return () => {
