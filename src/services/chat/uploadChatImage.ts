@@ -11,7 +11,7 @@ export const uploadChatImage = async (
 
     const { error } = await supabase.storage
       .from(BUCKET)
-      .update(filePath, file);
+      .upload(filePath, file);
 
     if (error) {
       console.log(error);
