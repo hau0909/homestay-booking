@@ -8,7 +8,7 @@ interface CalendarProps {
   onDateSelect?: (date: Date) => void;
   checkInDate?: Date | null;
   checkOutDate?: Date | null;
-  calendarType?: "checkIn" | "checkOut";
+  calendarType?: "checkIn" | "checkOut" | "dateRange";
 }
 
 export default function Calendar({
@@ -39,11 +39,28 @@ export default function Calendar({
   };
 
   const isSelectedDate = (date: Date) => {
+    if (calendarType === "dateRange") {
+      if (checkInDate && date.getTime() === checkInDate.getTime()) return true;
+      if (checkOutDate && date.getTime() === checkOutDate.getTime()) return true;
+      return false;
+    }
+    if (calendarType === "checkIn" && checkInDate && date.getTime() === checkInDate.getTime()) return true;
+    if (calendarType === "checkOut" && checkOutDate && date.getTime() === checkOutDate.getTime()) return true;
+
     if (!selectedDate) return false;
     return date.getTime() === selectedDate.getTime();
   };
 
+  const isInRange = (date: Date) => {
+    if (calendarType === "dateRange" && checkInDate && checkOutDate) {
+      return date > checkInDate && date < checkOutDate;
+    }
+    return false;
+  };
+
   const isDisabledDate = (date: Date) => {
+    if (calendarType === "dateRange") return false;
+
     // Disable ngày đã chọn ở phía còn lại
     if (calendarType === "checkIn" && checkOutDate) {
       return date >= checkOutDate;
@@ -96,6 +113,7 @@ export default function Calendar({
   
   const isPast = currentDate < today;
   const isSelected = isSelectedDate(currentDate);
+  const inRange = isInRange(currentDate);
   const isDisabled = isDisabledDate(currentDate);
 
   // Khi gửi dữ liệu đi hoặc log ra:
@@ -108,10 +126,12 @@ export default function Calendar({
           disabled={isPast || isDisabled}
           className={`p-2 text-center transition-all duration-200 relative min-w-[40px] min-h-[40px] flex items-center justify-center ${
             isSelected
-              ? "bg-[#328E6E] text-white rounded-full font-semibold"
+              ? "bg-[#328E6E] text-white rounded-full font-semibold relative z-10"
               : isPast || isDisabled
                 ? "text-[#E1EEBC] cursor-not-allowed"
-                : "text-[#328E6E] hover:bg-[#E1EEBC] rounded-full font-medium"
+                : inRange
+                  ? "bg-[#E1EEBC] bg-opacity-40 text-[#328E6E] font-medium"
+                  : "text-[#328E6E] hover:bg-[#E1EEBC] rounded-full font-medium"
           }`}
         >
           {day}
