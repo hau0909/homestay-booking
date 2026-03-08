@@ -148,22 +148,7 @@ export default function Header() {
                 <CalendarCheck size={30} />
                 Calendar
               </Link>
-              <Link
-                href="/hosting/bookings"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-                style={{ marginLeft: 16 }}
-              >
-                <ListOrdered size={30} />
-                Booking Experience
-              </Link>
-              <Link
-                href="/hosting/booking-experience"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-                style={{ marginLeft: 16 }}
-              >
-                <ListCheck size={30} />
-                Booking Experience
-              </Link>
+              
             </nav>
           </>
         ) : (
