@@ -19,6 +19,8 @@ export interface ListingDetailWithHost {
   room_size: number | null;
   price_weekday: number | null;
   price_weekend: number | null;
+  // Type
+  listing_type: string;
   // Location names
   province_name: string | null;
   district_name: string | null;
@@ -45,6 +47,7 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
         longitude,
         category_id,
         host_id,
+        listing_type,
         homes (
           max_guests,
           bed_count,
@@ -112,6 +115,7 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
       longitude: data.longitude,
       category_id: data.category_id,
       host_id: data.host_id,
+      listing_type: data.listing_type,
       quantity: home?.quantity || null,
       max_guests: home?.max_guests || null,
       bed_count: home?.bed_count || null,

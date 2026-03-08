@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import Calendar from "../home/Calendar";
 import GuestSelector from "../home/GuestSelector";
@@ -10,14 +10,23 @@ import LocationSelector from "../home/LocationSelector";
 import { Province } from "@/src/types/location";
 import { getAllProvinces } from "@/src/services/location/getAllProvinces";
 
-export default function CompactSearchBar() {
+interface CompactSearchBarProps {
+  isExperience?: boolean;
+}
+
+export default function CompactSearchBar({ isExperience }: CompactSearchBarProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  
+  const isExperiencePage = isExperience !== undefined ? isExperience : pathname === "/experiences" || pathname.startsWith("/experiences");
+  const checkInLabel = isExperiencePage ? "Start Time" : "Check In";
+  const checkOutLabel = isExperiencePage ? "End Time" : "Check Out";
   
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestSelector, setShowGuestSelector] = useState(false);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
-  const [calendarType, setCalendarType] = useState<"checkIn" | "checkOut">("checkIn");
+  const [calendarType, setCalendarType] = useState<"checkIn" | "checkOut" | "dateRange">("checkIn");
   const [checkInDate, setCheckInDate] = useState<Date | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
   const [guestCounts, setGuestCounts] = useState({
@@ -58,15 +67,35 @@ export default function CompactSearchBar() {
   };
 
   const handleDateSelect = (date: Date) => {
-    if (calendarType === "checkIn") {
+    if (calendarType === "dateRange") {
+      if (!checkInDate || (checkInDate && checkOutDate)) {
+        setCheckInDate(date);
+        setCheckOutDate(null);
+      } else {
+        if (date < checkInDate) {
+          setCheckInDate(date);
+        } else {
+          setCheckOutDate(date);
+          setShowCalendar(false);
+        }
+      }
+    } else if (calendarType === "checkIn") {
       setCheckInDate(date);
       if (checkOutDate && date > checkOutDate) {
         setCheckOutDate(null);
       }
+      setShowCalendar(false);
     } else {
       setCheckOutDate(date);
+      setShowCalendar(false);
     }
-    setShowCalendar(false);
+  };
+
+  const handleWhenClick = () => {
+    setCalendarType("dateRange");
+    setShowCalendar(true);
+    setShowGuestSelector(false);
+    setShowLocationSelector(false);
   };
 
   const handleCheckInClick = () => {
@@ -109,7 +138,8 @@ export default function CompactSearchBar() {
     // Chỉ dùng số lượng Adults để filter theo max_guests
     if (guestCounts.adults > 0) params.set("guests", guestCounts.adults.toString());
 
-    router.push(`/search?${params.toString()}`);
+    const basePath = isExperiencePage ? "/experiences" : "/search";
+    router.push(`${basePath}?${params.toString()}`);
   };
 
   // Initialize from URL params
@@ -198,33 +228,50 @@ export default function CompactSearchBar() {
           )}
         </div>
 
-        {/* Check In */}
-        <div
-          onClick={handleCheckInClick}
-          className="px-4 py-2 cursor-pointer border-r border-gray-200 min-w-[100px]"
-        >
-          <input
-            type="text"
-            placeholder="Check In"
-            value={formatDate(checkInDate)}
-            readOnly
-            className="w-full text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer"
-          />
-        </div>
+        {/* Dates */}
+        {isExperiencePage ? (
+          <div
+            onClick={handleWhenClick}
+            className="flex flex-col justify-center px-4 py-1 cursor-pointer border-r border-gray-200 min-w-[140px]"
+          >
+            <span className="text-xs font-bold text-gray-900 ml-1 leading-none mb-1">When</span>
+            <input
+              type="text"
+              placeholder="Add dates"
+              value={!checkInDate && !checkOutDate ? "" : checkInDate && !checkOutDate ? formatDate(checkInDate) : `${formatDate(checkInDate)} - ${formatDate(checkOutDate)}`}
+              readOnly
+              className="w-full text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer ml-1 leading-none"
+            />
+          </div>
+        ) : (
+          <>
+            <div
+              onClick={handleCheckInClick}
+              className="px-4 py-2 cursor-pointer border-r border-gray-200 min-w-[100px]"
+            >
+              <input
+                type="text"
+                placeholder={checkInLabel}
+                value={formatDate(checkInDate)}
+                readOnly
+                className="w-full text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer"
+              />
+            </div>
 
-        {/* Check Out */}
-        <div
-          onClick={handleCheckOutClick}
-          className="px-4 py-2 cursor-pointer border-r border-gray-200 min-w-[100px]"
-        >
-          <input
-            type="text"
-            placeholder="Check Out"
-            value={formatDate(checkOutDate)}
-            readOnly
-            className="w-full text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer"
-          />
-        </div>
+            <div
+              onClick={handleCheckOutClick}
+              className="px-4 py-2 cursor-pointer border-r border-gray-200 min-w-[100px]"
+            >
+              <input
+                type="text"
+                placeholder={checkOutLabel}
+                value={formatDate(checkOutDate)}
+                readOnly
+                className="w-full text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none bg-transparent cursor-pointer"
+              />
+            </div>
+          </>
+        )}
 
         {/* Guests */}
         <div

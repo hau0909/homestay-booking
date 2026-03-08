@@ -10,6 +10,8 @@ import {
 import { getHostInfo, HostInfo } from "@/src/services/profile/getHostInfo";
 import { getHomeByListingId } from "@/src/services/home/getHomeByListingId";
 import { Home } from "@/src/types/home";
+import { getExperienceSlotsByListingId } from "@/src/services/experience/getExperienceSlotsByListingId";
+import { ExperienceSlot } from "@/src/types/experienceSlot";
 import {
   Users,
   Bed,
@@ -40,6 +42,7 @@ export default function ListingDetailPage() {
   const [host, setHost] = useState<HostInfo | null>(null);
   const [home, setHome] = useState<Home | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
+  const [slots, setSlots] = useState<ExperienceSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -93,6 +96,12 @@ export default function ListingDetailPage() {
         // Fetch rules
         const rulesData = await getListingRules(parseInt(listingId));
         setRules(rulesData);
+
+        // Fetch slots if it's an experience
+        if (listingData?.listing_type === "EXPERIENCE") {
+          const slotsData = await getExperienceSlotsByListingId(listingId);
+          setSlots(slotsData);
+        }
 
         if (listingData?.host_id) {
           const hostData = await getHostInfo(listingData.host_id);
@@ -202,7 +211,7 @@ export default function ListingDetailPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3">
         <div className="max-w-[1920px] mx-auto">
-          <CompactSearchBar />
+          <CompactSearchBar isExperience={listing?.listing_type === "EXPERIENCE"} />
         </div>
       </header>
       {/* Main Content */}
@@ -310,6 +319,78 @@ export default function ListingDetailPage() {
         <div className="grid grid-cols-3 gap-12">
           {/* Left Column - Details */}
           <div className="col-span-2">
+
+            <h2 className="text-xl font-bold mb-3 text-black">
+              {listing.description}
+            </h2>
+            {listing.listing_type === "EXPERIENCE" ? (
+              <div className="text-sm text-gray-700 flex flex-col gap-4 mt-4">
+                {slots.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {slots.map((slot) => (
+                      <div key={slot.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="flex gap-2 items-center mb-1">
+                          <span className="font-semibold uppercase text-xs text-gray-500 w-16">Start:</span>
+                          <span className="font-medium text-black">{new Date(slot.start_time).toLocaleString()}</span>
+                        </div>
+                        <div className="flex gap-2 items-center mb-1">
+                          <span className="font-semibold uppercase text-xs text-gray-500 w-16">End:</span>
+                          <span className="font-medium text-black">{new Date(slot.end_time).toLocaleString()}</span>
+                        </div>
+                        <div className="flex gap-2 items-center mt-3 pt-3 border-t border-gray-200">
+                          <span className="font-semibold text-gray-700">Max Attendees:</span>
+                          <span className="font-bold text-[#328E6E]">{slot.max_attendees}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No available slots</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2">
+                  <span>
+                    <strong>quantity:</strong> {home?.quantity ?? ""}
+                  </span>
+                  <span>
+                    <strong>max_guests:</strong> {home?.max_guests ?? ""}
+                  </span>
+                  <span>
+                    <strong>room_size:</strong> {home?.room_size ?? ""}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2 mt-1">
+                  <span>
+                    <strong>bed_count:</strong> {home?.bed_count ?? ""}
+                  </span>
+                  <span>
+                    <strong>bath_count:</strong> {home?.bath_count ?? ""}
+                  </span>
+                </div>
+              </>
+            )}
+            <div className="w-2/3 border-b border-gray-200 mt-5"></div>
+
+            {/* House Rules Section */}
+            {listing.listing_type !== "EXPERIENCE" && (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold mb-4 text-black">House Rules</h3>
+                {rules.length > 0 ? (
+                  <ul className="space-y-2">
+                    {rules.map((rule) => (
+                      <li key={rule.id} className="text-sm text-gray-700 flex items-start gap-3">
+                        <span className="text-gray-400 mt-1">✔</span>
+                        <span>{rule.content}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">No house rules</p>
+                )}
+              </div>
+            )}
             {/* Host Info */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-4 mt-6">
@@ -340,34 +421,37 @@ export default function ListingDetailPage() {
                 )}
               </div>
             </div>
+
           </div>
 
           {/* Right Column - Booking Card */}
           <div className="col-span-1">
-            <div className="border border-gray-300 rounded-2xl p-6 shadow-lg sticky top-24">
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-2xl font-semibold underline text-black">
-                  {formatPrice(listing.price_weekday)}
-                </span>
-                <span className="text-black">/ weekday night</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-2xl font-semibold underline text-black">
-                  {formatPrice(listing.price_weekend)}
-                </span>
-                <span className="text-black">/ weekend night</span>
-              </div>
+            {listing.listing_type !== "EXPERIENCE" && (
+              <div className="border border-gray-300 rounded-2xl p-6 shadow-lg sticky top-24">
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-2xl font-semibold underline text-black">
+                    {formatPrice(listing.price_weekday)}
+                  </span>
+                  <span className="text-black">/ weekday night</span>
+                </div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-2xl font-semibold underline text-black">
+                    {formatPrice(listing.price_weekend)}
+                  </span>
+                  <span className="text-black">/ weekend night</span>
+                </div>
 
-              <Link href={`/book/homes?listing=${listingId}`}>
-                <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
-                  Book Now
-                </button>
-              </Link>
+                <Link href={`/book/homes?listing=${listingId}`}>
+                  <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
+                    Book Now
+                  </button>
+                </Link>
 
-              <p className="text-center text-sm text-gray-500">
-                You won&apos;t be charged yet
-              </p>
-            </div>
+                <p className="text-center text-sm text-gray-500">
+                  You won&apos;t be charged yet
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
