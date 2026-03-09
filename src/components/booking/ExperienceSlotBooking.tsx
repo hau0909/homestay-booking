@@ -97,7 +97,7 @@ export default function ExperienceSlotBooking({
               <Clock size={18} /> Select Time Slot
             </label>
             {selectedDate ? (
-              <div className="flex-1 border border-slate-200 rounded-2xl p-4 bg-white shadow-sm space-y-3 max-h-[350px] overflow-y-auto">
+              <div className="flex-1 border border-slate-200 rounded-2xl p-4 bg-white shadow-sm space-y-3 max-h-87.5 overflow-y-auto">
                 {availableSlots.filter((slot) => slot.available_guests > 0)
                   .length > 0 ? (
                   availableSlots
@@ -128,7 +128,7 @@ export default function ExperienceSlotBooking({
                       </button>
                     ))
                 ) : (
-                  <div className="h-full min-h-[250px] flex flex-col items-center justify-center text-center">
+                  <div className="h-full min-h-[25s0px] flex flex-col items-center justify-center text-center">
                     <p className="text-sm text-slate-500">
                       No slots available on this date.
                     </p>
@@ -136,7 +136,7 @@ export default function ExperienceSlotBooking({
                 )}
               </div>
             ) : (
-              <div className="flex-1 w-full border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center justify-center text-center min-h-[350px]">
+              <div className="flex-1 w-full border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center justify-center text-center min-h-87.5">
                 <CalendarIcon className="w-10 h-10 text-slate-300 mb-4" />
                 <p className="text-sm text-slate-500">
                   Pick a date first to see available slots

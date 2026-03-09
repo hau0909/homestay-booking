@@ -285,7 +285,7 @@ export default function Page() {
   };
 
   const handleCreate = async () => {
-    if (!experience || slots.length === 0) return;
+    if (!experience || slots.length === 0 || !listing) return;
 
     setOpenConfirmDialog(false);
 
@@ -310,8 +310,13 @@ export default function Page() {
       const insertedSlots = await createExperienceSlots(formattedSlots);
 
       if (insertedSlots) {
-        toast.success("Experience created successfully");
-        router.push("/hosting/listing");
+        const isUpdated = await updateListing(listing?.id, {
+          status: "ACTIVE",
+        });
+        if (isUpdated) {
+          toast.success("Experience created successfully");
+          router.push("/hosting/listing");
+        }
       }
     } catch (error) {
       console.error("Experience Slot error:", error);
@@ -392,8 +397,9 @@ export default function Page() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm create experience?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to create this experience listing? You won't
-              be able to easily edit slots immediately after creation.
+              Are you sure you want to create this experience listing? You
+              won&apos;t be able to easily edit slots immediately after
+              creation.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
