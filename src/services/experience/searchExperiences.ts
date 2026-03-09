@@ -174,6 +174,7 @@ export async function searchExperiences(params: SearchExperienceParams = {}): Pr
         all_images: allImageUrls,
         created_at: item.created_at,
         average_rating: null,
+        listing_type: "EXPERIENCE",
       };
     });
 

@@ -29,6 +29,7 @@ export interface ListingWithDetails {
   created_at?: string;
   is_bookable?: boolean;
   is_blocked?: boolean;
+  listing_type?: string;
 }
 
 export interface SearchParams {
@@ -233,6 +234,7 @@ export async function searchListings(params: SearchParams = {}): Promise<{
         all_images: allImageUrls,
         created_at: item.created_at,
         average_rating: null,
+        listing_type: "HOME",
       };
     });
 

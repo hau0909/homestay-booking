@@ -7,6 +7,7 @@ export interface ListingDetailWithHost {
   province_code: string | null;
   district_code: string | null;
   address_detail: string | null;
+  ward_code: string | null;
   latitude: number | null;
   longitude: number | null;
   category_id: number | null;
@@ -24,6 +25,7 @@ export interface ListingDetailWithHost {
   // Location names
   province_name: string | null;
   district_name: string | null;
+  ward_name: string | null;
   // Category
   category_name: string | null;
   // Images
@@ -42,6 +44,7 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
         description,
         province_code,
         district_code,
+        ward_code,
         address_detail,
         latitude,
         longitude,
@@ -57,10 +60,16 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
           quantity,
           room_size
         ),
+        experiences (
+          price_per_person
+        ),
         provinces (
           name
         ),
         districts (
+          name
+        ),
+        wards (
           name
         ),
         categories (
@@ -82,10 +91,11 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
       return null;
     }
 
-    let home = Array.isArray(data.homes) ? data.homes[0] : data.homes;
+    let home: any = Array.isArray(data.homes) ? data.homes[0] : data.homes;
+    let experience: any = Array.isArray(data.experiences) ? data.experiences[0] : data.experiences;
 
     // Fallback: if home not returned by join, fetch directly by listing_id (ensure numeric)
-    if (!home) {
+    if (!home && data.listing_type !== 'EXPERIENCE') {
       const listingNumericId = Number(listingId);
       const { data: homeRow } = await supabase
         .from("homes")
@@ -96,8 +106,21 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
         .single();
       home = homeRow || null;
     }
+    
+    // Fallback for experience
+    if (!experience && data.listing_type === 'EXPERIENCE') {
+      const listingNumericId = Number(listingId);
+      const { data: expRow } = await supabase
+        .from("experiences")
+        .select("price_per_person")
+        .eq("listing_id", Number.isFinite(listingNumericId) ? listingNumericId : listingId)
+        .single();
+      experience = expRow || null;
+    }
+
     const province = Array.isArray(data.provinces) ? data.provinces[0] : data.provinces;
     const district = Array.isArray(data.districts) ? data.districts[0] : data.districts;
+    const ward = Array.isArray(data.wards) ? data.wards[0] : data.wards;
     const category = Array.isArray(data.categories) ? data.categories[0] : data.categories;
     
     const images = data.listing_images || [];
@@ -110,6 +133,7 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
       description: data.description,
       province_code: data.province_code,
       district_code: data.district_code,
+      ward_code: data.ward_code,
       address_detail: data.address_detail,
       latitude: data.latitude,
       longitude: data.longitude,
@@ -121,10 +145,11 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
       bed_count: home?.bed_count || null,
       bath_count: home?.bath_count || null,
       room_size: home?.room_size || null,
-      price_weekday: home?.price_weekday || null,
-      price_weekend: home?.price_weekend || null,
+      price_weekday: home?.price_weekday || experience?.price_per_person || null,
+      price_weekend: home?.price_weekend || experience?.price_per_person || null,
       province_name: province?.name || null,
       district_name: district?.name || null,
+      ward_name: ward?.name || null,
       category_name: category?.name || null,
       thumbnail_url: thumbnailImage?.url || allImageUrls[0] || null,
       all_images: allImageUrls,
