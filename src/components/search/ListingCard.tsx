@@ -201,7 +201,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
             <span className="text-sm font-semibold text-gray-900">
               {formatPrice(listing.price_weekday)}
             </span>
-            <span className="text-sm text-gray-600"> / night</span>
+            <span className="text-sm text-gray-600">
+              {listing.listing_type === "EXPERIENCE" ? " / person" : " / night"}
+            </span>
           </div>
         </div>
       </div>

@@ -142,7 +142,7 @@ export default function SearchPage() {
         <div className="w-1/2 p-6">
           {/* Results Count */}
           <p className="text-sm text-gray-600 mb-6">
-            Hơn {total} nhà ở trong khu vực trên bản đồ
+            Over {total} homes in the map area
           </p>
 
           {/* Loading State */}

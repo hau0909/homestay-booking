@@ -139,7 +139,7 @@ export default function ExperiencesPage() {
         <div className="w-1/2 p-6">
           {/* Results Count */}
           <p className="text-sm text-gray-600 mb-6">
-            Hơn {total} trải nghiệm trong khu vực trên bản đồ
+            Over {total} experiences in the map area
           </p>
 
           {/* Loading State */}

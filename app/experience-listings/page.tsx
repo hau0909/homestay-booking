@@ -1,7 +1,8 @@
 // trietcmce180982_sprint3
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/src/lib/supabase';
+import CompactSearchBar from "@/src/components/search/CompactSearchBar";
 
 interface Experience {
   id: number;
@@ -43,10 +44,18 @@ export default function ExperienceListingsPage() {
 
   return (
     <div className="wishlist-page" style={{ minHeight: '100vh', background: '#fff' }}>
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3 mb-6">
+        <div className="max-w-[1920px] mx-auto flex items-center justify-center gap-4">
+          <Suspense fallback={<div className="h-10 w-full animate-pulse bg-gray-200 rounded-full max-w-2xl"></div>}>
+            <CompactSearchBar isExperience={true} />
+          </Suspense>
+        </div>
+      </header>
+
       <h2 style={{ fontSize: 32, fontWeight: 700, margin: '32px 0 16px', textAlign: 'center' }}>
         Experience Listings <span style={{ color: '#E53E3E' }}>❤️</span>
       </h2>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap', padding: '0 24px' }}>
         {loading ? (
           <div>Loading...</div>
         ) : experiences.length === 0 ? (
@@ -78,3 +87,4 @@ export default function ExperienceListingsPage() {
     </div>
   );
 }
+
