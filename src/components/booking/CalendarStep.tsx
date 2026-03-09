@@ -9,7 +9,6 @@ interface Props {
   value: DateRange | undefined;
   onChange: (range: DateRange | undefined) => void;
   disabledDates: Date[];
-  availableCount?: number;
 }
 
 const isRangeBlocked = (from: Date, to: Date, disabledDates: Date[]) => {
@@ -27,24 +26,13 @@ const isRangeBlocked = (from: Date, to: Date, disabledDates: Date[]) => {
   });
 };
 
+export default function CalendarStep({
   value,
   onChange,
   disabledDates,
-  availableCount,
 }: Props) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  if (availableCount === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-2xl font-semibold">Select dates</p>
-          <p className="text-sm text-slate-500">Không còn phòng khả dụng cho thời gian này.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

@@ -3,16 +3,64 @@
 import { Heart, Star, Users, Bed, Bath, MapPin } from "lucide-react";
 import Link from "next/link";
 import { ListingWithDetails } from "@/src/services/listing/searchListings";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from '@/src/lib/supabase';
+import { useAuth } from '@/src/hooks/useAuth';
 
 interface ListingCardProps {
   listing: ListingWithDetails;
 }
 
 export default function ListingCard({ listing }: ListingCardProps) {
+  const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [loading, setLoading] = useState(false);
   const images = listing.all_images.length > 0 ? listing.all_images : [listing.thumbnail_url || "/placeholder-home.jpg"];
+
+  useEffect(() => {
+    if (!user) return;
+    // Kiểm tra listing đã có trong wishlist chưa
+    const checkWishlist = async () => {
+      const { data, error } = await supabase
+        .from('wishlists')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('listing_id', listing.id);
+      if (!error && data && data.length > 0) setIsLiked(true);
+      else setIsLiked(false);
+    };
+    checkWishlist();
+  }, [user, listing.id]);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return;
+    setLoading(true);
+    if (!isLiked) {
+      // Thêm vào wishlist
+      const { error } = await supabase
+        .from('wishlists')
+        .insert([
+          {
+            user_id: user.id,
+            listing_id: listing.id,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      if (!error) setIsLiked(true);
+    } else {
+      // Xóa khỏi wishlist
+      const { error } = await supabase
+        .from('wishlists')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('listing_id', listing.id);
+      if (!error) setIsLiked(false);
+    }
+    setLoading(false);
+  };
 
   const formatPrice = (price: number | null) => {
     if (!price) return "N/A";
@@ -33,13 +81,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
     e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsLiked(!isLiked);
-    // TODO: Save to wishlist in database
   };
 
   return (
@@ -89,6 +130,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <button
             onClick={handleLike}
             className="absolute top-3 right-3 p-2 bg-white/80 rounded-full hover:bg-white transition-colors hover:scale-110 transform"
+            disabled={loading}
           >
             <Heart 
               className={`w-4 h-4 transition-all ${
@@ -159,7 +201,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
             <span className="text-sm font-semibold text-gray-900">
               {formatPrice(listing.price_weekday)}
             </span>
-            <span className="text-sm text-gray-600"> / night</span>
+            <span className="text-sm text-gray-600">
+              {listing.listing_type === "EXPERIENCE" ? " / person" : " / night"}
+            </span>
           </div>
         </div>
       </div>

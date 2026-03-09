@@ -1,9 +1,12 @@
 export interface Experience {
+  id: number;
   listing_id: number;
+
+  title: string;
+  description: string | null;
+
   price_per_person: number;
-  duration_minutes: number | null;
-  meeting_point: string | null;
-  activity_level: string | null;
-  group_size_limit: number | null;
-  included_items: string | null;
+
+  created_at: string;
+  updated_at: string;
 }

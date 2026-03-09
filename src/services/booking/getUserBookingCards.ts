@@ -10,7 +10,7 @@ export interface BookingCard {
   dateRange: string;
   guestsText: string;
   totalText: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   listingId: string;
   userId: string;
 }

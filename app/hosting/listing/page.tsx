@@ -14,7 +14,9 @@ export default function HostListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
-  const [listingImages, setListingImages] = useState<Record<number, string>>({});
+  const [listingImages, setListingImages] = useState<Record<number, string>>(
+    {},
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +25,10 @@ export default function HostListingsPage() {
       try {
         if (user) {
           const profile = await getProfile(user.id);
-          setIsHost((profile.role === "USER" && profile.is_host) || profile.role === "ADMIN");
+          setIsHost(
+            (profile.role === "USER" && profile.is_host) ||
+              profile.role === "ADMIN",
+          );
         }
         const data = await getHostListings();
         setListings(data);
@@ -59,12 +64,20 @@ export default function HostListingsPage() {
     <div className="max-w-7xl mx-auto py-10 px-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#328E6E]">My Listings</h1>
-        <a
-          href="/hosting/listing/create"
-          className="bg-[#328E6E] text-white px-4 py-2 rounded-lg"
-        >
-          Create New Listing
-        </a>
+        <div className="flex gap-2">
+          <a
+            href="/hosting/listing/create"
+            className="bg-[#328E6E] text-white px-4 py-2 rounded-lg"
+          >
+            Create New Homestay Listing
+          </a>
+          <a
+            href="/hosting/listing/experience/create"
+            className="bg-[#2ba3cb] text-white px-4 py-2 rounded-lg"
+          >
+            Create New Experience Listing
+          </a>
+        </div>
       </div>
       {listings.length === 0 ? (
         <div className="text-gray-500">No listings found.</div>
@@ -74,15 +87,27 @@ export default function HostListingsPage() {
             <div key={listing.id} className="relative h-full">
               <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
                 {listingImages[listing.id] ? (
-                  <img src={listingImages[listing.id]} alt={listing.title} className="w-full h-40 object-cover rounded mb-3" />
+                  <img
+                    src={listingImages[listing.id]}
+                    alt={listing.title}
+                    className="w-full h-40 object-cover rounded mb-3"
+                  />
                 ) : (
-                  <div className="w-full h-40 bg-gray-200 flex items-center justify-center rounded mb-3 text-gray-400">No Image</div>
+                  <div className="w-full h-40 bg-gray-200 flex items-center justify-center rounded mb-3 text-gray-400">
+                    No Image
+                  </div>
                 )}
                 <div className="flex-1 flex flex-col">
                   <h2 className="text-xl font-bold mb-1">{listing.title}</h2>
-                  <div className="text-sm text-gray-500 mb-1">Type: {listing.listing_type}</div>
-                  <div className="text-sm text-gray-500 mb-1">Address: {listing.address_detail}</div>
-                  <div className="text-sm text-gray-500 mb-2">{listing.description}</div>
+                  <div className="text-sm text-gray-500 mb-1">
+                    Type: {listing.listing_type}
+                  </div>
+                  <div className="text-sm text-gray-500 mb-1">
+                    Address: {listing.address_detail}
+                  </div>
+                  <div className="text-sm text-gray-500 mb-2">
+                    {listing.description}
+                  </div>
                 </div>
                 {/* Chỉ user host mới được edit */}
                 {isHost && (
@@ -101,4 +126,3 @@ export default function HostListingsPage() {
     </div>
   );
 }
-

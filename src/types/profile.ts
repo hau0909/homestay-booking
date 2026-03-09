@@ -1,4 +1,4 @@
-import { UserRole } from "./enums";
+import { ProfileStatus, UserRole } from "./enums";
 
 export interface Profile {
   id: string; // uuid
@@ -12,4 +12,5 @@ export interface Profile {
   identity_card: string | null;
   created_at: string;
   updated_at: string;
+  status: ProfileStatus;
 }

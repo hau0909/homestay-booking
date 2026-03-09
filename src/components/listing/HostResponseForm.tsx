@@ -45,7 +45,7 @@ export default function HostResponseForm({ reviewId, hostId, onSuccess }: HostRe
   return (
     <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Phản hồi của chủ nhà:</label>
+        <label className="block font-semibold mb-1">Host response:</label>
         <textarea
           className="w-full border rounded p-2"
           value={content}
@@ -59,7 +59,7 @@ export default function HostResponseForm({ reviewId, hostId, onSuccess }: HostRe
         className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52]"
         disabled={loading}
       >
-        {loading ? "Đang gửi..." : "Gửi phản hồi"}
+        {loading ? "Sending..." : "Send Response"}
       </button>
     </form>
   );

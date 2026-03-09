@@ -1,11 +1,18 @@
 import { supabase } from "@/src/lib/supabase";
 import { Amenity } from "@/src/types/amenity";
+import { AmenityType } from "@/src/types/enums";
 
-export async function getAmenities(): Promise<Amenity[]> {
+export async function getAmenities(typeFilter?: AmenityType): Promise<Amenity[]> {
   try {
-    const { data, error, status, statusText } = await supabase
+    let query = supabase
       .from("amenities")
       .select("id, name, icon_url, type");
+
+    if (typeFilter) {
+      query = query.in("type", [typeFilter, "BOTH"]);
+    }
+
+    const { data, error, status, statusText } = await query;
 
     console.log("Supabase response status:", status, statusText);
     

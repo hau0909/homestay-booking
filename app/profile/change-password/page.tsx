@@ -10,7 +10,6 @@ import {
   validatePasswordMatch,
   validatePasswordStrength,
 } from "@/src/utils/validation";
-import { logoutUser } from "@/src/services/auth/auth.service";
 import { useRouter } from "next/navigation";
 
 const Page = () => {
@@ -42,7 +41,6 @@ const Page = () => {
       }
       await changePassword(newpassword);
       toast.success("Change password successfully");
-      await logoutUser();
       router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");

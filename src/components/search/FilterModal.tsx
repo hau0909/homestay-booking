@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { Amenity } from "@/src/types/amenity";
 import { getAmenities } from "@/src/services/amenity/amenity.service";
+import { usePathname } from "next/navigation";
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -37,6 +38,8 @@ export default function FilterModal({
   const [showMoreAmenities, setShowMoreAmenities] = useState(false);
   const [loadingAmenities, setLoadingAmenities] = useState(true);
 
+  const pathname = usePathname();
+
   // Fetch amenities from database when modal opens
   useEffect(() => {
     if (!isOpen) return;
@@ -44,13 +47,15 @@ export default function FilterModal({
     const fetchAmenities = async () => {
       console.log("Fetching amenities...");
       setLoadingAmenities(true);
-      const data = await getAmenities();
+      // Decide amenity type based on current route
+      const amenityType = pathname === "/experiences" ? "EXP" : "HOME";
+      const data = await getAmenities(amenityType);
       console.log("Amenities loaded:", data);
       setAmenities(data);
       setLoadingAmenities(false);
     };
     fetchAmenities();
-  }, [isOpen]);
+  }, [isOpen, pathname]);
 
   const visibleAmenities = showMoreAmenities
     ? amenities

@@ -7,6 +7,7 @@ export type ListingStatus =
   | "PENDING"
   | "ACTIVE"
   | "HIDDEN"
+  | "REJECTED"
   | "BANNED";
 
 export type BookingStatus =
@@ -15,6 +16,12 @@ export type BookingStatus =
   | "CONFIRMED"
   | "COMPLETED"
   | "CANCELLED";
+
+export type ProfileStatus =
+  | "active"
+  | "banned"
+ 
+
 
 export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 

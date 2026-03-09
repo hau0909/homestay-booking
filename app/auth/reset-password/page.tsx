@@ -73,15 +73,16 @@ const Page = () => {
     }
   };
 
-  useEffect(() => {});
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Đã validate realtime, chỉ check lại trước khi submit
+
     if (passwordError || confirmError || !password || !newPassword) return;
     try {
       setLoading(true);
       await updatePassword(password);
       toast.success("Reset password successfully!");
+      await logoutUser();
+      router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {

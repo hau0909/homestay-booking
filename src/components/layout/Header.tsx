@@ -10,6 +10,8 @@ import {
   Home,
   ListOrdered,
   CalendarCheck,
+  Heart,
+  ListCheck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -72,7 +74,7 @@ export default function Header() {
 
     const checkHostStatus = async () => {
       try {
-        const status = await getHostStatus(user.id);
+        const status = await getHostStatus();
         setHost(status);
 
         if (status && pathname === "/") {
@@ -146,6 +148,7 @@ export default function Header() {
                 <CalendarCheck size={30} />
                 Calendar
               </Link>
+              
             </nav>
           </>
         ) : (
@@ -159,11 +162,22 @@ export default function Header() {
                 Homestay
               </Link>
               <Link
-                href="#"
+
+                href="/experiences"
+
+                href="/experience-listings"
+
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
               >
                 <Binoculars size={30} />
                 Experiences
+              </Link>
+              <Link
+                href="/wishlist"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Heart size={30} />
+                Wishlist
               </Link>
             </nav>
           </>
