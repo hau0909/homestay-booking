@@ -66,6 +66,10 @@ const EditBookingStatusModal: React.FC<EditBookingStatusModalProps> = ({
     if (currentStatus === 'CONFIRMED') {
       return ["COMPLETED"];
     }
+    if (currentStatus === 'PENDING') {
+      return ["CONFIRMED", "CANCELLED"];
+    }
+    // Fallback if needed
     return ["CONFIRMED", "COMPLETED", "CANCELLED"];
   };
 
