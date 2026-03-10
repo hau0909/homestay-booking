@@ -16,9 +16,11 @@ interface Booking {
   status: string;
   total_price: number;
   listingTitle?: string;
+  listingType?: string;
 }
 
 export default function Page() {
+  const [activeTab, setActiveTab] = useState<"HOME" | "EXPERIENCE">("HOME");
   const [editModal, setEditModal] = useState<{
     open: boolean;
     bookingId?: string;
@@ -104,12 +106,14 @@ export default function Page() {
         // 2. Lấy tất cả listing của host
         const { data: listings, error: listingsError } = await supabase
           .from("listings")
-          .select("id, title")
+          .select("id, title, listing_type")
           .eq("host_id", hostId);
         if (listingsError) throw listingsError;
         const listingMap: Record<string, string> = {};
+        const listingTypeMap: Record<string, string> = {};
         (listings || []).forEach((l: any) => {
           listingMap[l.id] = l.title;
+          listingTypeMap[l.id] = l.listing_type;
         });
         const listingIds = (listings || []).map((l: any) => l.id);
 
@@ -124,10 +128,10 @@ export default function Page() {
           bookingsData = (bookings || []).map((b: any) => ({
             ...b,
             listingTitle: listingMap[b.listing_id],
+            listingType: listingTypeMap[b.listing_id] || "HOME",
           }));
         }
         setBookings(bookingsData);
-        setFilteredBookings(bookingsData);
       } catch (err: any) {
         setError(err.message || "Unknown error");
       } finally {
@@ -138,17 +142,54 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
+    let result = bookings.filter((b) => b.listingType === activeTab);
+    
     if (selectedStatus === "ALL") {
-      setFilteredBookings(bookings);
+      setFilteredBookings(result);
     } else {
       setFilteredBookings(
-        bookings.filter((b: any) => b.status === selectedStatus),
+        result.filter((b: any) => b.status === selectedStatus),
       );
     }
-  }, [selectedStatus, bookings]);
+  }, [selectedStatus, bookings, activeTab]);
 
   return (
     <div style={{ background: "#f7fafd", minHeight: "100vh", padding: "32px" }}>
+      <div style={{ display: "flex", gap: "24px", marginBottom: "24px", borderBottom: "2px solid #e3e8ee" }}>
+        <button
+          onClick={() => setActiveTab("HOME")}
+          style={{
+            background: "none",
+            border: "none",
+            padding: "12px 0",
+            fontSize: "18px",
+            fontWeight: activeTab === "HOME" ? 700 : 500,
+            color: activeTab === "HOME" ? "#328E6E" : "#6b7280",
+            borderBottom: activeTab === "HOME" ? "3px solid #328E6E" : "3px solid transparent",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          Home
+        </button>
+        <button
+          onClick={() => setActiveTab("EXPERIENCE")}
+          style={{
+            background: "none",
+            border: "none",
+            padding: "12px 0",
+            fontSize: "18px",
+            fontWeight: activeTab === "EXPERIENCE" ? 700 : 500,
+            color: activeTab === "EXPERIENCE" ? "#328E6E" : "#6b7280",
+            borderBottom: activeTab === "EXPERIENCE" ? "3px solid #328E6E" : "3px solid transparent",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          Experiences
+        </button>
+      </div>
+
       <h1
         style={{
           fontSize: 22,
@@ -158,7 +199,7 @@ export default function Page() {
           letterSpacing: 0.2,
         }}
       >
-        All Bookings for Your Listings
+        All Bookings for Your {activeTab === "HOME" ? "Homes" : "Experiences"}
       </h1>
 
       {/* Status Filter Buttons - UI cải tiến */}
@@ -315,19 +356,21 @@ export default function Page() {
               >
                 Total
               </th>
-              <th
-                style={{
-                  padding: "14px 10px",
-                  borderBottom: "2px solid #e3e8ee",
-                  textAlign: "center",
-                  fontSize: 15,
-                  color: "#333",
-                  fontWeight: 700,
-                  minWidth: 120,
-                }}
-              >
-                Actions
-              </th>
+              {activeTab === "HOME" && (
+                <th
+                  style={{
+                    padding: "14px 10px",
+                    borderBottom: "2px solid #e3e8ee",
+                    textAlign: "center",
+                    fontSize: 15,
+                    color: "#333",
+                    fontWeight: 700,
+                    minWidth: 120,
+                  }}
+                >
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -431,75 +474,77 @@ export default function Page() {
                 >
                   ${booking.total_price}
                 </td>
-                <td
-                  style={{
-                    padding: "12px 10px",
-                    borderBottom: "1px solid #e3e8ee",
-                    textAlign: "right",
-                    minWidth: 120,
-                  }}
-                >
-                  <BookingActions
-                    status={booking.status}
-                    onView={async () => {
-                      // Lấy thông tin phòng từ DB (listings + homes)
-                      const { data: listing } = await supabase
-                        .from("listings")
-                        .select("*")
-                        .eq("id", booking.listing_id)
-                        .single();
-                      const { data: home } = await supabase
-                        .from("homes")
-                        .select("max_guests, price_weekday, price_weekend")
-                        .eq("listing_id", booking.listing_id)
-                        .single();
-                      // Lấy thông tin user từ DB (bảng profiles)
-                      let userInfo: Record<string, any> = {};
-                      const { data: userProfile } = await supabase
-                        .from("profiles")
-                        .select("full_name, email, phone")
-                        .eq("id", booking.user_id)
-                        .single();
-                      if (userProfile) {
-                        userInfo = {
-                          guest_name: userProfile.full_name,
-                          guest_email: userProfile.email,
-                          guest_phone: userProfile.phone,
-                          guest_address: undefined, // Address không có trong bảng profiles
-                        };
-                      }
-                      setViewModal({
-                        open: true,
-                        booking: {
-                          ...booking,
-                          guest_name: userInfo.guest_name,
-                          guest_email: userInfo.guest_email,
-                          guest_phone: userInfo.guest_phone,
-                          guest_address: userInfo.guest_address,
-                        },
-                        listing: {
-                          ...listing,
-                          max_guests: home?.max_guests ?? null,
-                          price_weekday: home?.price_weekday ?? null,
-                          price_weekend: home?.price_weekend ?? null,
-                        },
-                      });
+                {activeTab === "HOME" && (
+                  <td
+                    style={{
+                      padding: "12px 10px",
+                      borderBottom: "1px solid #e3e8ee",
+                      textAlign: "right",
+                      minWidth: 120,
                     }}
-                    onEdit={
-                      booking.status === "PENDING" ||
-                      booking.status === "CONFIRMED"
-                        ? () =>
-                            setEditModal({
-                              open: true,
-                              bookingId: booking.id,
-                              status: booking.status,
-                              listing_id: booking.listing_id,
-                              total_price: booking.total_price,
-                            })
-                        : undefined
-                    }
-                  />
-                </td>
+                  >
+                    <BookingActions
+                      status={booking.status}
+                      onView={async () => {
+                        // Lấy thông tin phòng từ DB (listings + homes)
+                        const { data: listing } = await supabase
+                          .from("listings")
+                          .select("*")
+                          .eq("id", booking.listing_id)
+                          .single();
+                        const { data: home } = await supabase
+                          .from("homes")
+                          .select("max_guests, price_weekday, price_weekend")
+                          .eq("listing_id", booking.listing_id)
+                          .single();
+                        // Lấy thông tin user từ DB (bảng profiles)
+                        let userInfo: Record<string, any> = {};
+                        const { data: userProfile } = await supabase
+                          .from("profiles")
+                          .select("full_name, email, phone")
+                          .eq("id", booking.user_id)
+                          .single();
+                        if (userProfile) {
+                          userInfo = {
+                            guest_name: userProfile.full_name,
+                            guest_email: userProfile.email,
+                            guest_phone: userProfile.phone,
+                            guest_address: undefined, // Address không có trong bảng profiles
+                          };
+                        }
+                        setViewModal({
+                          open: true,
+                          booking: {
+                            ...booking,
+                            guest_name: userInfo.guest_name,
+                            guest_email: userInfo.guest_email,
+                            guest_phone: userInfo.guest_phone,
+                            guest_address: userInfo.guest_address,
+                          },
+                          listing: {
+                            ...listing,
+                            max_guests: home?.max_guests ?? null,
+                            price_weekday: home?.price_weekday ?? null,
+                            price_weekend: home?.price_weekend ?? null,
+                          },
+                        });
+                      }}
+                      onEdit={
+                        booking.status === "PENDING" ||
+                        booking.status === "CONFIRMED"
+                          ? () =>
+                              setEditModal({
+                                open: true,
+                                bookingId: booking.id,
+                                status: booking.status,
+                                listing_id: booking.listing_id,
+                                total_price: booking.total_price,
+                              })
+                          : undefined
+                      }
+                    />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -532,3 +577,4 @@ export default function Page() {
     </div>
   );
 }
+
