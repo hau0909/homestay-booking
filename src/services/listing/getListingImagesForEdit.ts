@@ -1,7 +1,7 @@
 import { supabase } from "@/src/lib/supabase";
 import { ListingImage } from "@/src/types/listingImages";
 
-export async function getListingImages(
+export async function getListingImagesForEdit(
   listingId: number
 ): Promise<ListingImage[]> {
 
@@ -9,7 +9,6 @@ export async function getListingImages(
     .from("listing_images")
     .select("id, listing_id, url, caption, is_thumbnail, created_at")
     .eq("listing_id", listingId)
-    .order("is_thumbnail", { ascending: false })
     .order("created_at", { ascending: true });
 
   if (error) throw error;
