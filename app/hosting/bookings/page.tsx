@@ -78,13 +78,15 @@ export default function Page() {
             : b,
         ),
       );
-      await fetch("/api/review-alert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: bookingId,
-        }),
-      });
+      if (newStatus === "COMPLETED") {
+        await fetch("/api/review-alert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            booking_id: bookingId,
+          }),
+        });
+      }
     } else {
       alert("Cập nhật trạng thái thất bại!");
     }
@@ -143,7 +145,7 @@ export default function Page() {
 
   useEffect(() => {
     let result = bookings.filter((b) => b.listingType === activeTab);
-    
+
     if (selectedStatus === "ALL") {
       setFilteredBookings(result);
     } else {
@@ -155,7 +157,14 @@ export default function Page() {
 
   return (
     <div style={{ background: "#f7fafd", minHeight: "100vh", padding: "32px" }}>
-      <div style={{ display: "flex", gap: "24px", marginBottom: "24px", borderBottom: "2px solid #e3e8ee" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "24px",
+          marginBottom: "24px",
+          borderBottom: "2px solid #e3e8ee",
+        }}
+      >
         <button
           onClick={() => setActiveTab("HOME")}
           style={{
@@ -165,7 +174,10 @@ export default function Page() {
             fontSize: "18px",
             fontWeight: activeTab === "HOME" ? 700 : 500,
             color: activeTab === "HOME" ? "#328E6E" : "#6b7280",
-            borderBottom: activeTab === "HOME" ? "3px solid #328E6E" : "3px solid transparent",
+            borderBottom:
+              activeTab === "HOME"
+                ? "3px solid #328E6E"
+                : "3px solid transparent",
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -181,7 +193,10 @@ export default function Page() {
             fontSize: "18px",
             fontWeight: activeTab === "EXPERIENCE" ? 700 : 500,
             color: activeTab === "EXPERIENCE" ? "#328E6E" : "#6b7280",
-            borderBottom: activeTab === "EXPERIENCE" ? "3px solid #328E6E" : "3px solid transparent",
+            borderBottom:
+              activeTab === "EXPERIENCE"
+                ? "3px solid #328E6E"
+                : "3px solid transparent",
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -577,4 +592,3 @@ export default function Page() {
     </div>
   );
 }
-
