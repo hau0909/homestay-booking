@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       email
     ),
 
-    listing:listings!bookings_listing_id_fkey (
+    listing:Listings!bookings_listing_id_fkey (
     listing_type,
       title,
       host:profiles!listings_host_id_fkey (
