@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       email
     ),
 
-    listing:Listings!bookings_listing_id_fkey (
+    listing:listings!bookings_listing_id_fkey (
     listing_type,
       title,
       host:profiles!listings_host_id_fkey (
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
   `,
       )
       .eq("id", booking_id)
-      .single();
+      .maybeSingle();
 
-    if (!booking) {
+    if (error || !booking) {
       throw new Error("Booking not found");
     }
 
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       <!-- Review Button -->
       <div style="text-align:center; margin:30px 0;">
         <a 
-          href="http://localhost:3000/bookings" 
+          href="http://localhost:3000/bookings?email=${guest.email}" 
           style="background:#16a34a; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;"
         >
           ⭐ Write your review
