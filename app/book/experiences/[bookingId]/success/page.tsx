@@ -57,13 +57,18 @@ export default function Page() {
 
   const formatSlotTime = (time: string) => {
     const date = new Date(time);
-    return date.toLocaleString("en-US", {
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -93,6 +98,9 @@ export default function Page() {
           <div className="border rounded-xl p-4 text-left text-sm space-y-2">
             <p className="font-medium">{listing?.title}</p>
 
+            {booking.check_in_date && (
+              <p>{formatDate(booking.check_in_date)}</p>
+            )}
             {slot && (
               <p>
                 {formatSlotTime(slot.start_time)} —{" "}
