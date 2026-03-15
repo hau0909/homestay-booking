@@ -125,7 +125,8 @@ export default function Page() {
           const { data: bookings, error: bookingsError } = await supabase
             .from("bookings")
             .select("*")
-            .in("listing_id", listingIds);
+            .in("listing_id", listingIds)
+            .is("experience_slot_id", null);
           if (bookingsError) throw bookingsError;
           bookingsData = (bookings || []).map((b: any) => ({
             ...b,
