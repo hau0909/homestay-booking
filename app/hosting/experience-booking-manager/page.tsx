@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/src/lib/supabase";
 import ExperienceBookingActions from "@/src/components/hosting/ExperienceBookingActions";
+import ExperienceBookingViewModal from "@/src/components/hosting/ExperienceBookingViewModal";
 
 interface ExperienceBooking {
     id: string;
@@ -57,7 +58,7 @@ export default function ExperienceBookingManagerPage() {
                     // Lấy tất cả booking có experience_slot_id khác null, lấy thêm profile name
                     const { data: bookings, error: bookingsError } = await supabase
                         .from("bookings")
-                        .select("*, experience_slot_id, total_guests, status, profiles(full_name)")
+                        .select("*, experience_slot_id, total_guests, status, profiles(full_name, email, phone)")
                         .not("experience_slot_id", "is", null);
                     if (bookingsError) throw bookingsError;
 
@@ -82,6 +83,8 @@ export default function ExperienceBookingManagerPage() {
                         slot_end_time: slotMap[b.experience_slot_id]?.end_time || '',
                         attendees: b.total_guests || 1,
                         profile_name: b.profiles?.full_name || '',
+                        email: b.profiles?.email || '',
+                        tPhone: b.profiles?.phone || '',
                         price: b.total_price || 0,
                     }));
                 }
@@ -96,14 +99,16 @@ export default function ExperienceBookingManagerPage() {
     }, []);
 
     const [statusFilter, setStatusFilter] = useState('PENDING');
-    const statusOptions = ['PENDING', 'CONFIRMED', 'REJECT'];
+    const statusOptions = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
     const filteredBookings = bookings.filter(b => {
         if (statusFilter === 'PENDING') return b.status === 'PENDING';
         if (statusFilter === 'CONFIRMED') return b.status === 'CONFIRMED';
-        if (statusFilter === 'REJECT') return b.status === 'REJECT';
+        if (statusFilter === 'COMPLETED') return b.status === 'COMPLETED';
+        if (statusFilter === 'CANCELLED') return b.status === 'CANCELLED';
         return false;
     });
 
+    const [selectedBooking, setSelectedBooking] = useState<ExperienceBooking | null>(null);
     return (
         <div style={{ padding: 32 }}>
             <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 18, textAlign: 'center' }}>Experience Booking Manager</h2>
@@ -125,7 +130,7 @@ export default function ExperienceBookingManagerPage() {
                             transition: 'all 0.18s',
                         }}
                     >
-                        {status === 'REJECT' ? 'Rejected' : status.charAt(0) + status.slice(1).toLowerCase()}
+                        {status === 'CANCELLED' ? 'Cancelled' : status.charAt(0) + status.slice(1).toLowerCase()}
                     </button>
                 ))}
             </div>
@@ -140,8 +145,8 @@ export default function ExperienceBookingManagerPage() {
                                 <th style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 16 }}>Check-out</th>
                                 <th style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 16 }}>Status</th>
                                 <th style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 16 }}>Total</th>
-                                {statusFilter === 'PENDING' && (
-                                    <th style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 16 }}>Actions</th>
+                                {(statusFilter === 'PENDING' || statusFilter === 'CONFIRMED' || statusFilter === 'COMPLETED' || statusFilter === 'CANCELLED') && (
+                                    <th style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 16 }}>Action</th>
                                 )}
                             </tr>
                         </thead>
@@ -156,11 +161,23 @@ export default function ExperienceBookingManagerPage() {
                                     </td>
                                     <td style={{ textAlign: 'center', fontWeight: 500, color: '#555', fontSize: 15 }}>{booking.slot_start_time ? new Date(booking.slot_start_time).toLocaleDateString('en-CA') : ''}</td>
                                     <td style={{ textAlign: 'center', fontWeight: 500, color: '#555', fontSize: 15 }}>{booking.slot_end_time ? new Date(booking.slot_end_time).toLocaleDateString('en-CA') : ''}</td>
-                                    <td style={{ textAlign: 'center', fontWeight: 700, color: booking.status === 'PENDING' ? '#ff9800' : booking.status === 'CONFIRMED' ? '#43a047' : '#e53935', fontSize: 15 }}>{booking.status}</td>
+                                    <td style={{ textAlign: 'center', fontWeight: 700, color: booking.status === 'PENDING' ? '#ff9800' : booking.status === 'CONFIRMED' ? '#43a047' : booking.status === 'COMPLETED' ? '#43a047' : '#e53935', fontSize: 15 }}>{booking.status}</td>
                                     <td style={{ textAlign: 'center', fontWeight: 700, color: '#222', fontSize: 15 }}>${booking.price}</td>
-                                    {statusFilter === 'PENDING' && (
+                                    {(statusFilter === 'PENDING' || statusFilter === 'CONFIRMED') && (
+                                        <td style={{ textAlign: 'center', padding: '0 8px', display: 'flex', gap: 8, justifyContent: 'center' }}>
+                                            <ExperienceBookingActions booking={booking} statusFilter={statusFilter} />
+                                            <button
+                                                style={{ padding: '8px 24px', borderRadius: 8, background: '#1976d2', color: '#fff', border: 'none', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #1976d233', transition: 'background 0.18s, box-shadow 0.18s' }}
+                                                onClick={() => setSelectedBooking(booking)}
+                                            >View</button>
+                                        </td>
+                                    )}
+                                    {(statusFilter === 'COMPLETED' || statusFilter === 'CANCELLED') && (
                                         <td style={{ textAlign: 'center', padding: '0 8px' }}>
-                                            <ExperienceBookingActions booking={booking} />
+                                            <button
+                                                style={{ padding: '8px 24px', borderRadius: 8, background: '#1976d2', color: '#fff', border: 'none', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #1976d233', transition: 'background 0.18s, box-shadow 0.18s' }}
+                                                onClick={() => setSelectedBooking(booking)}
+                                            >View</button>
                                         </td>
                                     )}
                                 </tr>
@@ -169,6 +186,8 @@ export default function ExperienceBookingManagerPage() {
                     </table>
                 </div>
             )}
+            {/* Modal hiển thị thông tin chi tiết booking */}
+            <ExperienceBookingViewModal open={!!selectedBooking} booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
         </div>
     );
 }
