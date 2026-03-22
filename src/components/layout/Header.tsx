@@ -155,7 +155,6 @@ export default function Header() {
                 <Binoculars size={30} />
                 Experiences order
               </Link>
-              
             </nav>
           </>
         ) : (
@@ -169,11 +168,7 @@ export default function Header() {
                 Homestay
               </Link>
               <Link
-
-               
-
                 href="/experience-listings"
-
                 className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
               >
                 <Binoculars size={30} />
@@ -266,7 +261,7 @@ export default function Header() {
                       My Bookings
                     </a>
 
-                     <a
+                    <a
                       href="/experience-bookings"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
