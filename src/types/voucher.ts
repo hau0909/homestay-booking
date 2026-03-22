@@ -1,10 +1,13 @@
 export interface Voucher {
   id: number;
+  listing_id: number;
   code: string;
-  discount_percent: number | null;
-  max_discount_amount: number | null;
-  start_date: string | null;
-  end_date: string | null;
+  discount_value: number;
+  min_price: number | null;
+  max_discount: number | null;
   usage_limit: number | null;
-  is_active: boolean;
+  used_count: number | null;
+  is_active: boolean | null;
+  created_at: string;
+  updated_at: string;
 }
