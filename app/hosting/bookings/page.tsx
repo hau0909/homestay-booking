@@ -87,6 +87,15 @@ export default function Page() {
           }),
         });
       }
+      if (newStatus === "CONFIRMED") {
+        await fetch("/api/confirm-booking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            booking_id: bookingId,
+          }),
+        });
+      }
     } else {
       alert("Cập nhật trạng thái thất bại!");
     }
