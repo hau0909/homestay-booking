@@ -1,6 +1,5 @@
 "use client";
 
-// components/Header.tsx
 import {
   Menu,
   User,
@@ -20,23 +19,74 @@ import SignUpModal from "../auth/SignUpModal";
 import LoginModal from "../auth/LoginModal";
 import { useAuth } from "@/src/hooks/useAuth";
 import { logoutUser } from "@/src/services/auth/auth.service";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import toast from "react-hot-toast";
-import { getHostStatus } from "@/src/services/host/getHostStatus.service";
-import { usePathname } from "next/navigation";
+import NotificationBell from "../notifications/NotificationBell";
+import NotificationDropdown from "../notifications/NotificationDropdown";
+import useNotification from "@/src/hooks/useNotification";
+import { markOneNotificationAsRead } from "@/src/services/notifications/markNotificationAsRead";
 
 export default function Header() {
   const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [mode, setMode] = useState<"host" | "travelling">(() => {
+    return user ? "host" : "travelling";
+  });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [mode, setMode] = useState<"travelling" | "host">("host");
-  const [host, setHost] = useState<boolean | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const pathname = usePathname();
-  const isHostMode = host && pathname.startsWith("/hosting");
+  const [openNoti, setOpenNoti] = useState(false);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const { notifications, setNotifications } = useNotification(user?.id);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const isHostMode = mode === "host";
+
+  // ===== MARK AS READ =====
+  const markAsRead = async (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
+    );
+
+    try {
+      await markOneNotificationAsRead(id);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // State lưu thông tin đã redirect login chưa
+  const [redirectedOnLogin, setRedirectedOnLogin] = useState(false);
+
+  useEffect(() => {
+    const updateModeAndRedirect = async () => {
+      if (user && !redirectedOnLogin) {
+        // dùng setTimeout 0 để defer state update
+        setTimeout(() => {
+          setMode("host"); // login → host mode
+          if (pathname === "/") {
+            router.replace("/hosting"); // redirect nếu ở "/"
+          }
+          setRedirectedOnLogin(true);
+        }, 0);
+      }
+
+      if (!user) {
+        setTimeout(() => {
+          setMode("travelling"); // logout → travelling mode
+          setRedirectedOnLogin(false); // reset flag
+        }, 0);
+      }
+    };
+
+    updateModeAndRedirect();
+  }, [user?.id]);
+
+  // ===== CLICK OUTSIDE MENU =====
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -53,41 +103,29 @@ export default function Header() {
     };
   }, [isMenuOpen]);
 
+  // ===== LOGOUT =====
   const handleLogout = async () => {
     try {
-      if (user?.id) {
-        localStorage.removeItem(`profile_${user.id}`);
-      }
-
       await logoutUser();
       toast.success("Logged out successfully");
-      setHost(false);
+      setMode("travelling"); // reset về bình thường
       setIsMenuOpen(false);
-
       router.push("/");
-    } catch (error) {
+    } catch {
       toast.error("Logout failed");
     }
   };
 
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const checkHostStatus = async () => {
-      try {
-        const status = await getHostStatus();
-        setHost(status);
-
-        if (status && pathname === "/") {
-          router.replace("/hosting");
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    checkHostStatus();
-  }, [user?.id]);
+  // ===== MODE SWITCH =====
+  const handleSwitchMode = () => {
+    if (mode === "host") {
+      setMode("travelling");
+      router.push("/"); // đi Travelling
+    } else {
+      setMode("host");
+      router.push("/hosting"); // đi Host
+    }
+  };
 
   const handleBecomeHost = () => {
     if (!user) {
@@ -97,26 +135,17 @@ export default function Header() {
     router.push("/become-host/sendRequestHost");
   };
 
-  const handleHostMode = () => {
-    setMode("host");
-    router.push("/hosting");
-  };
+  const getInitial = (email: string) => email.charAt(0).toUpperCase();
 
-  const handleTravellingMode = () => {
-    setMode("travelling");
-    router.push("/");
-  };
-
-  const getInitial = (email: string) => {
-    return email.charAt(0).toUpperCase();
-  };
+  // ===== PREVENT FLICKER =====
+  if (loading) {
+    return <div className="h-[72px] bg-white" />;
+  }
 
   return (
     <header className="w-full bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        {/* LOGO */}
-        {/* <img src="/logo.png" alt="logo" className="w-12 h-12" /> */}
-        {/* NAVIGATION */}
+        {/* NAV */}
         {isHostMode ? (
           <>
             {/* HOST MODE */}
@@ -166,57 +195,68 @@ export default function Header() {
             </nav>
           </>
         ) : (
-          <>
-            <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
-              <Link
-                href="/"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-              >
-                <HouseHeart size={30} />
-                Homestay
-              </Link>
-              <Link
-                href="/experience-listings"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-              >
-                <Binoculars size={30} />
-                Experiences
-              </Link>
-              <Link
-                href="/wishlist"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-              >
-                <Heart size={30} />
-                Wishlist
-              </Link>
-            </nav>
-          </>
+          <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
+            <Link
+              href="/"
+              className="flex items-center gap-2 hover:scale-110 transition"
+            >
+              <HouseHeart size={30} /> Homestay
+            </Link>
+            <Link
+              href="/experience-listings"
+              className="flex items-center gap-2 hover:scale-110 transition"
+            >
+              <Binoculars size={30} /> Experiences
+            </Link>
+            <Link
+              href="/wishlist"
+              className="flex items-center gap-2 hover:scale-110 transition"
+            >
+              <Heart size={30} /> Wishlist
+            </Link>
+          </nav>
         )}
 
-        {/* RIGHT ACTIONS */}
+        {/* RIGHT */}
         <div className="flex items-center gap-4">
-          {host ? (
+          {/* NOTIFICATION */}
+          <div className="relative">
+            <NotificationBell
+              count={unreadCount}
+              onClick={() => setOpenNoti(!openNoti)}
+            />
+
+            {openNoti && (
+              <NotificationDropdown
+                notifications={notifications}
+                markAsRead={markAsRead}
+                onClose={() => setOpenNoti(false)}
+              />
+            )}
+          </div>
+
+          {/* SWITCH / HOST */}
+          {user ? (
             <button
-              onClick={mode === "host" ? handleTravellingMode : handleHostMode}
-              className="cursor-pointer rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium hover:bg-[#67AE6E] transition"
+              onClick={handleSwitchMode}
+              className="rounded-full bg-[#328E6E] px-5 py-3 text-white hover:bg-[#67AE6E] transition cursor-pointer"
             >
-              {mode === "host" ? "Switch to Travelling" : "Switch to Hosting"}
+              {isHostMode ? "Switch to Travelling" : "Switch to Hosting"}
             </button>
           ) : (
             <button
               onClick={handleBecomeHost}
-              className="cursor-pointer rounded-full bg-[#328E6E] px-5 py-3 text-white font-medium hover:bg-[#67AE6E] transition"
+              className="rounded-full bg-[#328E6E] px-5 py-3 text-white hover:bg-[#67AE6E] transition cursor-pointer"
             >
               Become a Host
             </button>
           )}
 
-          {/* User Menu */}
+          {/* USER MENU */}
           <div className="relative" ref={menuRef}>
-            {/* User Menu Icon */}
             <div
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center gap-2 rounded-full border bg-[#328E6E] border-[#67AE6E] p-2 hover:cursor-pointer hover:bg-[#67AE6E] transition-all duration-300"
+              className="flex items-center gap-2 rounded-full bg-[#328E6E] p-2 cursor-pointer hover:bg-[#67AE6E]"
             >
               <Menu size={18} />
 
@@ -224,66 +264,60 @@ export default function Header() {
                 user.user_metadata?.avatar_url ? (
                   <img
                     src={user.user_metadata.avatar_url}
-                    alt="User avatar"
                     className="h-7 w-7 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="h-7 w-7 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm">
                     {getInitial(user.email ?? "U")}
                   </div>
                 )
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#67AE6E]">
+                <div className="h-7 w-7 bg-[#67AE6E] rounded-full flex items-center justify-center">
                   <User size={18} className="text-white" />
                 </div>
               )}
             </div>
 
-            {/* Dropdown Menu */}
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50">
-                {/* Nếu user đã login */}
                 {user ? (
                   <>
-                    {/* User Info */}
-                    <div className="px-4 py-2 border-b border-[#90C67C]">
-                      <p className="text-sm font-semibold text-[#328E6E] truncate">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold truncate">
                         {user.email}
                       </p>
-                      <p className="text-xs text-[#67AE6E]">
+                      <p className="text-xs text-gray-500">
                         {user.user_metadata?.full_name || "User"}
                       </p>
                     </div>
 
-                    {/* Menu Items cho user đã login */}
-                    <a
+                    <Link
                       href="/profile"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
                       My Profile
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/bookings"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
                       My Bookings
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/host-request"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
                       My Host Request
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/experience-bookings"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
                     >
                       My Experience Bookings
-                    </a>
+                    </Link>
 
-                    <div className="border-t border-[#90C67C] my-2"></div>
+                    <div className="border-t my-2"></div>
 
-                    {/* Logout Button */}
                     <button
                       onClick={handleLogout}
                       className="block w-full hover:cursor-pointer text-left px-4 py-2 text-red-600 hover:bg-gray-200 transition-colors"
@@ -293,7 +327,6 @@ export default function Header() {
                   </>
                 ) : (
                   <>
-                    {/* Menu Items cho guest */}
                     <button
                       onClick={() => {
                         setIsSignUpModalOpen(true);
@@ -312,12 +345,6 @@ export default function Header() {
                     >
                       Login
                     </button>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
-                    >
-                      Help Center
-                    </a>
                   </>
                 )}
               </div>
@@ -326,13 +353,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Sign Up Modal */}
       <SignUpModal
         isOpen={isSignUpModalOpen}
         onClose={() => setIsSignUpModalOpen(false)}
       />
-
-      {/* Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
