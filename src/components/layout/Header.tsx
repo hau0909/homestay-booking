@@ -147,38 +147,53 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* NAV */}
         {isHostMode ? (
-          <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
-            <Link
-              href="/hosting"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <LayoutDashboard size={30} /> Dashboard
-            </Link>
-            <Link
-              href="/hosting/listing"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <Home size={30} /> Listing
-            </Link>
-            <Link
-              href="/hosting/bookings"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <ListOrdered size={30} /> Booking Order
-            </Link>
-            <Link
-              href="/hosting/calendar"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <CalendarCheck size={30} /> Calendar
-            </Link>
-            <Link
-              href="/hosting/experience-booking-manager"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <Binoculars size={30} /> Experience Order
-            </Link>
-          </nav>
+          <>
+            {/* HOST MODE */}
+            <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
+              <Link
+                href="/hosting"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <LayoutDashboard size={30} />
+                Dashboard
+              </Link>
+              <Link
+                href="/hosting/listing"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Home size={30} />
+                Listing
+              </Link>
+              <Link
+                href="/hosting/bookings"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <ListOrdered size={30} />
+                Bookings order
+              </Link>
+              <Link
+                href="/hosting/calendar"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <CalendarCheck size={30} />
+                Calendar
+              </Link>
+              <Link
+                href="/hosting/experience-booking-manager"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Binoculars size={30} />
+                Experiences order
+              </Link>
+              <Link
+                href="/hosting/policies"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Shield size={30} strokeWidth={2} />
+                Policies Setup
+              </Link>
+            </nav>
+          </>
         ) : (
           <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
             <Link
