@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { isWeekend } from "@/src/utils/isWeekend";
 import { formatPrice } from "@/src/utils/foormatPrice";
 import { getListingThumbnail } from "@/src/services/listing/getListingThumbnail";
+import { Voucher } from "@/src/types/voucher";
 
 export default function ListingSummary({
   title,
@@ -18,6 +19,7 @@ export default function ListingSummary({
   price_weekend,
   dateRange,
   maxGuest,
+  selectedVoucher,
 }: {
   title: string;
   listingId: number;
@@ -26,6 +28,7 @@ export default function ListingSummary({
   price_weekend: number;
   dateRange: any;
   maxGuest: number;
+  selectedVoucher?: Voucher | null;
 }) {
   const MAX_GUESTS = maxGuest;
 
@@ -74,7 +77,9 @@ export default function ListingSummary({
     }
   }
 
-  const total = weekdayCount * price_weekday + weekendCount * price_weekend;
+  const subtotal = weekdayCount * price_weekday + weekendCount * price_weekend;
+  const discount = selectedVoucher ? selectedVoucher.discount_value : 0;
+  const total = Math.max(0, subtotal - discount);
 
   useEffect(() => {
     const fetchThumbnail = async () => {
@@ -168,12 +173,25 @@ export default function ListingSummary({
         <p className="font-medium">Price details</p>
 
         <div className="space-y-1 text-sm text-slate-700">
-          <p className="text-slate-500">
-            Weekday: ${formatPrice(WEEKDAY_PRICE)} · Weekend: $
-            {formatPrice(WEEKEND_PRICE)}
+          <p className="text-slate-500 flex justify-between">
+            <span>Weekday: ${formatPrice(WEEKDAY_PRICE)}</span>
+            <span>Weekend: ${formatPrice(WEEKEND_PRICE)}</span>
           </p>
         </div>
       </div>
+      
+      {selectedVoucher && (
+        <>
+          <hr />
+          <div className="space-y-3">
+            <p className="font-medium">Voucher applied</p>
+            <div className="flex justify-between items-center text-sm text-teal-600">
+              <p>{selectedVoucher.code}</p>
+              <p>-${formatPrice(selectedVoucher.discount_value)}</p>
+            </div>
+          </div>
+        </>
+      )}
 
       <hr />
 

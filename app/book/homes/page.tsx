@@ -14,11 +14,15 @@ import toast from "react-hot-toast";
 import { getUser, getUserProfile } from "@/src/services/profile/getUserProfile";
 import { getListingById } from "@/src/services/listing/getListingById";
 import { Listing } from "@/src/types/listing";
+import { CancelPolicy } from "@/src/types/cancel-policy";
+import { getCancelPolicyByListingId } from "@/src/services/listing/getCancelPolicyByListingId";
+import { getActiveVouchersByListingId } from "@/src/services/listing/getActiveVouchersByListingId";
 import { updateProfile } from "@/src/services/profile/updateProfile";
 import { getListingCalendar } from "@/src/services/booking/getListingCalendar";
 import { DateRange } from "react-day-picker";
 import { getHomeByListingId } from "@/src/services/home/getHomeByListingId";
 import { Home } from "@/src/types/home";
+import { Voucher } from "@/src/types/voucher";
 import { getProvinceByCode } from "@/src/services/location/getProvinceByCode";
 import { getDistrictByCode } from "@/src/services/location/getDistrictByCode";
 import { getWardByCode } from "@/src/services/location/getWardByCode";
@@ -57,6 +61,10 @@ export default function Page() {
   const [address, setAddress] = useState("");
   const [bookingId, setBookingId] = useState<number | null>(null);
   const [totalPrice, setTotalPrice] = useState<number | null>(null);
+  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK">("CASH");
+  const [cancelPolicy, setCancelPolicy] = useState<CancelPolicy | null>(null);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
 
   const searchParams = useSearchParams();
   const listingId = Number(searchParams.get("listing"));
@@ -285,6 +293,12 @@ export default function Page() {
         router.back();
         throw new Error("Fetch Listing failed, please try again!");
       }
+
+      const cancelPolicyData = await getCancelPolicyByListingId(listingId);
+      setCancelPolicy(cancelPolicyData);
+
+      const vouchersData = await getActiveVouchersByListingId(listingId);
+      setVouchers(vouchersData);
     };
 
     // home info
@@ -350,15 +364,11 @@ export default function Page() {
       setLoading(true);
       setOpenConfirmDialog(false);
 
-      router.push(`/book/homes/${booking.id}/success`);
-
-      await fetch("/api/new-booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: bookingId,
-        }),
-      });
+      if (paymentMethod === "BANK") {
+        router.push(`/payment/${booking.id}?listingId=${listingId}`);
+      } else {
+        router.push(`/book/homes/${booking.id}/success`);
+      }
     } catch (err) {
       toast.error("Failed to confirm booking");
       console.error(err);
@@ -411,10 +421,21 @@ export default function Page() {
                   price_weekday={home.price_weekday}
                   price_weekend={home.price_weekend}
                   dateRange={dateRange}
+                  selectedVoucher={selectedVoucher}
+                  setSelectedVoucher={setSelectedVoucher}
+                  vouchers={vouchers}
                 />
               )}
 
-              {step === 3 && <NoteStep note={note} setNote={setNote} />}
+              {step === 3 && (
+                <NoteStep
+                  note={note}
+                  setNote={setNote}
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={setPaymentMethod}
+                  cancelPolicy={cancelPolicy}
+                />
+              )}
 
               {/* Navigation */}
               <div className="flex justify-between pt-4">
@@ -427,7 +448,11 @@ export default function Page() {
                 </Button>
 
                 <Button disabled={!canNext()} onClick={handleNext}>
-                  {step === STEPS.length - 1 ? "Confirm Booking" : "Next"}
+                  {step === STEPS.length - 1
+                    ? paymentMethod === "BANK"
+                      ? "Confirm & Pay"
+                      : "Confirm Booking"
+                    : "Next"}
                 </Button>
               </div>
             </div>
@@ -443,6 +468,7 @@ export default function Page() {
               title={listing?.title}
               maxGuest={maxGuest}
               dateRange={dateRange}
+              selectedVoucher={selectedVoucher}
             />
           </div>
 
