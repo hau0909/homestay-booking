@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   Heart,
   ListCheck,
+  Shield,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -154,6 +155,13 @@ export default function Header() {
               >
                 <Binoculars size={30} />
                 Experiences order
+              </Link>
+              <Link
+                href="/hosting/policies"
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
+              >
+                <Shield size={30} strokeWidth={2} />
+                Policies Setup
               </Link>
             </nav>
           </>
