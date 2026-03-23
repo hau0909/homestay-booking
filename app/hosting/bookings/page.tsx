@@ -51,11 +51,65 @@ export default function Page() {
     if (totalPrice !== undefined) {
       updateData.total_price = totalPrice;
     }
-    const { error } = await supabase
+    const { data: updateBooking } = await supabase
       .from("bookings")
       .update(updateData)
-      .eq("id", bookingId);
-    if (!error) {
+      .eq("id", bookingId)
+      .select("id, user_id")
+      .single();
+
+    const { data: booking, error } = await supabase
+      .from("bookings")
+      .select(
+        `
+    total_guests,
+    total_price,
+    payment_status,
+    check_in_date,
+    check_out_date,
+
+  user:profiles!bookings_user_id_fkey (
+      full_name,
+      email
+    ),
+
+    listing:listings!bookings_listing_id_fkey (
+    listing_type,
+      title,
+      host:profiles!listings_host_id_fkey (
+        full_name,
+        email
+      )
+    )
+  `,
+      )
+      .eq("id", bookingId)
+      .single();
+
+    const listing = Array.isArray(booking?.listing)
+      ? booking.listing[0]
+      : booking?.listing;
+    if (!error && updateBooking) {
+      if (newStatus === "CONFIRMED") {
+        await supabase.from("notifications").insert({
+          user_id: updateBooking.user_id,
+          title: "Booking Confirmed",
+          message: `Your ${listing?.title} listing has been confirmed by the host!`,
+          type: "CONFIRM",
+          is_read: false,
+        });
+      }
+
+      if (newStatus === "CANCELLED") {
+        await supabase.from("notifications").insert({
+          user_id: updateBooking.user_id,
+          title: "Booking Cancelled",
+          message: `Your ${listing?.title} listing has been cancelled!`,
+          type: "CANCEL",
+          is_read: false,
+        });
+      }
+
       setFilteredBookings((prev: Booking[]) =>
         prev.map((b: Booking) =>
           b.id === bookingId
