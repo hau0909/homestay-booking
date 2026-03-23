@@ -21,8 +21,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"travelling" | "host">("host");
+  const [host, setHost] = useState<boolean | null>(null);
   const router = useRouter();
-
   // Validation errors
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -111,6 +112,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       toast.success("Login successfully");
       onClose();
       if (isHost) {
+        setHost(true);
+        setMode("host");
         router.replace("/hosting");
       } else {
         router.replace("/");

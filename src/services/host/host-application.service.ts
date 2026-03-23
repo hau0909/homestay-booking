@@ -6,26 +6,44 @@ export const sendBecomeHostRequest = async (
   frontUrl: string,
   backUrl: string,
 ): Promise<HostApplication> => {
-  const { data: pending } = await supabase
+  const { data: existing } = await supabase
     .from("host_applications")
-    .select("id")
+    .select("*")
     .eq("user_id", userId)
-    .eq("status", "pending")
-    .single();
+    .maybeSingle();
 
-  if (pending)
-    throw new Error(
-      "You already have a pending request. Please wait for the acceptance from admin!",
-    );
+  if (existing) {
+    if (existing.status === "pending") {
+      throw new Error(
+        "You already have a pending request. Please wait for admin approval.",
+      );
+    }
+    if (existing.status === "approved") {
+      throw new Error("Your request has already been approved.");
+    }
+    if (existing.status === "rejected") {
+      throw new Error(
+        "Your current request was rejected. You cannot send again!",
+      );
+    }
+    if (existing.status === "request_again") {
+      throw new Error(
+        "Admin requested additional information. Please update your existing request.",
+      );
+    }
+  }
 
   const { data, error } = await supabase
     .from("host_applications")
-    .insert({
-      user_id: userId,
-      identity_card_front_url: frontUrl,
-      identity_card_back_url: backUrl,
-      status: "pending",
-    })
+    .upsert(
+      {
+        user_id: userId,
+        identity_card_front_url: frontUrl,
+        identity_card_back_url: backUrl,
+        status: "pending",
+      },
+      { onConflict: "user_id" },
+    )
     .select("*")
     .single();
 

@@ -17,14 +17,14 @@ export type BookingStatus =
   | "COMPLETED"
   | "CANCELLED";
 
-export type ProfileStatus =
-  | "active"
-  | "banned"
- 
-
+export type ProfileStatus = "active" | "banned";
 
 export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 
 export type AmenityType = "HOME" | "EXP" | "BOTH";
 
-export type requestHostStatus = "pending" | "approved" | "rejected";
+export type requestHostStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "resubmit";

@@ -33,8 +33,8 @@ export default function Header() {
   const [host, setHost] = useState<boolean | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const isHostMode = host && mode === "host";
   const pathname = usePathname();
+  const isHostMode = host && pathname.startsWith("/hosting");
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -260,7 +260,12 @@ export default function Header() {
                     >
                       My Bookings
                     </a>
-
+                    <a
+                      href="/host-request"
+                      className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
+                    >
+                      My Host Request
+                    </a>
                     <a
                       href="/experience-bookings"
                       className="block px-4 py-2 text-[#328E6E] hover:text-[#67AE6E] hover:bg-gray-200 transition-colors"
