@@ -25,15 +25,16 @@ import NotificationBell from "../notifications/NotificationBell";
 import NotificationDropdown from "../notifications/NotificationDropdown";
 import useNotification from "@/src/hooks/useNotification";
 import { markOneNotificationAsRead } from "@/src/services/notifications/markNotificationAsRead";
+import { supabase } from "@/src/lib/supabase";
 
 export default function Header() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [mode, setMode] = useState<"host" | "travelling">(() => {
-    return user ? "host" : "travelling";
-  });
+  const [mode, setMode] = useState<"host" | "travelling">("travelling");
+  const [onLogin, setOnLogin] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [redirectedOnLogin, setRedirectedOnLogin] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [openNoti, setOpenNoti] = useState(false);
@@ -59,8 +60,40 @@ export default function Header() {
     }
   };
 
-  // State lưu thông tin đã redirect login chưa
-  const [redirectedOnLogin, setRedirectedOnLogin] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setMode("travelling");
+      setRedirectedOnLogin(false);
+      return;
+    }
+
+    const checkHostStatus = async () => {
+      // fetch user from DB
+      const { data, error } = await supabase
+        .from("users") // bảng users
+        .select("is_host") // cột kiểm tra host
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching host status:", error);
+        setMode("travelling"); // fallback
+        return;
+      }
+
+      const isHost = data?.is_host;
+      setMode(isHost ? "host" : "travelling");
+
+      if (!redirectedOnLogin) {
+        if (pathname === "/" && isHost) {
+          router.replace("/hosting");
+        }
+        setRedirectedOnLogin(true);
+      }
+    };
+
+    checkHostStatus();
+  }, [user?.id]);
 
   useEffect(() => {
     const updateModeAndRedirect = async () => {
@@ -184,13 +217,6 @@ export default function Header() {
               >
                 <Binoculars size={30} />
                 Experiences order
-              </Link>
-              <Link
-                href="/hosting/policies"
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-110"
-              >
-                <Shield size={30} strokeWidth={2} />
-                Policies Setup
               </Link>
             </nav>
           </>
