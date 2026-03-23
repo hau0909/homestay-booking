@@ -36,6 +36,8 @@ import { getOrCreateConversation } from "@/src/services/chat/getOrCreateConversa
 import toast from "react-hot-toast";
 import { getListingRules } from "@/src/services/listing/getListingRules";
 import { Rule } from "@/src/types/rule";
+import { getPoliciesByListingIds } from "@/src/services/cancel-policy/getPoliciesByListingIds";
+import type { CancelPolicy } from "@/src/types/cancel-policy";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -45,6 +47,7 @@ export default function ListingDetailPage() {
   const [host, setHost] = useState<HostInfo | null>(null);
   const [home, setHome] = useState<Home | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
+  const [cancelPolicies, setCancelPolicies] = useState<CancelPolicy[]>([]);
   const [slots, setSlots] = useState<ExperienceSlot[]>([]);
   const [activities, setActivities] = useState<ExperienceActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +105,14 @@ export default function ListingDetailPage() {
         // Fetch rules
         const rulesData = await getListingRules(parseInt(listingId));
         setRules(rulesData);
+
+        try {
+          const policyMap = await getPoliciesByListingIds([parseInt(listingId, 10)]);
+          const list = policyMap[parseInt(listingId, 10)];
+          setCancelPolicies(list ?? []);
+        } catch {
+          setCancelPolicies([]);
+        }
 
         // Fetch slots if it's an experience
         if (listingData?.listing_type === "EXPERIENCE") {
@@ -430,42 +441,48 @@ export default function ListingDetailPage() {
 
 
 
-            {/* Booking Card */}
-            <div className="border border-gray-300 rounded-2xl p-6 shadow-lg sticky top-24 bg-white">
-              {listing.listing_type === "EXPERIENCE" ? (
-                <>
-                  <Link href={`/book/experiences?listing=${listingId}`}>
-                    <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
-                      Book Now
-                    </button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-2xl font-semibold underline text-black">
-                      {formatPrice(listing.price_weekday)}
-                    </span>
-                    <span className="text-black">/ weekday night</span>
-                  </div>
-                  <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-2xl font-semibold underline text-black">
-                      {formatPrice(listing.price_weekend)}
-                    </span>
-                    <span className="text-black">/ weekend night</span>
-                  </div>
+            {/* Booking + cancellation policy: sticky together while scrolling */}
+            <div className="sticky top-24 z-10 flex w-full max-w-full flex-col gap-3 self-start">
+              <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-lg">
+                {listing.listing_type === "EXPERIENCE" ? (
+                  <>
+                    <Link href={`/book/experiences?listing=${listingId}`}>
+                      <button className="mb-4 w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600">
+                        Book Now
+                      </button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-6 flex items-baseline gap-2">
+                      <span className="text-2xl font-semibold text-black underline">
+                        {formatPrice(listing.price_weekday)}
+                      </span>
+                      <span className="text-black">/ weekday night</span>
+                    </div>
+                    <div className="mb-6 flex items-baseline gap-2">
+                      <span className="text-2xl font-semibold text-black underline">
+                        {formatPrice(listing.price_weekend)}
+                      </span>
+                      <span className="text-black">/ weekend night</span>
+                    </div>
 
-                  <Link href={`/book/homes?listing=${listingId}`}>
-                    <button className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all mb-4">
-                      Book Now
-                    </button>
-                  </Link>
-                </>
-              )}
+                    <Link href={`/book/homes?listing=${listingId}`}>
+                      <button className="mb-4 w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600">
+                        Book Now
+                      </button>
+                    </Link>
+                  </>
+                )}
 
-              <p className="text-center text-sm text-gray-500">
-                You won&apos;t be charged yet
-              </p>
+                <p className="text-center text-sm text-gray-500">
+                  You won&apos;t be charged yet
+                </p>
+              </div>
+
+              {cancelPolicies.length > 0 ? (
+                <ListingCancelPolicySnippet policies={cancelPolicies} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -506,6 +523,55 @@ export default function ListingDetailPage() {
         <ChatModal chat={activeChat} onClose={() => setActiveChat(null)} />
       )}
     </div>
+  );
+}
+
+function ListingCancelPolicySnippet({
+  policies,
+}: {
+  policies: CancelPolicy[];
+}) {
+  return (
+    <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <h4 className="mb-3 text-sm font-bold text-gray-900">
+        Cancellation Policy
+      </h4>
+      <div className="flex flex-col gap-3">
+        {policies.map((p) => (
+          <div
+            key={p.id}
+            className="rounded-lg border border-gray-100 bg-gray-50 p-3"
+          >
+            <div className="mb-2 text-sm font-semibold text-gray-900">
+              {p.name?.trim() || "—"}
+            </div>
+            {p.description?.trim() ? (
+              <div className="mb-2 text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {p.description.trim()}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+              {p.cancel_before_hours != null && (
+                <span>
+                  Cancel before{" "}
+                  <span className="font-medium text-gray-700">
+                    {p.cancel_before_hours}h
+                  </span>
+                </span>
+              )}
+              {p.refund_percentage != null && (
+                <span>
+                  Refund{" "}
+                  <span className="font-medium text-gray-700">
+                    {p.refund_percentage}%
+                  </span>
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
   );
 }
 
