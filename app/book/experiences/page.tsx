@@ -24,6 +24,10 @@ import { confirmBooking } from "@/src/services/booking/confirmBooking";
 import { formatDateLocal } from "@/src/utils/fomartDateLocal";
 import { supabase } from "@/src/lib/supabase";
 import { Listing } from "@/src/types/listing";
+import { Voucher } from "@/src/types/voucher";
+import { CancelPolicy } from "@/src/types/cancel-policy";
+import { getCancelPolicyByListingId } from "@/src/services/listing/getCancelPolicyByListingId";
+import { getActiveVouchersByListingId } from "@/src/services/listing/getActiveVouchersByListingId";
 
 import {
   AlertDialog,
@@ -89,6 +93,11 @@ export default function ExperienceBookingPage() {
     useState<AvailableExperienceSlot | null>(null);
   const [guests, setGuests] = useState(1);
   const [note, setNote] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
+  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK">("CASH");
+  const [cancelPolicy, setCancelPolicy] = useState<CancelPolicy | null>(null);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -195,7 +204,9 @@ export default function ExperienceBookingPage() {
           return;
         }
 
-        const totalPrice = experience.price_per_person * guests;
+        const subtotal = experience.price_per_person * guests;
+        const discount = selectedVoucher ? selectedVoucher.discount_value : 0;
+        const totalPrice = Math.max(0, subtotal - discount);
 
         await updateBookingTotalPrice({
           booking_id: bookingId,
@@ -282,6 +293,13 @@ export default function ExperienceBookingPage() {
         router.back();
         throw new Error("Fetch Listing failed, please try again!");
       }
+
+      const cancelPolicyData = await getCancelPolicyByListingId(listingId);
+      setCancelPolicy(cancelPolicyData);
+
+      const vouchersData = await getActiveVouchersByListingId(listingId);
+      setVouchers(vouchersData);
+
       return listingData;
     };
 
@@ -393,7 +411,11 @@ export default function ExperienceBookingPage() {
       setLoading(true);
       setOpenConfirmDialog(false);
 
-      router.push(`/book/experiences/${bookingId}/success`);
+      if (paymentMethod === "BANK") {
+        router.push(`/payment/${bookingId}?listingId=${listingId}`);
+      } else {
+        router.push(`/book/experiences/${bookingId}/success`);
+      }
     } catch (err) {
       toast.error("Failed to confirm booking");
       console.error(err);
@@ -462,6 +484,15 @@ export default function ExperienceBookingPage() {
                   onBack={handleBack}
                   onConfirm={handleNext}
                   canConfirm={canNext()}
+                  voucherCode={voucherCode}
+                  setVoucherCode={setVoucherCode}
+                  selectedVoucher={selectedVoucher}
+                  setSelectedVoucher={setSelectedVoucher}
+                  subtotal={experience ? experience.price_per_person * guests : 0}
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={setPaymentMethod}
+                  cancelPolicy={cancelPolicy}
+                  vouchers={vouchers}
                 />
               )}
             </div>
@@ -477,6 +508,7 @@ export default function ExperienceBookingPage() {
               selectedDate={selectedDate}
               selectedSlot={selectedSlot}
               guests={guests}
+              selectedVoucher={selectedVoucher}
             />
           </div>
 

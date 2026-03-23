@@ -6,6 +6,7 @@ import { getListingThumbnail } from "@/src/services/listing/getListingThumbnail"
 import { useEffect, useState } from "react";
 import { ExperienceSlot } from "@/src/types/experienceSlot";
 import { format } from "date-fns";
+import { Voucher } from "@/src/types/voucher";
 
 export default function ExperienceListingSummary({
   title,
@@ -15,6 +16,7 @@ export default function ExperienceListingSummary({
   selectedDate,
   selectedSlot,
   guests,
+  selectedVoucher,
 }: {
   title: string;
   listingId: number;
@@ -23,10 +25,13 @@ export default function ExperienceListingSummary({
   selectedDate: Date | undefined;
   selectedSlot: ExperienceSlot | null;
   guests: number;
+  selectedVoucher: Voucher | null;
 }) {
   const [thumbnailUrl, setThumbnailUrl] = useState("/placeholder-img.png");
 
-  const total = price_per_person * guests;
+  const subtotal = price_per_person * guests;
+  const discount = selectedVoucher ? selectedVoucher.discount_value : 0;
+  const total = Math.max(0, subtotal - discount);
 
   useEffect(() => {
     const fetchThumbnail = async () => {
@@ -129,8 +134,14 @@ export default function ExperienceListingSummary({
             ${formatPrice(price_per_person)} × {guests} guest
             {guests > 1 ? "s" : ""}
           </p>
-          <p>${formatPrice(total)}</p>
+          <p>${formatPrice(subtotal)}</p>
         </div>
+        {selectedVoucher && (
+          <div className="flex justify-between items-center text-sm text-teal-600">
+            <p className="flex items-center gap-1">Voucher applied ({selectedVoucher.code})</p>
+            <p>-${formatPrice(selectedVoucher.discount_value)}</p>
+          </div>
+        )}
       </div>
 
       {/* Total */}
