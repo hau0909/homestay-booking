@@ -1,7 +1,9 @@
 "use client";
 
 import { Search } from "lucide-react";
+
 import { useState, useRef, useEffect } from "react";
+
 import { useRouter } from "next/navigation";
 import Calendar from "./Calendar";
 import GuestSelector from "./GuestSelector";
@@ -10,6 +12,32 @@ import { Province } from "@/src/types/location";
 import { getAllProvinces } from "@/src/services/location/getAllProvinces";
 
 export default function HeroSection() {
+  // Banner images và auto slide phải nằm trong thân hàm component
+  const bannerImages = [
+    {
+      src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1800&q=80",
+      alt: "Homestay Banner",
+      label: "Homestay",
+      color: "bg-[#328E6E]/80",
+      route: "/search",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=1800&q=80",
+      alt: "Experience Banner",
+      label: "Experience",
+      color: "bg-[#FF9900]/80",
+      route: "/experiences",
+    },
+  ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % bannerImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
   const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestSelector, setShowGuestSelector] = useState(false);
@@ -166,22 +194,30 @@ export default function HeroSection() {
   }, [showCalendar, showGuestSelector, showLocationSelector]);
 
   return (
-    <section className="relative h-[600px] w-full">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src="/banner.jpg"
-          alt="Hero Background"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
+    <section className="relative min-h-[600px] w-full flex flex-col items-center justify-center bg-white">
+      <div className="relative z-20 flex flex-col items-center w-full pt-10">
+        {/* Banner auto chuyển ảnh */}
+        <div className="w-full max-w-[1920px] mb-8 px-2 sm:px-4">
+          <div
+            className="relative group cursor-pointer rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-white/80 w-full h-[40vw] max-h-[500px] min-h-[220px]"
+            onClick={() => router.push(bannerImages[activeIndex].route)}
+          >
+            <img
+              src={bannerImages[activeIndex].src}
+              alt={bannerImages[activeIndex].alt}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute bottom-8 left-0 w-full text-center">
+              <span className={`text-3xl md:text-4xl font-bold text-white drop-shadow-lg ${bannerImages[activeIndex].color} px-8 md:px-10 py-3 md:py-4 rounded-full`}>
+                {bannerImages[activeIndex].label}
+              </span>
+            </div>
+          </div>
+        </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-end pb-12 px-6">
         {/* Search Card */}
         <div
-          className="relative w-full max-w-6xl rounded-4xl p-8"
+          className="relative w-full max-w-6xl rounded-4xl p-8 bg-white/90 shadow-lg"
           ref={calendarRef}
         >
           {/* Search Form */}
