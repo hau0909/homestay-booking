@@ -1,4 +1,4 @@
-export type NotificationType = "BOOKING" | "SYSTEM" | "PROMO";
+export type NotificationType = "CONFIRM" | "CANCEL" | "NEW";
 
 export interface Notification {
   id: number;
