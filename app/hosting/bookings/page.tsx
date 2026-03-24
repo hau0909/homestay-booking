@@ -77,6 +77,7 @@ export default function Page() {
     listing_type,
       title,
       host:profiles!listings_host_id_fkey (
+        id,
         full_name,
         email
       )

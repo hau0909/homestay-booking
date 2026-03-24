@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, XCircle, Bell, Sparkles, Megaphone } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Bell,
+  CirclePlus,
+  Megaphone,
+} from "lucide-react";
 import { markOneNotificationAsRead } from "@/src/services/notifications/markNotificationAsRead";
+import { getHostStatus } from "@/src/services/host/getHostStatus.service";
 import { supabase } from "@/src/lib/supabase";
 
 type Notification = {
@@ -35,7 +42,7 @@ const NotificationDropdown = ({
       case "CANCEL":
         return <XCircle className="text-red-500 w-5 h-5" />;
       case "NEW":
-        return <Sparkles className="text-blue-500 w-5 h-5" />;
+        return <CirclePlus className="text-blue-500 w-5 h-5" />;
       default:
         return <Bell className="text-blue-500 w-5 h-5" />;
     }
@@ -57,8 +64,14 @@ const NotificationDropdown = ({
     if (!user) return;
     markAsRead(n.id);
     await markOneNotificationAsRead(n.id);
+    const hostStatus = await getHostStatus();
+
     onClose();
-    router.push("/bookings");
+    if (hostStatus) {
+      router.push("/hosting/bookings");
+    } else {
+      router.push("/bookings");
+    }
   };
 
   if (loadingUser) {
