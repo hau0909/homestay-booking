@@ -2,6 +2,11 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+const DownloadInvoiceButton = dynamic(
+  () => import("@/src/components/booking/DownloadInvoiceButton"),
+  { ssr: false }
+);
 import {
   BookingCard,
   getUserBookingCards,
@@ -162,6 +167,11 @@ export default function BookingsPage() {
                   userId={String((booking as any).userId || "")}
                   bookingId={String(booking.id)}
                 />
+              )}
+
+              {/* Hiện nút Download Invoice nếu paymentStatus là PAID */}
+              {booking.paymentStatus === "PAID" && (
+                <DownloadInvoiceButton booking={booking} />
               )}
             </div>
           </div>

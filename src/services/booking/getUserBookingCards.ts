@@ -14,6 +14,7 @@ export interface BookingCard {
   listingId: string;
   userId: string;
   listingType: "HOME" | "EXPERIENCE";
+  paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
 }
 
 export async function getUserBookingCards(): Promise<BookingCard[]> {
@@ -41,10 +42,11 @@ export async function getUserBookingCards(): Promise<BookingCard[]> {
         dateRange: `${booking.check_in_date} → ${booking.check_out_date}`,
         guestsText: `${booking.total_guests} guests`,
         totalText: `$${booking.total_price} USD`,
-        status: booking.status as "PENDING" | "CONFIRMED" | "CANCELLED",
+        status: booking.status as "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED",
         listingId: booking.listing_id.toString(),
         userId: booking.user_id.toString(),
         listingType: listing.listing_type,
+        paymentStatus: booking.payment_status,
       };
     }),
   );
