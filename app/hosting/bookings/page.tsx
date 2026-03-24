@@ -15,6 +15,7 @@ interface Booking {
   check_out_date: string;
   status: string;
   total_price: number;
+  payment_status?: string;
   listingTitle?: string;
   listingType?: string;
 }
@@ -50,6 +51,9 @@ export default function Page() {
     const updateData: any = { status: newStatus };
     if (totalPrice !== undefined) {
       updateData.total_price = totalPrice;
+    }
+    if (newStatus === "COMPLETED") {
+      updateData.payment_status = "PAID";
     }
     const { data: updateBooking } = await supabase
       .from("bookings")
@@ -117,6 +121,7 @@ export default function Page() {
                 ...b,
                 status: newStatus,
                 total_price: totalPrice ?? b.total_price,
+                payment_status: newStatus === "COMPLETED" ? "PAID" : b.payment_status,
               }
             : b,
         ),
@@ -128,6 +133,7 @@ export default function Page() {
                 ...b,
                 status: newStatus,
                 total_price: totalPrice ?? b.total_price,
+                payment_status: newStatus === "COMPLETED" ? "PAID" : b.payment_status,
               }
             : b,
         ),

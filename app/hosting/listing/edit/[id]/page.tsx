@@ -13,8 +13,11 @@ import { uploadListingImages } from "@/src/services/listing/uploadListingImages"
 import { deleteListingImage } from "@/src/services/listing/deleteListingImage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useRef } from "react";
+import CreateVoucherModal from "@/src/components/hosting/CreateVoucherModal";
+import EditVoucherModal from "@/src/components/hosting/EditVoucherModal";
+import { Voucher } from "@/src/types/voucher";
+import { getVouchersByListingId } from "@/src/services/voucher/getVouchersByListingId";
 
 export default function EditListingPage() {
   const router = useRouter();
@@ -35,6 +38,9 @@ export default function EditListingPage() {
   const [imgLoading, setImgLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -60,6 +66,13 @@ export default function EditListingPage() {
             setImages(imgs);
           } catch {
             setImages([]);
+          }
+          // Lấy vouchers
+          try {
+            const vs = await getVouchersByListingId(found.id);
+            setVouchers(vs);
+          } catch {
+            setVouchers([]);
           }
         }
       } catch {
@@ -200,6 +213,76 @@ export default function EditListingPage() {
               rows={4}
             />
           </div>
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-slate-300"
+              onClick={() => setVoucherModalOpen(true)}
+            >
+              Add Voucher
+            </Button>
+          </div>
+          <CreateVoucherModal
+            open={voucherModalOpen}
+            onOpenChange={setVoucherModalOpen}
+            listingId={listing.id}
+            onCreated={async () => {
+              const vs = await getVouchersByListingId(listing.id);
+              setVouchers(vs);
+            }}
+          />
+          {editingVoucher && (
+            <EditVoucherModal
+              open={true}
+              onOpenChange={(open) => { if (!open) setEditingVoucher(null); }}
+              voucher={editingVoucher}
+              onUpdated={async () => {
+                const vs = await getVouchersByListingId(listing.id);
+                setVouchers(vs);
+                setEditingVoucher(null);
+              }}
+            />
+          )}
+          {vouchers.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-slate-800 mb-3">Vouchers</h3>
+              <div className="border rounded-lg overflow-hidden divide-y divide-slate-200">
+                {vouchers.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex items-center justify-between gap-4 px-4 py-3 bg-white"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 text-sm truncate">{v.code}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Discount: {v.discount_value}
+                        {v.min_price != null ? ` · Min: ${v.min_price}` : ""}
+                        {v.max_discount != null ? ` · Max off: ${v.max_discount}` : ""}
+                        {v.usage_limit != null ? ` · Used: ${v.used_count ?? 0}/${v.usage_limit}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        v.is_active
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {v.is_active ? "Active" : "Inactive"}
+                    </span>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-full border border-slate-200 bg-white px-6 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+                      onClick={() => setEditingVoucher(v)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex gap-3 mt-6">
             <button
               type="submit"

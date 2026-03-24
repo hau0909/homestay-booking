@@ -61,15 +61,14 @@ const EditBookingStatusModal: React.FC<EditBookingStatusModalProps> = ({
     return total_price + selectedFeesPrices;
   };
 
-  // Lọc status options dựa vào current status
+  // Lọc status options dựa vào current status (CONFIRMED → Completed dùng nút xanh ở góc dưới phải)
   const getStatusOptions = () => {
-    if (currentStatus === 'CONFIRMED') {
-      return ["COMPLETED"];
+    if (currentStatus === "CONFIRMED") {
+      return [];
     }
-    if (currentStatus === 'PENDING') {
+    if (currentStatus === "PENDING") {
       return ["CONFIRMED", "CANCELLED"];
     }
-    // Fallback if needed
     return ["CONFIRMED", "COMPLETED", "CANCELLED"];
   };
 
@@ -103,28 +102,31 @@ const EditBookingStatusModal: React.FC<EditBookingStatusModalProps> = ({
       <div style={{ background: '#fff', borderRadius: 12, minWidth: 800, maxWidth: '90vw', padding: 28, boxShadow: '0 8px 32px #0002', position: 'relative', maxHeight: '80vh', overflowY: 'auto' }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: '#222' }}>Update booking status</h3>
         
-        {/* Status Options */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
-          {STATUS_OPTIONS.map((status) => (
-            <button
-              key={status}
-              onClick={() => handleSelectStatus(status)}
-              style={{
-                padding: '10px 0',
-                borderRadius: 7,
-                border: '1.5px solid #e3e8ee',
-                background: '#f7fafd',
-                color: '#222',
-                fontWeight: 600,
-                fontSize: 16,
-                cursor: 'pointer',
-                transition: 'all 0.18s',
-              }}
-            >
-              {status.charAt(0) + status.slice(1).toLowerCase()}
-            </button>
-          ))}
-        </div>
+        {/* Status Options (PENDING: Confirm / Cancel) */}
+        {STATUS_OPTIONS.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+            {STATUS_OPTIONS.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => handleSelectStatus(status)}
+                style={{
+                  padding: "10px 0",
+                  borderRadius: 7,
+                  border: "1.5px solid #e3e8ee",
+                  background: "#f7fafd",
+                  color: "#222",
+                  fontWeight: 600,
+                  fontSize: 16,
+                  cursor: "pointer",
+                  transition: "all 0.18s",
+                }}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Fees Section - chỉ hiển thị khi status là CONFIRMED */}
         {currentStatus === 'CONFIRMED' && (
@@ -242,6 +244,39 @@ const EditBookingStatusModal: React.FC<EditBookingStatusModalProps> = ({
                 <span style={{ fontWeight: 700, color: '#222', fontSize: 15 }}>Total:</span>
                 <span style={{ fontWeight: 700, color: '#328E6E', fontSize: 18 }}>${totalAmount}</span>
               </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => handleSelectStatus("COMPLETED")}
+                style={{
+                  padding: "12px 28px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: "#328E6E",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(50, 142, 110, 0.35)",
+                  transition: "background 0.18s, transform 0.12s",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "#2a7a5f";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "#328E6E";
+                }}
+              >
+                Completed
+              </button>
             </div>
           </>
         )}

@@ -35,6 +35,10 @@ import { getListingBannedDetail } from "@/src/services/listing/getListingBannedD
 import AddSlotModal from "@/src/components/listing/AddSlotModal";
 import AddActivityModal from "@/src/components/listing/AddActivityModal";
 import EditActivityModal from "@/src/components/listing/EditActivityModal";
+import CreateVoucherModal from "@/src/components/hosting/CreateVoucherModal";
+import EditVoucherModal from "@/src/components/hosting/EditVoucherModal";
+import { Voucher } from "@/src/types/voucher";
+import { getVouchersByListingId } from "@/src/services/voucher/getVouchersByListingId";
 
 export default function EditExperiencePage() {
   const params = useParams();
@@ -68,6 +72,10 @@ export default function EditExperiencePage() {
   const [showAddActivityModal, setShowAddActivityModal] = useState(false);
   const [editingActivity, setEditingActivity] =
     useState<ExperienceActivity | null>(null);
+
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   // ---------- Helper functions ----------
   const isEditable =
     listingStatus === "ACTIVE" ||
@@ -140,6 +148,13 @@ export default function EditExperiencePage() {
     setExperience(exp);
     setActivities(acts);
     setSlots(sls);
+
+    try {
+      const vs = await getVouchersByListingId(exp.id);
+      setVouchers(vs);
+    } catch {
+      setVouchers([]);
+    }
 
     setLoading(false);
   };
@@ -365,6 +380,14 @@ export default function EditExperiencePage() {
               }`}
             >
               {listingStatus === "ACTIVE" ? "Hide Listing" : "Publish Listing"}
+            </button>
+          )}
+          {isEditable && (
+            <button
+              onClick={() => setVoucherModalOpen(true)}
+              className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm"
+            >
+              Add Voucher
             </button>
           )}
         </div>
@@ -777,6 +800,68 @@ export default function EditExperiencePage() {
           }}
           loadImages={loadImages} // Pass loadImages để reload ảnh ngay
         />
+      )}
+
+      {/* VOUCHERS */}
+      <CreateVoucherModal
+        open={voucherModalOpen}
+        onOpenChange={setVoucherModalOpen}
+        listingId={id}
+        onCreated={async () => {
+          const vs = await getVouchersByListingId(id);
+          setVouchers(vs);
+        }}
+      />
+      {editingVoucher && (
+        <EditVoucherModal
+          open={true}
+          onOpenChange={(open) => { if (!open) setEditingVoucher(null); }}
+          voucher={editingVoucher}
+          onUpdated={async () => {
+            const vs = await getVouchersByListingId(id);
+            setVouchers(vs);
+            setEditingVoucher(null);
+          }}
+        />
+      )}
+      {vouchers.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Vouchers</h2>
+          <div className="space-y-3">
+            {vouchers.map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:shadow-md transition-all"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm truncate">{v.code}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Discount: {v.discount_value}
+                    {v.min_price != null ? ` · Min: ${v.min_price}` : ""}
+                    {v.max_discount != null ? ` · Max off: ${v.max_discount}` : ""}
+                    {v.usage_limit != null ? ` · Used: ${v.used_count ?? 0}/${v.usage_limit}` : ""}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${
+                    v.is_active
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {v.is_active ? "Active" : "Inactive"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingVoucher(v)}
+                  className="shrink-0 rounded-full border border-slate-100 bg-white px-6 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

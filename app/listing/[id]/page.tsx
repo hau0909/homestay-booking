@@ -38,6 +38,9 @@ import { getListingRules } from "@/src/services/listing/getListingRules";
 import { Rule } from "@/src/types/rule";
 import { getPoliciesByListingIds } from "@/src/services/cancel-policy/getPoliciesByListingIds";
 import type { CancelPolicy } from "@/src/types/cancel-policy";
+import { getVouchersByListingId } from "@/src/services/voucher/getVouchersByListingId";
+import type { Voucher } from "@/src/types/voucher";
+import ListingBookingVouchers from "@/src/components/listing/ListingBookingVouchers";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -48,6 +51,7 @@ export default function ListingDetailPage() {
   const [home, setHome] = useState<Home | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
   const [cancelPolicies, setCancelPolicies] = useState<CancelPolicy[]>([]);
+  const [bookingVouchers, setBookingVouchers] = useState<Voucher[]>([]);
   const [slots, setSlots] = useState<ExperienceSlot[]>([]);
   const [activities, setActivities] = useState<ExperienceActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +116,13 @@ export default function ListingDetailPage() {
           setCancelPolicies(list ?? []);
         } catch {
           setCancelPolicies([]);
+        }
+
+        try {
+          const allVouchers = await getVouchersByListingId(parseInt(listingId, 10));
+          setBookingVouchers(allVouchers ?? []);
+        } catch {
+          setBookingVouchers([]);
         }
 
         // Fetch slots if it's an experience
@@ -444,15 +455,7 @@ export default function ListingDetailPage() {
             {/* Booking + cancellation policy: sticky together while scrolling */}
             <div className="sticky top-24 z-10 flex w-full max-w-full flex-col gap-3 self-start">
               <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-lg">
-                {listing.listing_type === "EXPERIENCE" ? (
-                  <>
-                    <Link href={`/book/experiences?listing=${listingId}`}>
-                      <button className="mb-4 w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600">
-                        Book Now
-                      </button>
-                    </Link>
-                  </>
-                ) : (
+                {listing.listing_type !== "EXPERIENCE" ? (
                   <>
                     <div className="mb-6 flex items-baseline gap-2">
                       <span className="text-2xl font-semibold text-black underline">
@@ -466,18 +469,35 @@ export default function ListingDetailPage() {
                       </span>
                       <span className="text-black">/ weekend night</span>
                     </div>
+                  </>
+                ) : null}
 
-                    <Link href={`/book/homes?listing=${listingId}`}>
-                      <button className="mb-4 w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600">
-                        Book Now
-                      </button>
-                    </Link>
+                {bookingVouchers.length > 0 ? (
+                  <ListingBookingVouchers
+                    vouchers={bookingVouchers}
+                    formatPrice={formatPrice}
+                  />
+                ) : null}
+
+                {!(user && host && user.id === host.id) && (
+                  <>
+                    {listing.listing_type === "EXPERIENCE" ? (
+                      <Link href={`/book/experiences?listing=${listingId}`}>
+                        <button
+                          className={`w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600 ${bookingVouchers.length === 0 ? "mt-4" : ""}`}
+                        >
+                          Book Now
+                        </button>
+                      </Link>
+                    ) : (
+                      <Link href={`/book/homes?listing=${listingId}`}>
+                        <button className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-red-500 py-3 font-semibold text-white transition-all hover:from-pink-600 hover:to-red-600">
+                          Book Now
+                        </button>
+                      </Link>
+                    )}
                   </>
                 )}
-
-                <p className="text-center text-sm text-gray-500">
-                  You won&apos;t be charged yet
-                </p>
               </div>
 
               {cancelPolicies.length > 0 ? (

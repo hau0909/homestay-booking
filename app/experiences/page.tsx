@@ -27,7 +27,7 @@ export default function ExperiencesPage() {
   const [sortBy, setSortBy] = useState<SortOption[]>([]);
 
   const limit = 12;
-  const itemsPerCarouselPage = 4; // Show 4 items (2 cols x 2 rows) per carousel page
+  const itemsPerCarouselPage = 20; // Show 20 items (4 cols x 5 rows) per carousel page
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
@@ -134,9 +134,9 @@ export default function ExperiencesPage() {
       />
 
       {/* Main Content */}
-      <div className="flex">
-        {/* Listings Section - Left */}
-        <div className="w-1/2 p-6">
+      <div className="p-6">
+        {/* Listings Section */}
+        <div className="w-full">
           {/* Results Count */}
           <p className="text-sm text-gray-600 mb-6">
             Over {total} experiences in the map area
@@ -144,7 +144,7 @@ export default function ExperiencesPage() {
 
           {/* Loading State */}
           {loading ? (
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-4 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="aspect-square bg-gray-200 rounded-xl mb-3" />
@@ -165,7 +165,7 @@ export default function ExperiencesPage() {
                     {Array.from({ length: totalCarouselPages }).map(
                       (_, pageIdx) => (
                         <div key={pageIdx} className="flex-[0_0_100%] min-w-0">
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-8">
+                          <div className="grid grid-cols-4 gap-4">
                             {listings
                               .slice(
                                 pageIdx * itemsPerCarouselPage,
@@ -341,21 +341,6 @@ export default function ExperiencesPage() {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Map Section - Right (Sticky) */}
-        <div className="w-1/2 h-screen sticky top-0 p-6">
-          <div className="h-full bg-gray-200 rounded-2xl overflow-hidden relative">
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <div className="text-center">
-                <div className="text-4xl mb-2">🗺️</div>
-                <p className="font-medium">Map will be integrated here</p>
-                <p className="text-sm mt-2">
-                  Sẽ hiển thị markers với giá của từng trải nghiệm
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
