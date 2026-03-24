@@ -9,35 +9,45 @@ import Calendar from "./Calendar";
 import GuestSelector from "./GuestSelector";
 import LocationSelector from "./LocationSelector";
 import { Province } from "@/src/types/location";
+
 import { getAllProvinces } from "@/src/services/location/getAllProvinces";
+import { getBanners } from "@/src/services/banner/getBanners";
 
 export default function HeroSection() {
-  // Banner images và auto slide phải nằm trong thân hàm component
-  const bannerImages = [
-    {
-      src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1800&q=80",
-      alt: "Homestay Banner",
-      label: "Homestay",
-      color: "bg-[#328E6E]/80",
-      route: "/search",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=1800&q=80",
-      alt: "Experience Banner",
-      label: "Experience",
-      color: "bg-[#FF9900]/80",
-      route: "/experiences",
-    },
-  ];
-
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Banner images lấy từ Supabase
+  const [bannerImages, setBannerImages] = useState<any[]>([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % bannerImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    const fetchBanners = async () => {
+      try {
+        const data = await getBanners();
+        setBannerImages(data || []);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch banners:', error);
+      }
+    };
+    fetchBanners();
   }, []);
+
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+
+  // Hiệu ứng chuyển fade mượt mà
+  useEffect(() => {
+    if (bannerImages.length === 0) return;
+    const interval = setInterval(() => {
+      setIsFading(true);
+      setTimeout(() => {
+        setActiveIndex((prev) => (prev + 1) % bannerImages.length);
+        setIsFading(false);
+      }, 400); // thời gian fade out
+    }, 4000); // đổi banner mỗi 4s
+    return () => clearInterval(interval);
+  }, [bannerImages]);
+
+  // Đã loại bỏ useEffect cũ setInterval không hiệu ứng để tránh xung đột
   const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestSelector, setShowGuestSelector] = useState(false);
@@ -198,21 +208,34 @@ export default function HeroSection() {
       <div className="relative z-20 flex flex-col items-center w-full pt-10">
         {/* Banner auto chuyển ảnh */}
         <div className="w-full max-w-[1920px] mb-8 px-2 sm:px-4">
-          <div
-            className="relative group cursor-pointer rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-white/80 w-full h-[40vw] max-h-[500px] min-h-[220px]"
-            onClick={() => router.push(bannerImages[activeIndex].route)}
-          >
-            <img
-              src={bannerImages[activeIndex].src}
-              alt={bannerImages[activeIndex].alt}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute bottom-8 left-0 w-full text-center">
-              <span className={`text-3xl md:text-4xl font-bold text-white drop-shadow-lg ${bannerImages[activeIndex].color} px-8 md:px-10 py-3 md:py-4 rounded-full`}>
-                {bannerImages[activeIndex].label}
-              </span>
+          {bannerImages.length > 0 && bannerImages[activeIndex] ? (
+            <div
+              className="relative group cursor-pointer rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-white/80 w-full h-[40vw] max-h-[500px] min-h-[220px]"
+              onClick={() => {
+                const banner = bannerImages[activeIndex];
+                let url = banner?.redirect_url || '/';
+                if (banner?.title?.toLowerCase() === 'homestay') url = '/search';
+                if (banner?.title?.toLowerCase() === 'experience') url = '/experiences';
+                router.push(url);
+              }}
+            >
+              <img
+                src={bannerImages[activeIndex]?.image_url}
+                alt={bannerImages[activeIndex]?.title || 'Banner'}
+                className={`h-full w-full object-cover transition-opacity duration-400 ${isFading ? 'opacity-0' : 'opacity-100'}`}
+                style={{ transition: 'opacity 0.4s' }}
+              />
+              <div className="absolute bottom-8 left-0 w-full text-center">
+                <span className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg bg-black/40 px-8 md:px-10 py-3 md:py-4 rounded-full">
+                  {bannerImages[activeIndex]?.title}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full h-[40vw] max-h-[500px] min-h-[220px] flex items-center justify-center bg-gray-200 rounded-3xl">
+              <span className="text-xl text-gray-500">No banner available</span>
+            </div>
+          )}
         </div>
 
         {/* Search Card */}
