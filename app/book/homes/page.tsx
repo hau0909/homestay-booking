@@ -44,6 +44,7 @@ import { confirmBooking } from "@/src/services/booking/confirmBooking";
 import { createBookingCalendars } from "@/src/services/booking/createBookingCalendars";
 import { isValidEmail, isValidPhone } from "@/src/utils/validGuestInfo";
 import { formatDateLocal } from "@/src/utils/fomartDateLocal";
+import { supabase } from "@/src/lib/supabase";
 
 const STEPS = ["Guest Info", "Calendar", "Pricing", "Note"];
 
@@ -350,7 +351,57 @@ export default function Page() {
       const booking = await confirmBooking(bookingId!);
       toast.success("Booking confirmed successfully");
 
-      //build calendar
+      const { data: bookingInfo, error } = await supabase
+        .from("bookings")
+        .select(
+          `
+    id,
+    total_guests,
+    total_price,
+    payment_status,
+    check_in_date,
+    check_out_date,
+    user:profiles!bookings_user_id_fkey (
+      full_name,
+      email
+    ),
+    listing:listings!bookings_listing_id_fkey (
+      listing_type,
+      title,
+      host:profiles!listings_host_id_fkey (
+        id,
+        full_name,
+        email
+      )
+    )
+  `,
+        )
+        .eq("id", bookingId)
+        .single();
+
+      if (error || !bookingInfo) throw error || new Error("Booking not found");
+
+      const listing = Array.isArray(bookingInfo.listing)
+        ? bookingInfo.listing[0]
+        : bookingInfo.listing;
+
+      const host = Array.isArray(listing.host) ? listing.host[0] : listing.host;
+
+      const guest = Array.isArray(bookingInfo.user)
+        ? bookingInfo.user[0]
+        : bookingInfo.user;
+
+      // Build notification message
+      const message = `New booking #${bookingInfo.id} by ${guest?.full_name} for "${listing?.title}"`;
+
+      // Insert notification
+      await supabase.from("notifications").insert({
+        user_id: host.id,
+        title: "New Booking",
+        message,
+        type: "NEW",
+        is_read: false,
+      });
 
       if (dateRange && home)
         await createBookingCalendars({

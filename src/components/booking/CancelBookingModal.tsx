@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { supabase } from "@/src/lib/supabase";
 
 interface Props {
   isOpen: boolean;
@@ -39,6 +40,62 @@ const CancelBookingModal = ({
           bookingId,
           reason,
         }),
+      });
+
+      const { data: bookingInfo, error } = await supabase
+        .from("bookings")
+        .select(
+          `
+    id,
+    total_guests,
+    total_price,
+    payment_status,
+    check_in_date,
+    check_out_date,
+    user:profiles!bookings_user_id_fkey (
+      full_name,
+      email
+    ),
+    listing:listings!bookings_listing_id_fkey (
+      listing_type,
+      title,
+      host:profiles!listings_host_id_fkey (
+        id,
+        full_name,
+        email
+      )
+    )
+  `,
+        )
+        .eq("id", bookingId)
+        .single();
+
+      if (error || !bookingInfo) throw error || new Error("Booking not found");
+
+      // Lấy listing, guest, host
+      const listing = Array.isArray(bookingInfo.listing)
+        ? bookingInfo.listing[0]
+        : bookingInfo.listing;
+
+      const host = Array.isArray(listing?.host)
+        ? listing.host[0]
+        : listing?.host;
+      const guest = Array.isArray(bookingInfo.user)
+        ? bookingInfo.user[0]
+        : bookingInfo.user;
+
+      if (!host || !guest || !listing)
+        throw new Error("Incomplete booking data");
+
+      // Build notification message
+
+      // Insert notification for host
+      await supabase.from("notifications").insert({
+        user_id: host.id,
+        title: "Cancel Booking",
+        message: `Booking #${bookingInfo.id} by ${guest.full_name} has been canceled for "${listing.title} by reason ${reason}"`,
+        type: "CANCEL", // ✅ đổi type cho đúng enum
+        is_read: false,
       });
 
       const data = await res.json();
