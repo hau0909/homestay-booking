@@ -1,8 +1,10 @@
 "use client";
 
 import { Profile } from "@/src/types/profile";
+import { BankAccount } from "@/src/types/bankAccount";
+import { getUserBankAccount } from "@/src/services/banking/getUserBankAccount";
+import { editUserBankAccount } from "@/src/services/banking/editUserBankAccount";
 import { useEffect, useState } from "react";
-import { getBankAccountByProfileId } from "@/src/services/bankAccount/bankAccount.service";
 import {
   User,
   Mail,
@@ -11,9 +13,20 @@ import {
   Calendar,
   Shield,
   Edit,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import banksData from "@/src/data/banks.json";
 
 interface ProfileViewProps {
   profile: Profile;
@@ -21,18 +34,55 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
-  const [bankInfo, setBankInfo] = useState<{
-    bank_name?: string;
-    account_name?: string;
-    account_number?: string;
-  } | null>(null);
+  const [bankInfo, setBankInfo] = useState<BankAccount | null>(null);
+  const [showBankInfo, setShowBankInfo] = useState(false);
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [newBankInfo, setNewBankInfo] = useState({
+    bank_name: "",
+    account_name: "",
+    account_number: "",
+  });
+  const [isSavingBank, setIsSavingBank] = useState(false);
+
   useEffect(() => {
     if (profile.is_host) {
-      getBankAccountByProfileId(profile.id)
-        .then(setBankInfo)
+      getUserBankAccount(profile.id)
+        .then((data) => {
+          setBankInfo(data);
+          if (data) {
+            setNewBankInfo({
+              bank_name: data.bank_name || "",
+              account_name: data.account_name || "",
+              account_number: data.account_number || "",
+            });
+          }
+        })
         .catch(() => setBankInfo(null));
     }
   }, [profile.id, profile.is_host]);
+
+  const handleSaveBank = async () => {
+    if (
+      !newBankInfo.bank_name ||
+      !newBankInfo.account_name ||
+      !newBankInfo.account_number
+    ) {
+      toast.error("Please fill in all bank account fields.");
+      return;
+    }
+    try {
+      setIsSavingBank(true);
+      const updatedBank = await editUserBankAccount(profile.id, newBankInfo);
+      setBankInfo(updatedBank);
+      setIsBankModalOpen(false);
+      toast.success("Bank account saved successfully!");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Failed to save bank account");
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -144,44 +194,84 @@ export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
             </div>
           </div>
 
-            {/* Bank Info (Host only, lấy từ bảng bank_accounts) */}
-            {profile.is_host && (
-              <>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-yellow-600" />
+          {/* Bank Info (Host only, lấy từ bảng bank_accounts) */}
+          {profile.is_host && (
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <Button
+                  onClick={() => setShowBankInfo(!showBankInfo)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  {showBankInfo
+                    ? "Hide Bank Account Info"
+                    : "Show Bank Account Info"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!bankInfo) {
+                      setNewBankInfo({
+                        bank_name: "",
+                        account_name: "",
+                        account_number: "",
+                      });
+                    } else {
+                      setNewBankInfo({
+                        bank_name: bankInfo.bank_name || "",
+                        account_name: bankInfo.account_name || "",
+                        account_number: bankInfo.account_number || "",
+                      });
+                    }
+                    setIsBankModalOpen(true);
+                  }}
+                  variant="default"
+                  className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
+                >
+                  <Plus className="w-4 h-4" />
+                  {bankInfo ? "Edit Bank Account" : "Add Bank Account"}
+                </Button>
+              </div>
+
+              {showBankInfo && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <CreditCard className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Bank Name</p>
+                      <p className="text-gray-900 font-medium">
+                        {bankInfo?.bank_name || "Not provided"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Bank Name</p>
-                    <p className="text-gray-900 font-medium">
-                      {bankInfo?.bank_name || "Not provided"}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <CreditCard className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Account Name</p>
+                      <p className="text-gray-900 font-medium">
+                        {bankInfo?.account_name || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <CreditCard className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Account Number</p>
+                      <p className="text-gray-900 font-medium">
+                        {bankInfo?.account_number || "Not provided"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Account Name</p>
-                    <p className="text-gray-900 font-medium">
-                      {bankInfo?.account_name || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Account Number</p>
-                    <p className="text-gray-900 font-medium">
-                      {bankInfo?.account_number || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
+              )}
+            </div>
+          )}
           {/* Identity Card */}
           {profile.identity_card && (
             <div className="flex items-start gap-3">
@@ -218,6 +308,74 @@ export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
           </p>
         </div>
       </div>
+
+      {/* Bank Account Modal */}
+      <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {bankInfo ? "Edit Bank Account" : "Add Bank Account"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Bank Name</label>
+              <select
+                value={newBankInfo.bank_name}
+                onChange={(e) =>
+                  setNewBankInfo({ ...newBankInfo, bank_name: e.target.value })
+                }
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="" disabled>Select a bank</option>
+                {banksData.data.map((bank) => (
+                  <option key={bank.code} value={bank.short_name}>
+                    {bank.short_name} - {bank.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Name</label>
+              <Input
+                value={newBankInfo.account_name}
+                onChange={(e) =>
+                  setNewBankInfo({
+                    ...newBankInfo,
+                    account_name: e.target.value,
+                  })
+                }
+                placeholder="e.g. NGUYEN VAN A"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Number</label>
+              <Input
+                value={newBankInfo.account_number}
+                onChange={(e) =>
+                  setNewBankInfo({
+                    ...newBankInfo,
+                    account_number: e.target.value,
+                  })
+                }
+                placeholder="e.g. 1010101010"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBankModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveBank}
+              disabled={isSavingBank}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              {isSavingBank ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
