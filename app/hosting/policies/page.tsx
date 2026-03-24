@@ -225,14 +225,41 @@ function PoliciesSetupPageInner() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">{listing.title}</p>
-                  <p className="mt-0.5 text-sm text-slate-600">
-                    {listing.address_detail?.trim() || "—"}
-                  </p>
-                  <span className="mt-1.5 inline-block rounded-full bg-[#328E6E]/10 px-2.5 py-0.5 text-xs font-medium text-[#328E6E]">
-                    {(policies[listing.id]?.length ?? 0) === 1
-                      ? "1 policy"
-                      : `${policies[listing.id]?.length ?? 0} policies`}
-                  </span>
+                  <div className="mt-2 space-y-2">
+                    {(policies[listing.id] ?? []).map((p) => (
+                      <div
+                        key={p.id}
+                        className="rounded-lg border border-slate-200 bg-slate-50/90 p-3 text-sm"
+                      >
+                        <p className="font-semibold text-slate-900">
+                          {p.name?.trim() || "—"}
+                        </p>
+                        {p.description?.trim() ? (
+                          <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-slate-600">
+                            {p.description.trim()}
+                          </p>
+                        ) : null}
+                        <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                          <div>
+                            <span className="font-medium text-slate-700">
+                              Cancel before:{" "}
+                            </span>
+                            {p.cancel_before_hours != null
+                              ? `${p.cancel_before_hours} hours`
+                              : "—"}
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-700">
+                              Refund:{" "}
+                            </span>
+                            {p.refund_percentage != null
+                              ? `${p.refund_percentage}%`
+                              : "—"}
+                          </div>
+                        </dl>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="shrink-0 sm:ml-auto">
                   <button

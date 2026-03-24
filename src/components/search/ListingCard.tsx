@@ -87,7 +87,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
     <Link href={`/listing/${listing.id}`}>
       <div className="group cursor-pointer">
         {/* Image Section */}
-        <div className="relative aspect-square rounded-xl overflow-hidden mb-3">
+        <div className="relative aspect-4/3 rounded-xl overflow-hidden mb-2">
           <img
             src={images[currentImageIndex]}
             alt={listing.title}
@@ -143,14 +143,14 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
           {/* Guest Favorite Badge */}
           {listing.category_name && (
-            <div className="absolute top-3 left-3 px-3 py-1 bg-white rounded-full text-xs font-semibold">
+            <div className="absolute top-3 left-3 px-2.5 py-1 bg-white rounded-full text-[11px] font-semibold">
               Guest favorite
             </div>
           )}
         </div>
 
         {/* Content Section */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {/* Location & Rating */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -170,12 +170,12 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
+          <h3 className="text-xs font-medium text-gray-900 line-clamp-1">
             {listing.title}
           </h3>
 
           {/* Amenities */}
-          <div className="flex items-center gap-3 text-xs text-gray-600">
+          <div className="flex items-center gap-2 text-[11px] text-gray-600">
             {listing.max_guests && (
               <div className="flex items-center gap-1">
                 <Users className="w-3.5 h-3.5" />
@@ -197,11 +197,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </div>
 
           {/* Price */}
-          <div className="pt-1">
-            <span className="text-sm font-semibold text-gray-900">
+          <div className="pt-0.5">
+            <span className="text-xs font-semibold text-gray-900">
               {formatPrice(listing.price_weekday)}
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-xs text-gray-600">
               {listing.listing_type === "EXPERIENCE" ? " / person" : " / night"}
             </span>
           </div>

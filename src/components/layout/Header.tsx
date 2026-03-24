@@ -161,7 +161,7 @@ export default function Header() {
               href="/hosting/bookings"
               className="flex items-center gap-2 hover:scale-110 transition"
             >
-              <ListOrdered size={30} /> Bookings order
+              <ListOrdered size={30} /> Booking
             </Link>
             <Link
               href="/hosting/calendar"
@@ -180,7 +180,7 @@ export default function Header() {
               className="flex items-center gap-2 hover:scale-110 transition"
             >
               <Shield size={30} strokeWidth={2} />
-              Policies Setup
+              Policies
             </Link>
           </nav>
         ) : (
