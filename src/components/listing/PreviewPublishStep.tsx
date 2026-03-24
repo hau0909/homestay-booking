@@ -13,8 +13,6 @@ import { getDistrictsByProvince } from "@/src/services/listing/getDistrict";
 import { getWardsByDistrict } from "@/src/services/listing/getWard";
 import { getAmenities } from "@/src/services/listing/getAmenities";
 import { Amenity } from "@/src/types/amenity";
-import { getRules } from "@/src/services/listing/getRules";
-import { Rule } from "@/src/types/rule";
 
 type Props = {
   data: CreateListingForm;
@@ -38,7 +36,6 @@ export default function PreviewPublishStep({
 
   /* ===== AMENITIES ===== */
   const [amenities, setAmenities] = useState<Amenity[]>([]);
-  const [rules, setRules] = useState<Rule[]>([]);
 
   const images = data.images ?? [];
   const mainImage = images[0];
@@ -52,22 +49,20 @@ export default function PreviewPublishStep({
       if (data.province_code) {
         const provinces = await getProvinces();
         setProvinceName(
-          provinces.find((p) => p.code === data.province_code)?.name ?? ""
+          provinces.find((p) => p.code === data.province_code)?.name ?? "",
         );
       }
 
       if (data.province_code && data.district_code) {
         const districts = await getDistrictsByProvince(data.province_code);
         setDistrictName(
-          districts.find((d) => d.code === data.district_code)?.name ?? ""
+          districts.find((d) => d.code === data.district_code)?.name ?? "",
         );
       }
 
       if (data.district_code && data.ward_code) {
         const wards = await getWardsByDistrict(data.district_code);
-        setWardName(
-          wards.find((w) => w.code === data.ward_code)?.name ?? ""
-        );
+        setWardName(wards.find((w) => w.code === data.ward_code)?.name ?? "");
       }
     }
 
@@ -87,21 +82,8 @@ export default function PreviewPublishStep({
   }, []);
 
   const selectedAmenities = amenities.filter((a) =>
-    data.amenity_ids.includes(a.id)
+    data.amenity_ids.includes(a.id),
   );
-
-  useEffect(() => {
-  async function fetchRules() {
-    const res = await getRules();
-    setRules(res);
-  }
-
-  fetchRules();
-}, []);
-
-const selectedRules = rules.filter((r) =>
-  data.rule_ids.includes(r.id)
-);
 
   return (
     <div className="space-y-10">
@@ -174,51 +156,51 @@ const selectedRules = rules.filter((r) =>
           </section>
 
           {/* AMENITIES */}
-{selectedAmenities.length > 0 && (
-  <section>
-    <h2 className="text-xl font-semibold">Amenities</h2>
+          {selectedAmenities.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold">Amenities</h2>
 
-    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6">
-      {selectedAmenities.map((a) => (
-        <div
-          key={a.id}
-          className="flex items-center gap-3 text-sm text-slate-700"
-        >
-          {a.icon_url ? (
-            <img
-              src={a.icon_url}
-              alt={a.name}
-              className="w-5 h-5 object-contain"
-            />
-          ) : (
-            <div className="w-5 h-5 rounded bg-gray-300" />
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6">
+                {selectedAmenities.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-3 text-sm text-slate-700"
+                  >
+                    {a.icon_url ? (
+                      <img
+                        src={a.icon_url}
+                        alt={a.name}
+                        className="w-5 h-5 object-contain"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded bg-gray-300" />
+                    )}
+
+                    <span>{a.name}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
 
-          <span>{a.name}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+          {/* HOUSE RULES */}
+          {data.rules.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold">House Rules</h2>
 
-{/* HOUSE RULES */}
-{selectedRules.length > 0 && (
-  <section>
-    <h2 className="text-xl font-semibold">House Rules</h2>
-
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-      {selectedRules.map((rule) => (
-        <div
-          key={rule.id}
-          className="flex items-center gap-3 text-sm text-slate-700"
-        >
-          <div className="w-2 h-2 rounded-full bg-black" />
-          <span>{rule.content}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {data.rules.map((rule, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 text-sm text-slate-700"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-black" />
+                    <span>{rule}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* CONFIRM */}
           <div className="border rounded-xl px-5 py-4">
@@ -266,24 +248,22 @@ const selectedRules = rules.filter((r) =>
               </div>
             )}
 
-         <Button
-  className="w-full py-6 text-base"
-  disabled={!confirmed || loading}
-  onClick={onPublish}
->
-  {loading ? "Publishing..." : "Publish listing"}
-</Button>
-
+            <Button
+              className="w-full py-6 text-base"
+              disabled={!confirmed || loading}
+              onClick={onPublish}
+            >
+              {loading ? "Publishing..." : "Publish listing"}
+            </Button>
 
             <Button
-  variant="outline"
-  className="w-full"
-  onClick={onBack}
-  disabled={loading}
->
-  Back
-</Button>
-
+              variant="outline"
+              className="w-full"
+              onClick={onBack}
+              disabled={loading}
+            >
+              Back
+            </Button>
           </div>
         </div>
       </div>

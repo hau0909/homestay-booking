@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
-import { Rule } from "@/src/types/rule";
-import { getRules } from "@/src/services/listing/getRules";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -19,113 +16,112 @@ export default function HouseRulesStep({
   onNext,
   onBack,
 }: Props) {
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const rules: string[] = data.rules || [];
+
+  const [input, setInput] = useState("");
 
   /* =========================
-     FETCH RULES
+     ADD RULE
   ========================== */
-  useEffect(() => {
-    async function fetchRules() {
-      try {
-        const res = await getRules();
-        setRules(res);
-      } catch (err) {
-        console.error("Failed to load rules:", err);
-      } finally {
-        setLoading(false);
-      }
+  const addRule = () => {
+    const value = input.trim();
+    if (!value) return;
+
+    // tránh trùng
+    const exists = rules.some(
+      (r) => r.toLowerCase().trim() === value.toLowerCase(),
+    );
+
+    if (exists) {
+      setInput("");
+      return;
     }
 
-    fetchRules();
-  }, []);
+    onChange({
+      ...data,
+      rules: [...rules, value],
+    });
+
+    setInput("");
+  };
 
   /* =========================
-     TOGGLE RULE
+     REMOVE RULE
   ========================== */
-  function toggleRule(id: number) {
-    const selected = data.rule_ids.includes(id);
+  const removeRule = (index: number) => {
+    onChange({
+      ...data,
+      rules: rules.filter((_, i) => i !== index),
+    });
+  };
 
-    if (selected) {
-      onChange({
-        ...data,
-        rule_ids: data.rule_ids.filter(
-          (item: number) => item !== id
-        ),
-      });
-    } else {
-      onChange({
-        ...data,
-        rule_ids: [...data.rule_ids, id],
-      });
-    }
-  }
-
-
-  /* =========================
-     UI
-  ========================== */
   return (
-    <div className="border rounded-xl p-6 space-y-6">
-      
-      {/* TITLE */}
+    <div className="border rounded-2xl p-6 bg-white space-y-6">
+      {/* HEADER */}
       <div>
-        <h2 className="text-xl font-semibold">House Rules</h2>
-        <p className="text-sm text-gray-500">
-          Select the rules guests must follow during their stay
-        </p>
+        <h2 className="text-xl font-semibold">House rules</h2>
+        <p className="text-sm text-gray-500">Add rules guests must follow</p>
       </div>
 
-      {/* LOADING */}
-      {loading && (
-        <div className="text-sm text-gray-400">
-          Loading rules...
-        </div>
-      )}
+      {/* INPUT */}
+      <div className="flex gap-3">
+        <input
+          type="text"
+          placeholder="No smoking, No pets..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 border rounded-lg px-4 py-3
+                     focus:outline-none focus:ring-2 focus:ring-black"
+        />
 
-      {/* RULE LIST */}
-      {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rules.map((rule) => {
-            const active = data.rule_ids.includes(rule.id);
+        <button
+          type="button"
+          onClick={addRule}
+          disabled={!input.trim()}
+          className="px-5 rounded-full border text-sm font-medium
+                     disabled:opacity-40
+                     hover:bg-gray-100"
+        >
+          Add
+        </button>
+      </div>
 
-            return (
+      {/* LIST */}
+      {rules.length > 0 && (
+        <div className="space-y-3">
+          <div className="border border-gray-300 bg-gray-50 rounded-xl divide-y">
+            {rules.map((rule, index) => (
               <div
-                key={rule.id}
-                onClick={() => toggleRule(rule.id)}
-                className={`
-                  border rounded-lg p-4 cursor-pointer
-                  transition-all duration-200
-                  flex items-center justify-between
-                  ${
-                    active
-                      ? "border-black bg-gray-100"
-                      : "border-gray-300 hover:border-black"
-                  }
-                `}
+                key={index}
+                className="px-4 py-4 flex justify-between items-center
+                           bg-white first:rounded-t-xl last:rounded-b-xl"
               >
-                <span className="text-sm font-medium">
-                  {rule.content}
-                </span>
+                <span className="font-medium text-gray-900">{rule}</span>
 
-                {active && (
-                  <span className="text-xs font-semibold">
-                    ✓
-                  </span>
-                )}
+                <button
+                  onClick={() => removeRule(index)}
+                  className="w-8 h-8 flex items-center justify-center
+                             rounded-full text-gray-500
+                             hover:bg-gray-200 hover:text-black"
+                >
+                  ×
+                </button>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
 
-      {/* ACTION BUTTONS */}
-      <div className="flex justify-between pt-4">
+      {/* FOOTER */}
+      <div className="flex justify-between pt-6">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
 
-        <Button onClick={onNext} disabled={loading}>
+        <Button
+          className="bg-black text-white hover:bg-gray-800"
+          onClick={onNext}
+        >
           Next
         </Button>
       </div>

@@ -311,7 +311,7 @@ export default function Page() {
 
       if (insertedSlots) {
         const isUpdated = await updateListing(listing?.id, {
-          status: "ACTIVE",
+          status: "PENDING",
         });
         if (isUpdated) {
           toast.success("Experience created successfully");

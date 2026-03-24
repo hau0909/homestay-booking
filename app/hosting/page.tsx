@@ -5,86 +5,91 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { getHostDashboardData } from "@/src/services/host/getHostDashboardData";
 import { RevenueChart } from "@/src/components/hosting/RevenueChart";
-import { Building2, BookOpen, TrendingUp, Wallet, ChevronRight,CalendarDays,CheckCircle } from "lucide-react";
+import {
+  Building2,
+  BookOpen,
+  TrendingUp,
+  Wallet,
+  ChevronRight,
+  CalendarDays,
+  CheckCircle,
+} from "lucide-react";
 
 export default function HostDashboardPage() {
   const router = useRouter();
   const [listings, setListings] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [hostId, setHostId] = useState<string | null>(null);  
+  const [hostId, setHostId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-useEffect(() => {
-  async function load() {
-    setLoading(true);
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setHostId(user.id);
+
+      const data = await getHostDashboardData(user.id);
+      setListings(data.listings);
+      setBookings(data.bookings);
+
       setLoading(false);
-      return;
     }
 
-    setHostId(user.id); 
+    load();
+  }, []);
 
-    const data = await getHostDashboardData(user.id);
-    setListings(data.listings);
-    setBookings(data.bookings);
-
-    setLoading(false);
-  }
-
-  load();
-}, []);
-
- const totalRevenue = useMemo(() => {
-  return bookings
-    .filter(
-      b =>
-        b.status !== "CANCELLED" &&
-        b.status === "COMPLETED"
-    )
-    .reduce((sum, b) => sum + (b.total_price || 0), 0);
-}, [bookings]);
-
+  const totalRevenue = useMemo(() => {
+    return bookings
+      .filter((b) => b.status !== "CANCELLED" && b.status === "COMPLETED")
+      .reduce((sum, b) => sum + (b.total_price || 0), 0);
+  }, [bookings]);
 
   if (loading) {
     return <div className="p-6 text-gray-500">Loading dashboard...</div>;
   }
 
- return (
+  return (
     <div className="px-6 py-10 space-y-8">
       {/* HEADER */}
       <div className="space-y-1">
         <h1 className="text-4xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 text-sm">Your hosting performance at a glance</p>
+        <p className="text-slate-500 text-sm">
+          Your hosting performance at a glance
+        </p>
       </div>
 
       {/* STATS */}
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  <StatCard
-    icon={<Building2 className="w-5 h-5 text-slate-600" />}
-    title="Total Listings"
-    value={listings.length}
-  />
-  <StatCard
-    icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
-    title="Active"
-    value={listings.filter((l) => l.status === "ACTIVE").length}
-  />
-  <StatCard
-    icon={<CalendarDays className="w-5 h-5 text-indigo-600" />}
-    title="Bookings"
-    value={bookings.length}
-  />
-  <StatCard
-    icon={<Wallet className="w-5 h-5 text-amber-600" />}
-    title="Revenue"
-    value={`$${totalRevenue.toLocaleString()}`}
-    highlight
-  />
-</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={<Building2 className="w-5 h-5 text-slate-600" />}
+          title="Total Listings"
+          value={listings.length}
+        />
+        <StatCard
+          icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
+          title="Active"
+          value={listings.filter((l) => l.status === "ACTIVE").length}
+        />
+        <StatCard
+          icon={<CalendarDays className="w-5 h-5 text-indigo-600" />}
+          title="Bookings"
+          value={bookings.length}
+        />
+        <StatCard
+          icon={<Wallet className="w-5 h-5 text-amber-600" />}
+          title="Revenue"
+          value={`$${totalRevenue.toLocaleString()}`}
+          highlight
+        />
+      </div>
       {/* CHART */}
       <div className="rounded-2xl border border-slate-200 shadow-lg p-6">
         {hostId && <RevenueChart hostId={hostId} />}
@@ -99,14 +104,20 @@ useEffect(() => {
           >
             <Table
               headers={["Title", "Type", "Status", "Date"]}
-              rows={listings.slice(0, 5).map((l) => [
-                <span className="font-medium text-slate-900 truncate">{l.title}</span>,
-                <span className="text-slate-500 text-sm">{l.listing_type}</span>,
-                <StatusBadge key={l.id} value={l.status} />,
-                <span className="text-slate-500 text-sm">
-                  {new Date(l.created_at).toLocaleDateString()}
-                </span>,
-              ])}
+              rows={listings
+                .slice(0, 5)
+                .map((l) => [
+                  <span className="font-medium text-slate-900 truncate">
+                    {l.title}
+                  </span>,
+                  <span className="text-slate-500 text-sm">
+                    {l.listing_type}
+                  </span>,
+                  <StatusBadge key={l.id} value={l.status} />,
+                  <span className="text-slate-500 text-sm">
+                    {new Date(l.created_at).toLocaleDateString()}
+                  </span>,
+                ])}
             />
           </Section>
         </div>
@@ -118,15 +129,23 @@ useEffect(() => {
           >
             <Table
               headers={["Customer", "Check-in", "Check-out", "Status", "Total"]}
-              rows={bookings.slice(0, 5).map((b) => [
-                <span className="text-slate-600 text-sm">
-  {b.profiles?.full_name ?? "Unknown guest"}
-</span>,
-                <span className="text-slate-500 text-sm">{b.check_in_date}</span>,
-                <span className="text-slate-500 text-sm">{b.check_out_date}</span>,
-                <StatusBadge key={b.id} value={b.status} />,
-                <span className="font-medium text-emerald-600">${b.total_price}</span>,
-              ])}
+              rows={bookings
+                .slice(0, 5)
+                .map((b) => [
+                  <span className="text-slate-600 text-sm">
+                    {b.profiles?.full_name ?? "Unknown guest"}
+                  </span>,
+                  <span className="text-slate-500 text-sm">
+                    {b.check_in_date}
+                  </span>,
+                  <span className="text-slate-500 text-sm">
+                    {b.check_out_date}
+                  </span>,
+                  <StatusBadge key={b.id} value={b.status} />,
+                  <span className="font-medium text-emerald-600">
+                    ${b.total_price}
+                  </span>,
+                ])}
             />
           </Section>
         </div>
@@ -153,11 +172,7 @@ function StatCard({
       className={`
         rounded-xl border bg-white
         transition-all duration-200
-        ${
-          highlight
-            ? "border-slate-300 shadow-sm"
-            : "border-slate-200"
-        }
+        ${highlight ? "border-slate-300 shadow-sm" : "border-slate-200"}
         hover:shadow-md
         p-5
       `}
@@ -257,10 +272,7 @@ function Table({ headers, rows }: { headers: string[]; rows: any[][] }) {
 }
 
 function StatusBadge({ value }: { value: string }) {
-  const statusConfig: Record<
-    string,
-    { bg: string; text: string }
-  > = {
+  const statusConfig: Record<string, { bg: string; text: string }> = {
     ACTIVE: {
       bg: "bg-emerald-100",
       text: "text-emerald-800",

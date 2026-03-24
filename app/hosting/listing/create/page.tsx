@@ -12,8 +12,6 @@ import ImagesStep from "@/src/components/listing/ImagesStep";
 import PreviewPublishStep from "@/src/components/listing/PreviewPublishStep";
 import AmenitiesStep from "@/src/components/listing/AmenitiesStep";
 
-
-
 /* ===== services ===== */
 import { createBasicInfo } from "@/src/services/listing/createBasicInfo";
 import { saveLocation } from "@/src/services/listing/saveLocation";
@@ -21,11 +19,10 @@ import { saveDetails } from "@/src/services/listing/saveDetails";
 import { uploadListingImages } from "@/src/services/listing/uploadListingImages";
 import { publishListing } from "@/src/services/listing/publishListing";
 import { saveAmenities } from "@/src/services/listing/saveAmenities";
-import { saveRules } from "@/src/services/listing/saveRules";
+import { saveRulesFromText } from "@/src/services/listing/saveRules";
 import { saveFees } from "@/src/services/listing/saveFees";
 
-
-import { getUser } from "@/src/services/profile/getUserProfile"; 
+import { getUser } from "@/src/services/profile/getUserProfile";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import ExtraFeesStep from "@/src/components/listing/ExtraFeesStep";
@@ -55,12 +52,12 @@ export type CreateListingForm = {
 
   images: File[];
   amenity_ids: number[];
-  rule_ids: number[];
+  rule_ids: number[]; // dùng khi save
+  rules: string[]; // dùng cho UI nhập tay
   fees: {
     title: string;
     price: number;
   }[];
- 
 };
 
 const steps = [
@@ -75,7 +72,7 @@ const steps = [
   "Preview",
 ];
 
-export default function CreateListingPage() {      
+export default function CreateListingPage() {
   const [step, setStep] = useState(0);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -102,10 +99,11 @@ export default function CreateListingPage() {
     images: [],
     amenity_ids: [],
     rule_ids: [],
+    rules: [],
     fees: [],
   });
 
-  const next = () => setStep((s) => Math.min(s + 1, steps.length - 1)); 
+  const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   /* =======================
@@ -146,8 +144,8 @@ export default function CreateListingPage() {
         price_weekend: data.price_weekend,
       });
       await saveAmenities(listing.id, data.amenity_ids);
-      await saveRules(listing.id, data.rule_ids);
-      await saveFees(listing.id, data.fees); 
+      await saveRulesFromText(listing.id, data.rules);
+      await saveFees(listing.id, data.fees);
 
       /* IMAGES */
       await uploadListingImages(listing.id, data.images);
@@ -169,10 +167,10 @@ export default function CreateListingPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Create Listing</h1>
 
-      <Progress value={((step + 1) / steps.length) * 100} />   
+      <Progress value={((step + 1) / steps.length) * 100} />
 
       {step === 0 && (
-        <BasicInfoStep data={data} onChange={setData} onNext={next} />   //cho component con nhận data, cho conpoment con sửa data
+        <BasicInfoStep data={data} onChange={setData} onNext={next} /> //cho component con nhận data, cho conpoment con sửa data
       )}
 
       {step === 1 && (
@@ -193,30 +191,29 @@ export default function CreateListingPage() {
         />
       )}
       {step === 3 && (
-  <AmenitiesStep
-    data={data}
-    onChange={setData}
-    onNext={next}
-    onBack={back}
-  />
-)}
-{step === 4 && (
-  <HouseRulesStep
-    data={data}
-    onChange={setData}
-    onNext={next}
-    onBack={back}
-  />
-)}
-{step === 5 && (
-  <ExtraFeesStep
-    data={data}
-    onChange={setData}
-    onNext={next}
-    onBack={back}
-  />
-)}
-
+        <AmenitiesStep
+          data={data}
+          onChange={setData}
+          onNext={next}
+          onBack={back}
+        />
+      )}
+      {step === 4 && (
+        <HouseRulesStep
+          data={data}
+          onChange={setData}
+          onNext={next}
+          onBack={back}
+        />
+      )}
+      {step === 5 && (
+        <ExtraFeesStep
+          data={data}
+          onChange={setData}
+          onNext={next}
+          onBack={back}
+        />
+      )}
 
       {step === 6 && (
         <PricingStep
@@ -241,8 +238,7 @@ export default function CreateListingPage() {
           data={data}
           onBack={back}
           onPublish={handlePublish}
-           loading={loading}
-          
+          loading={loading}
         />
       )}
     </div>
