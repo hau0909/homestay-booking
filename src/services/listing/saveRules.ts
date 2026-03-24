@@ -1,19 +1,32 @@
 import { supabase } from "@/src/lib/supabase";
 
-export async function saveRules(
+export async function saveRulesFromText(
   listingId: number,
-  ruleIds: number[]
+  rules: string[]
 ) {
-  if (!ruleIds || ruleIds.length === 0) return;
+  if (!rules || rules.length === 0) return;
 
-  const payload = ruleIds.map((ruleId) => ({
-    listing_id: listingId,
-    rule_id: ruleId,
-  }));
+  const payload: { listing_id: number; rule_id: number }[] = [];
 
-  const { error } = await supabase
-    .from("listing_rules")
-    .insert(payload);
+  for (const content of rules) {
+  const newId = Math.floor(Math.random() * 1000000000);
 
-  if (error) throw error;
+const { data, error } = await supabase
+  .from("rules")
+  .insert({
+    id: newId,
+    content,
+  })
+  .select()
+  .single();
+
+    if (error) throw error;
+
+    payload.push({
+      listing_id: listingId,
+      rule_id: data.id,
+    });
+  }
+
+  await supabase.from("listing_rules").insert(payload);
 }
