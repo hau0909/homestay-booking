@@ -128,10 +128,22 @@ export default function BookingsPage() {
 
             <div className="flex-1 space-y-2">
               <div className="flex justify-between items-start">
-                <p className="text-lg font-semibold">{booking.listingName}</p>
+                <div>
+                  <p className="text-lg font-semibold">{booking.listingName}</p>
+                  <p
+                    className={
+                      "text-xs font-semibold " +
+                      (booking.listingType === "HOME"
+                        ? "text-[#328E6E]"
+                        : "text-[#FF9900]")
+                    }
+                  >
+                    {booking.listingType === "HOME" ? "Homestay" : "Experience"}
+                  </p>
+                </div>
                 <StatusBadge
                   status={booking.status}
-                  bookingId={booking.id}
+                  bookingId={Number(booking.id)}
                   userId={booking.userId}
                   onCancelSuccess={handleCancelSuccess}
                 />

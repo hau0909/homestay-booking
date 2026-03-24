@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Profile } from "@/src/types/profile";
 import { User, Camera, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   validatePhone,
   validateIdentityCard,
 } from "@/src/services/profile/profile.service";
+import { upsertBankAccount, getBankAccountByProfileId } from "@/src/services/bankAccount/bankAccount.service";
 import toast from "react-hot-toast";
 
 interface ProfileEditProps {
@@ -29,7 +30,26 @@ export default function ProfileEdit({
     phone: profile.phone || "",
     identity_card: profile.identity_card || "",
     avatar_url: profile.avatar_url || "",
+    bank_name: "",
+    account_name: "",
+    account_number: "",
   });
+
+  // Lấy thông tin ngân hàng khi là host
+  useEffect(() => {
+    if (profile.is_host) {
+      getBankAccountByProfileId(profile.id)
+        .then((bank) => {
+          if (bank) setFormData((prev) => ({
+            ...prev,
+            bank_name: bank.bank_name || "",
+            account_name: bank.account_name || "",
+            account_number: bank.account_number || "",
+          }));
+        })
+        .catch(() => {});
+    }
+  }, [profile.id, profile.is_host]);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     profile.avatar_url
@@ -63,6 +83,53 @@ export default function ProfileEdit({
         return;
       }
 
+              {/* Bank Name (Host only) */}
+              {profile.is_host && (
+                <div>
+                  <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">Bank Name</label>
+                  <input
+                    type="text"
+                    id="bank_name"
+                    name="bank_name"
+                    value={formData.bank_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                    placeholder="Enter your bank name"
+                  />
+                </div>
+              )}
+
+              {/* Bank Account Name (Host only) */}
+              {profile.is_host && (
+                <div>
+                  <label htmlFor="bank_account_name" className="block text-sm font-medium text-gray-700">Bank Account Name</label>
+                  <input
+                    type="text"
+                    id="bank_account_name"
+                    name="bank_account_name"
+                    value={formData.account_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                    placeholder="Enter your bank account name"
+                  />
+                </div>
+              )}
+
+              {/* Bank Account Number (Host only) */}
+              {profile.is_host && (
+                <div>
+                  <label htmlFor="bank_account_number" className="block text-sm font-medium text-gray-700">Bank Account Number</label>
+                  <input
+                    type="text"
+                    id="bank_account_number"
+                    name="bank_account_number"
+                    value={formData.account_number}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                    placeholder="Enter your bank account number"
+                  />
+                </div>
+              )}
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("File size must be less than 5MB");
@@ -120,34 +187,54 @@ export default function ProfileEdit({
       if (selectedFile) {
         const uploadingToast = toast.loading("Uploading avatar...");
         try {
-          // Import đúng hàm uploadAvatar từ uploadAvatar.ts nếu cần
           const { uploadAvatar } = await import("@/src/services/profile/uploadAvatar");
           avatarUrl = await uploadAvatar(profile.id, selectedFile);
           toast.dismiss(uploadingToast);
           toast.success("Avatar uploaded!");
         } catch (uploadError) {
           toast.dismiss(uploadingToast);
-          toast.error(
-            uploadError instanceof Error 
-              ? uploadError.message 
-              : "Failed to upload avatar"
-          );
+          const msg = uploadError instanceof Error ? uploadError.message : "Failed to upload avatar";
+          toast.error(msg);
           console.error("Avatar upload error:", uploadError);
         }
       }
 
-      // Update profile
-      const updatedProfile = await updateProfile(profile.id, {
-        ...formData,
-        avatar_url: avatarUrl,
-      });
+      // Update profile (không bao gồm thông tin ngân hàng)
+      const { bank_name, account_name, account_number, ...profileData } = formData;
+      let updatedProfile;
+      try {
+        updatedProfile = await updateProfile(profile.id, {
+          ...profileData,
+          avatar_url: avatarUrl,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to update profile";
+        toast.error(msg);
+        console.error("Error updating profile:", err);
+        return;
+      }
+
+      // Nếu là host thì cập nhật thông tin ngân hàng vào bảng bank_accounts
+      if (profile.is_host) {
+        try {
+          await upsertBankAccount(profile.id, {
+            bank_name,
+            account_name,
+            account_number,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Failed to update bank account";
+          toast.error(msg);
+          console.error("Error updating bank account:", err);
+          return;
+        }
+      }
 
       onSave(updatedProfile);
     } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to update profile";
+      toast.error(msg);
       console.error("Error updating profile:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update profile"
-      );
     } finally {
       setLoading(false);
     }
@@ -269,6 +356,60 @@ export default function ProfileEdit({
             <p className="mt-1 text-sm text-red-500">{errors.identity_card}</p>
           )}
         </div>
+
+          {/* Bank Name (Host only) */}
+          {profile.is_host && (
+            <div className="mb-4">
+              <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700 mb-2">
+                Bank Name
+              </label>
+              <input
+                type="text"
+                id="bank_name"
+                name="bank_name"
+                value={formData.bank_name}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+                placeholder="Enter your bank name"
+              />
+            </div>
+          )}
+
+          {/* Account Name (Host only) */}
+          {profile.is_host && (
+            <div className="mb-4">
+              <label htmlFor="account_name" className="block text-sm font-medium text-gray-700 mb-2">
+                Account Name
+              </label>
+              <input
+                type="text"
+                id="account_name"
+                name="account_name"
+                value={formData.account_name}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+                placeholder="Enter your account name"
+              />
+            </div>
+          )}
+
+          {/* Account Number (Host only) */}
+          {profile.is_host && (
+            <div className="mb-6">
+              <label htmlFor="account_number" className="block text-sm font-medium text-gray-700 mb-2">
+                Account Number
+              </label>
+              <input
+                type="text"
+                id="account_number"
+                name="account_number"
+                value={formData.account_number}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+                placeholder="Enter your account number"
+              />
+            </div>
+          )}
 
         {/* Action Buttons */}
         <div className="flex gap-3">

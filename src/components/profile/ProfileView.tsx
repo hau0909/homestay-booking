@@ -1,6 +1,8 @@
 "use client";
 
 import { Profile } from "@/src/types/profile";
+import { useEffect, useState } from "react";
+import { getBankAccountByProfileId } from "@/src/services/bankAccount/bankAccount.service";
 import {
   User,
   Mail,
@@ -19,6 +21,18 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
+  const [bankInfo, setBankInfo] = useState<{
+    bank_name?: string;
+    account_name?: string;
+    account_number?: string;
+  } | null>(null);
+  useEffect(() => {
+    if (profile.is_host) {
+      getBankAccountByProfileId(profile.id)
+        .then(setBankInfo)
+        .catch(() => setBankInfo(null));
+    }
+  }, [profile.id, profile.is_host]);
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -130,6 +144,44 @@ export default function ProfileView({ profile, onEdit }: ProfileViewProps) {
             </div>
           </div>
 
+            {/* Bank Info (Host only, lấy từ bảng bank_accounts) */}
+            {profile.is_host && (
+              <>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Bank Name</p>
+                    <p className="text-gray-900 font-medium">
+                      {bankInfo?.bank_name || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Account Name</p>
+                    <p className="text-gray-900 font-medium">
+                      {bankInfo?.account_name || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Account Number</p>
+                    <p className="text-gray-900 font-medium">
+                      {bankInfo?.account_number || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           {/* Identity Card */}
           {profile.identity_card && (
             <div className="flex items-start gap-3">

@@ -13,6 +13,7 @@ export interface BookingCard {
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   listingId: string;
   userId: string;
+  listingType: "HOME" | "EXPERIENCE";
 }
 
 export async function getUserBookingCards(): Promise<BookingCard[]> {
@@ -26,6 +27,13 @@ export async function getUserBookingCards(): Promise<BookingCard[]> {
       const listing = await getListingById(booking.listing_id.toString());
       const listingImage = await getListingThumbnail(booking.listing_id);
 
+      // Debug log để kiểm tra giá trị thực tế lấy từ listings
+      console.log('DEBUG LISTING', {
+        listing_id: booking.listing_id,
+        title: listing.title,
+        listing_type: listing.listing_type,
+      });
+
       return {
         id: booking.id.toString(),
         listingName: listing.title,
@@ -36,6 +44,7 @@ export async function getUserBookingCards(): Promise<BookingCard[]> {
         status: booking.status as "PENDING" | "CONFIRMED" | "CANCELLED",
         listingId: booking.listing_id.toString(),
         userId: booking.user_id.toString(),
+        listingType: listing.listing_type,
       };
     }),
   );
