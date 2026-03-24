@@ -67,7 +67,9 @@ export default function PaymentPage() {
               ward?.full_name ?? ward?.name,
               district?.full_name ?? district?.name,
               province?.full_name ?? province?.name,
-            ].filter(Boolean).join(", ");
+            ]
+              .filter(Boolean)
+              .join(", ");
             setAddress(addr);
           }
 
@@ -78,7 +80,9 @@ export default function PaymentPage() {
 
             if (exp) {
               const slots = await getExperienceSlots(exp.id);
-              const foundSlot = slots.find((s) => s.id === b.experience_slot_id);
+              const foundSlot = slots.find(
+                (s) => s.id === b.experience_slot_id,
+              );
               setSlot(foundSlot || null);
             }
           } else {
@@ -128,11 +132,14 @@ export default function PaymentPage() {
       : undefined;
 
   // Derive date for Experience
-  const expDate = booking.check_in_date ? new Date(booking.check_in_date) : undefined;
+  const expDate = booking.check_in_date
+    ? new Date(booking.check_in_date)
+    : undefined;
 
   // Determine actual amount to pay. We'll use the raw value for demo. SePay takes amount in VND.
-  const amountToPay = booking.total_price > 0 ? booking.total_price * 25000 : 500000;
-  const qrCodeUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0903252427&template=compact&amount=${amountToPay}&des=BOOKING${booking.id}&download=true`;
+  const amountToPay =
+    booking.total_price > 0 ? booking.total_price * 25000 : 500000;
+  const qrCodeUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0852933924&template=compact&amount=${amountToPay}&des=BOOKING${booking.id}&download=true`;
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -150,8 +157,12 @@ export default function PaymentPage() {
           {/* LEFT: Payment Info & QR Code */}
           <div className="flex-1 w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">Complete your payment</h2>
-              <p className="text-slate-500 mt-1">Scan the QR code with your banking app to pay</p>
+              <h2 className="text-2xl font-bold text-slate-800">
+                Complete your payment
+              </h2>
+              <p className="text-slate-500 mt-1">
+                Scan the QR code with your banking app to pay
+              </p>
             </div>
 
             <div className="flex justify-center mb-6">
@@ -171,11 +182,15 @@ export default function PaymentPage() {
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Account Holder</span>
-                <span className="font-semibold text-slate-800 uppercase">LE DINH HAU</span>
+                <span className="font-semibold text-slate-800 uppercase">
+                  LE DINH HAU
+                </span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Account Number</span>
-                <span className="font-semibold text-teal-600 text-lg">0903252427</span>
+                <span className="font-semibold text-teal-600 text-lg">
+                  0903252427
+                </span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Amount</span>
@@ -195,14 +210,25 @@ export default function PaymentPage() {
               <Info className="shrink-0 mt-0.5" size={20} />
               <div className="text-sm">
                 <p className="font-semibold mb-1">Important Note</p>
-                <p>Please enter the EXACT transfer message <strong>BOOKING{booking.id}</strong> so our system can automatically verify your payment.</p>
+                <p>
+                  Please enter the EXACT transfer message{" "}
+                  <strong>BOOKING{booking.id}</strong> so our system can
+                  automatically verify your payment.
+                </p>
               </div>
             </div>
 
             <div className="text-center text-sm text-slate-500 mt-8 mb-4">
-              <Loader2 className="animate-spin mx-auto mb-3 text-teal-500" size={30} />
-              <p className="font-medium text-slate-700">Waiting for payment...</p>
-              <p className="mt-1">This page will automatically update once it is received.</p>
+              <Loader2
+                className="animate-spin mx-auto mb-3 text-teal-500"
+                size={30}
+              />
+              <p className="font-medium text-slate-700">
+                Waiting for payment...
+              </p>
+              <p className="mt-1">
+                This page will automatically update once it is received.
+              </p>
             </div>
 
             <Button
@@ -246,11 +272,15 @@ export default function PaymentPage() {
 
             {/* Total Price Card */}
             <div className="bg-slate-800 text-white rounded-2xl p-6 shadow-sm">
-               <div className="flex justify-between items-center">
-                  <p className="font-medium">Final Confirmed Booking Total</p>
-               </div>
-               <p className="font-bold text-3xl mt-2">${booking.total_price} USD</p>
-               <p className="text-xs text-slate-400 mt-2">*This is the exact confirmed amount derived from your checkout.</p>
+              <div className="flex justify-between items-center">
+                <p className="font-medium">Final Confirmed Booking Total</p>
+              </div>
+              <p className="font-bold text-3xl mt-2">
+                ${booking.total_price} USD
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                *This is the exact confirmed amount derived from your checkout.
+              </p>
             </div>
           </div>
         </div>

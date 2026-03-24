@@ -10,8 +10,10 @@ import {
   validatePhone,
   validateIdentityCard,
 } from "@/src/services/profile/profile.service";
-import { upsertBankAccount, getBankAccountByProfileId } from "@/src/services/bankAccount/bankAccount.service";
+import { getUserBankAccount } from "@/src/services/banking/getUserBankAccount";
+import { editUserBankAccount } from "@/src/services/banking/editUserBankAccount";
 import toast from "react-hot-toast";
+import banksData from "@/src/data/banks.json";
 
 interface ProfileEditProps {
   profile: Profile;
@@ -38,21 +40,22 @@ export default function ProfileEdit({
   // Lấy thông tin ngân hàng khi là host
   useEffect(() => {
     if (profile.is_host) {
-      getBankAccountByProfileId(profile.id)
+      getUserBankAccount(profile.id)
         .then((bank) => {
-          if (bank) setFormData((prev) => ({
-            ...prev,
-            bank_name: bank.bank_name || "",
-            account_name: bank.account_name || "",
-            account_number: bank.account_number || "",
-          }));
+          if (bank)
+            setFormData((prev) => ({
+              ...prev,
+              bank_name: bank.bank_name || "",
+              account_name: bank.account_name || "",
+              account_number: bank.account_number || "",
+            }));
         })
         .catch(() => {});
     }
   }, [profile.id, profile.is_host]);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    profile.avatar_url
+    profile.avatar_url,
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +63,7 @@ export default function ProfileEdit({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -83,53 +86,80 @@ export default function ProfileEdit({
         return;
       }
 
-              {/* Bank Name (Host only) */}
-              {profile.is_host && (
-                <div>
-                  <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">Bank Name</label>
-                  <input
-                    type="text"
-                    id="bank_name"
-                    name="bank_name"
-                    value={formData.bank_name}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
-                    placeholder="Enter your bank name"
-                  />
-                </div>
-              )}
+      {
+        /* Bank Name (Host only) */
+      }
+      {
+        profile.is_host && (
+          <div>
+            <label
+              htmlFor="bank_name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Bank Name
+            </label>
+            <input
+              type="text"
+              id="bank_name"
+              name="bank_name"
+              value={formData.bank_name}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+              placeholder="Enter your bank name"
+            />
+          </div>
+        );
+      }
 
-              {/* Bank Account Name (Host only) */}
-              {profile.is_host && (
-                <div>
-                  <label htmlFor="bank_account_name" className="block text-sm font-medium text-gray-700">Bank Account Name</label>
-                  <input
-                    type="text"
-                    id="bank_account_name"
-                    name="bank_account_name"
-                    value={formData.account_name}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
-                    placeholder="Enter your bank account name"
-                  />
-                </div>
-              )}
+      {
+        /* Bank Account Name (Host only) */
+      }
+      {
+        profile.is_host && (
+          <div>
+            <label
+              htmlFor="bank_account_name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Bank Account Name
+            </label>
+            <input
+              type="text"
+              id="bank_account_name"
+              name="bank_account_name"
+              value={formData.account_name}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+              placeholder="Enter your bank account name"
+            />
+          </div>
+        );
+      }
 
-              {/* Bank Account Number (Host only) */}
-              {profile.is_host && (
-                <div>
-                  <label htmlFor="bank_account_number" className="block text-sm font-medium text-gray-700">Bank Account Number</label>
-                  <input
-                    type="text"
-                    id="bank_account_number"
-                    name="bank_account_number"
-                    value={formData.account_number}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
-                    placeholder="Enter your bank account number"
-                  />
-                </div>
-              )}
+      {
+        /* Bank Account Number (Host only) */
+      }
+      {
+        profile.is_host && (
+          <div>
+            <label
+              htmlFor="bank_account_number"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Bank Account Number
+            </label>
+            <input
+              type="text"
+              id="bank_account_number"
+              name="bank_account_number"
+              value={formData.account_number}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm"
+              placeholder="Enter your bank account number"
+            />
+          </div>
+        );
+      }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("File size must be less than 5MB");
@@ -158,12 +188,17 @@ export default function ProfileEdit({
 
     // Validate phone (if provided)
     if (formData.phone && !validatePhone(formData.phone)) {
-      newErrors.phone = "Invalid phone number format (must be 10 digits, e.g., 0123456789)";
+      newErrors.phone =
+        "Invalid phone number format (must be 10 digits, e.g., 0123456789)";
     }
 
     // Validate identity card (if provided)
-    if (formData.identity_card && !validateIdentityCard(formData.identity_card)) {
-      newErrors.identity_card = "Invalid identity card (must be 9 or 12 digits)";
+    if (
+      formData.identity_card &&
+      !validateIdentityCard(formData.identity_card)
+    ) {
+      newErrors.identity_card =
+        "Invalid identity card (must be 9 or 12 digits)";
     }
 
     setErrors(newErrors);
@@ -187,20 +222,25 @@ export default function ProfileEdit({
       if (selectedFile) {
         const uploadingToast = toast.loading("Uploading avatar...");
         try {
-          const { uploadAvatar } = await import("@/src/services/profile/uploadAvatar");
+          const { uploadAvatar } =
+            await import("@/src/services/profile/uploadAvatar");
           avatarUrl = await uploadAvatar(profile.id, selectedFile);
           toast.dismiss(uploadingToast);
           toast.success("Avatar uploaded!");
         } catch (uploadError) {
           toast.dismiss(uploadingToast);
-          const msg = uploadError instanceof Error ? uploadError.message : "Failed to upload avatar";
+          const msg =
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Failed to upload avatar";
           toast.error(msg);
           console.error("Avatar upload error:", uploadError);
         }
       }
 
       // Update profile (không bao gồm thông tin ngân hàng)
-      const { bank_name, account_name, account_number, ...profileData } = formData;
+      const { bank_name, account_name, account_number, ...profileData } =
+        formData;
       let updatedProfile;
       try {
         updatedProfile = await updateProfile(profile.id, {
@@ -208,7 +248,8 @@ export default function ProfileEdit({
           avatar_url: avatarUrl,
         });
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Failed to update profile";
+        const msg =
+          err instanceof Error ? err.message : "Failed to update profile";
         toast.error(msg);
         console.error("Error updating profile:", err);
         return;
@@ -217,13 +258,16 @@ export default function ProfileEdit({
       // Nếu là host thì cập nhật thông tin ngân hàng vào bảng bank_accounts
       if (profile.is_host) {
         try {
-          await upsertBankAccount(profile.id, {
+          await editUserBankAccount(profile.id, {
             bank_name,
             account_name,
             account_number,
           });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : "Failed to update bank account";
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Failed to update bank account";
           toast.error(msg);
           console.error("Error updating bank account:", err);
           return;
@@ -232,7 +276,8 @@ export default function ProfileEdit({
 
       onSave(updatedProfile);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to update profile";
+      const msg =
+        error instanceof Error ? error.message : "Failed to update profile";
       toast.error(msg);
       console.error("Error updating profile:", error);
     } finally {
@@ -250,7 +295,11 @@ export default function ProfileEdit({
       <form onSubmit={handleSubmit} className="p-6">
         {/* Avatar Upload - Clickable */}
         <div className="mb-6 flex flex-col items-center">
-          <div className="relative group cursor-pointer" onClick={handleAvatarClick} title="Click to change avatar">
+          <div
+            className="relative group cursor-pointer"
+            onClick={handleAvatarClick}
+            title="Click to change avatar"
+          >
             {avatarPreview ? (
               <img
                 src={avatarPreview}
@@ -280,7 +329,10 @@ export default function ProfileEdit({
 
         {/* Full Name */}
         <div className="mb-4">
-          <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="full_name"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Full Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -301,7 +353,10 @@ export default function ProfileEdit({
 
         {/* Bio */}
         <div className="mb-4">
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="bio"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Bio
           </label>
           <textarea
@@ -317,7 +372,10 @@ export default function ProfileEdit({
 
         {/* Phone */}
         <div className="mb-4">
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Phone Number
           </label>
           <input
@@ -338,7 +396,10 @@ export default function ProfileEdit({
 
         {/* Identity Card */}
         <div className="mb-6">
-          <label htmlFor="identity_card" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="identity_card"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Identity Card
           </label>
           <input
@@ -357,59 +418,73 @@ export default function ProfileEdit({
           )}
         </div>
 
-          {/* Bank Name (Host only) */}
-          {profile.is_host && (
-            <div className="mb-4">
-              <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                id="bank_name"
-                name="bank_name"
-                value={formData.bank_name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-                placeholder="Enter your bank name"
-              />
-            </div>
-          )}
+        {/* Bank Name (Host only) */}
+        {profile.is_host && (
+          <div className="mb-4">
+            <label
+              htmlFor="bank_name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Bank Name
+            </label>
+            <select
+              id="bank_name"
+              name="bank_name"
+              value={formData.bank_name}
+              onChange={handleInputChange as any}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 bg-white"
+            >
+              <option value="" disabled>Select a bank</option>
+              {banksData.data.map((bank) => (
+                <option key={bank.code} value={bank.short_name}>
+                  {bank.short_name} - {bank.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-          {/* Account Name (Host only) */}
-          {profile.is_host && (
-            <div className="mb-4">
-              <label htmlFor="account_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Account Name
-              </label>
-              <input
-                type="text"
-                id="account_name"
-                name="account_name"
-                value={formData.account_name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-                placeholder="Enter your account name"
-              />
-            </div>
-          )}
+        {/* Account Name (Host only) */}
+        {profile.is_host && (
+          <div className="mb-4">
+            <label
+              htmlFor="account_name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Account Name
+            </label>
+            <input
+              type="text"
+              id="account_name"
+              name="account_name"
+              value={formData.account_name}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+              placeholder="Enter your account name"
+            />
+          </div>
+        )}
 
-          {/* Account Number (Host only) */}
-          {profile.is_host && (
-            <div className="mb-6">
-              <label htmlFor="account_number" className="block text-sm font-medium text-gray-700 mb-2">
-                Account Number
-              </label>
-              <input
-                type="text"
-                id="account_number"
-                name="account_number"
-                value={formData.account_number}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-                placeholder="Enter your account number"
-              />
-            </div>
-          )}
+        {/* Account Number (Host only) */}
+        {profile.is_host && (
+          <div className="mb-6">
+            <label
+              htmlFor="account_number"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Account Number
+            </label>
+            <input
+              type="text"
+              id="account_number"
+              name="account_number"
+              value={formData.account_number}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+              placeholder="Enter your account number"
+            />
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-3">
