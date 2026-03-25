@@ -2,11 +2,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-const DownloadInvoiceButton = dynamic(
-  () => import("@/src/components/booking/DownloadInvoiceButton"),
-  { ssr: false }
-);
 import {
   BookingCard,
   getUserBookingCards,
@@ -15,6 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { BookingStatus } from "@/src/types/enums";
 import { Loader2 } from "lucide-react";
 import ReviewBookingButton from "@/src/components/booking/ReviewBookingButton";
+import dynamic from "next/dynamic";
+const DownloadInvoiceButton = dynamic(
+  () => import("@/src/components/booking/DownloadInvoiceButton"),
+  { ssr: false }
+);
 import toast from "react-hot-toast";
 import CancelBookingModal from "@/src/components/booking/CancelBookingModal";
 
@@ -74,6 +74,7 @@ function StatusBadge({
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'HOME' | 'EXPERIENCE'>('HOME');
 
   const handleCancelSuccess = (bookingId: number) => {
     setBookings((prev) =>
@@ -108,6 +109,10 @@ export default function BookingsPage() {
       </div>
     );
 
+  // Filter bookings by type
+  const homeBookings = bookings.filter((b) => b.listingType === 'HOME');
+  const experienceBookings = bookings.filter((b) => b.listingType === 'EXPERIENCE');
+
   return (
     <div className="bg-white py-10 px-40 pb-20 space-y-8">
       {/* Header */}
@@ -118,9 +123,25 @@ export default function BookingsPage() {
         </p>
       </div>
 
-      {/* Booking list */}
+      {/* Tab Navigation */}
+      <div className="flex gap-4 mb-6">
+        <button
+          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === 'HOME' ? 'bg-[#328E6E] text-white' : 'bg-gray-100 text-[#328E6E]'}`}
+          onClick={() => setActiveTab('HOME')}
+        >
+          Homestay
+        </button>
+        <button
+          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === 'EXPERIENCE' ? 'bg-[#FF9900] text-white' : 'bg-gray-100 text-[#FF9900]'}`}
+          onClick={() => setActiveTab('EXPERIENCE')}
+        >
+          Experience
+        </button>
+      </div>
+
+      {/* Booking list by tab */}
       <div className="space-y-5">
-        {bookings.map((booking) => (
+        {(activeTab === 'HOME' ? homeBookings : experienceBookings).map((booking) => (
           <div
             key={booking.id}
             className="border rounded-2xl p-5 flex gap-5 items-start"
@@ -160,7 +181,7 @@ export default function BookingsPage() {
               </p>
               <p className="font-medium">Total: {booking.totalText}</p>
 
-              {/* Hiện nút review nếu status là CONFIRMED */}
+              {/* Hiện nút review nếu status là COMPLETED */}
               {booking.status === "COMPLETED" && (
                 <ReviewBookingButton
                   listingId={String((booking as any).listingId || booking.id)}
