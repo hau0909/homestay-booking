@@ -1,25 +1,22 @@
 import { supabase } from "@/src/lib/supabase";
 
-export async function saveAmenities(
-  listingId: number,
-  amenityIds: number[]
-) {
-  // Remove all old amenities for this listing first
+export async function saveListingRules(listingId: number, ruleIds: number[]) {
+  // Remove all old rules for this listing first
   const { error: deleteError } = await supabase
-    .from("listing_amenities")
+    .from("listing_rules")
     .delete()
     .eq("listing_id", listingId);
   if (deleteError) throw deleteError;
 
-  if (!amenityIds.length) return;
+  if (!ruleIds.length) return;
 
-  const payload = amenityIds.map((amenity_id) => ({
+  const payload = ruleIds.map((rule_id) => ({
     listing_id: listingId,
-    amenity_id,
+    rule_id,
   }));
 
   const { error } = await supabase
-    .from("listing_amenities")
+    .from("listing_rules")
     .insert(payload);
 
   if (error) throw error;

@@ -1,6 +1,7 @@
 // trietcmce180982_sprint3
 "use client";
 import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabase';
 import CompactSearchBar from "@/src/components/search/CompactSearchBar";
 
@@ -16,6 +17,7 @@ interface Experience {
 }
 
 export default function ExperienceListingsPage() {
+  const router = useRouter();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,24 +57,78 @@ export default function ExperienceListingsPage() {
       <h2 style={{ fontSize: 32, fontWeight: 700, margin: '32px 0 16px', textAlign: 'center' }}>
         Experience Listings <span style={{ color: '#E53E3E' }}>❤️</span>
       </h2>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap', padding: '0 24px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: 32,
+          padding: '0 24px',
+          justifyItems: 'center',
+        }}
+      >
         {loading ? (
           <div>Loading...</div>
         ) : experiences.length === 0 ? (
           <div>No experiences found.</div>
         ) : (
           experiences.map((exp: Experience) => (
-            <div key={exp.id} style={{ width: 340, background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #eee', padding: 24, marginBottom: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              key={exp.id}
+              onClick={() => router.push(`/listing/${exp.id}`)}
+              style={{
+                width: 340,
+                minHeight: 440,
+                background: '#fff',
+                borderRadius: 16,
+                boxShadow: '0 2px 12px #eee',
+                padding: 24,
+                marginBottom: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                cursor: 'pointer',
+                transition: 'box-shadow 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 24px #ccc')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 2px 12px #eee')}
+            >
               {exp.image_url ? (
-                <img src={exp.image_url} alt={exp.title} width={320} height={200} style={{ borderRadius: 16, objectFit: 'cover', marginBottom: 16, display: 'block' }} />
+                <img
+                  src={exp.image_url}
+                  alt={exp.title}
+                  width={320}
+                  height={200}
+                  style={{
+                    borderRadius: 16,
+                    objectFit: 'cover',
+                    marginBottom: 16,
+                    display: 'block',
+                    width: 320,
+                    height: 200,
+                  }}
+                />
               ) : (
-                <div style={{ width: 320, height: 200, background: '#e5e7eb', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, color: '#888', fontWeight: 500 }}>
+                <div
+                  style={{
+                    width: 320,
+                    height: 200,
+                    background: '#e5e7eb',
+                    borderRadius: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 16,
+                    color: '#888',
+                    fontWeight: 500,
+                  }}
+                >
                   No Image Available
                 </div>
               )}
-              <div style={{ width: '100%', textAlign: 'left' }}>
-                <h3 style={{ fontWeight: 700, fontSize: 20 }}>{exp.title || 'No title'}</h3>
-                <p style={{ color: '#666', margin: '8px 0' }}>{exp.description || ''}</p>
+              <div style={{ width: '100%', textAlign: 'left', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontWeight: 700, fontSize: 20, minHeight: 48, marginBottom: 4 }}>{exp.title || 'No title'}</h3>
+                <p style={{ color: '#666', margin: '8px 0', minHeight: 40, overflow: 'hidden', textOverflow: 'ellipsis' }}>{exp.description || ''}</p>
                 <p style={{ color: '#E53E3E', margin: '8px 0' }}>
                   <span role="img" aria-label="price">💰</span> {exp.price_per_person !== undefined ? `${exp.price_per_person.toLocaleString()} VND/người` : 'Chưa có giá'}
                 </p>

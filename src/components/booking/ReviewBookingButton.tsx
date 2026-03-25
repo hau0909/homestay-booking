@@ -26,7 +26,7 @@ export default function ReviewBookingButton({ listingId, userId, bookingId }: Re
   }, [listingId, userId]);
 
   if (hasReviewed) {
-    return <div className="text-green-600">Bạn đã đánh giá.</div>;
+    return <div className="text-green-600">You have reviewed.</div>;
   }
 
   return (
@@ -36,7 +36,7 @@ export default function ReviewBookingButton({ listingId, userId, bookingId }: Re
           className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52] mb-2"
           onClick={() => setShowForm(true)}
         >
-          Viết đánh giá
+          Write a review
         </button>
       ) : (
         <ReviewForm listingId={listingId} userId={userId} bookingId={bookingId} onSuccess={() => window.location.reload()} />

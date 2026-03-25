@@ -8,6 +8,7 @@ import { getProfile } from "@/src/services/profile/profile.service";
 import { Listing } from "@/src/types/listing";
 import toast from "react-hot-toast";
 import ExperienceCard from "@/src/components/listing/ExperienceCard";
+import HomeCard from "@/src/components/listing/HomeCard";
 import { useSearchParams } from "next/navigation";
 
 export default function HostListingsPage() {
@@ -133,46 +134,21 @@ export default function HostListingsPage() {
           ))}
         </div>
       ) : (
-        // ✅ GIỮ NGUYÊN GRID CHO HOME
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-          {filteredListings.map((listing) => (
-            <div key={listing.id} className="relative h-full">
-              <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
-                {listingImages[listing.id] ? (
-                  <img
-                    src={listingImages[listing.id]}
-                    alt={listing.title}
-                    className="w-full h-40 object-cover rounded mb-3"
-                  />
-                ) : (
-                  <div className="w-full h-40 bg-gray-200 flex items-center justify-center rounded mb-3 text-gray-400">
-                    No Image
-                  </div>
-                )}
-
-                <div className="flex-1 flex flex-col">
-                  <h2 className="text-xl font-bold mb-1">{listing.title}</h2>
-                  <div className="text-sm text-gray-500 mb-1">
-                    Type: {listing.listing_type}
-                  </div>
-                  <div className="text-sm text-gray-500 mb-1">
-                    Address: {listing.address_detail}
-                  </div>
-                  <div className="text-sm text-gray-500 mb-2">
-                    {listing.description}
-                  </div>
-                </div>
-
-                {isHost && (
-                  <a
-                    href={`/hosting/listing/edit/${listing.id}`}
-                    className="bg-[#328E6E] text-white px-3 py-1 rounded shadow hover:bg-[#256d52] mt-2 self-start"
-                  >
-                    Edit
-                  </a>
-                )}
-              </div>
-            </div>
+        // ✅ TABLE VIEW CHO HOME (giống EXPERIENCE, chỉ sửa HOME)
+        <div className="bg-white rounded-xl shadow overflow-hidden mt-3">
+          {/* HEADER */}
+          <div className="grid grid-cols-[50px_110px_1.6fr_1.3fr_130px_150px_120px] items-center px-8 py-4 text-sm italic text-gray-500 border-b bg-gray-50">
+            <div>#</div>
+            <div>Image</div>
+            <div>Title</div>
+            <div>Address</div>
+            <div>Price</div>
+            <div>Created</div>
+            <div>Status</div>
+          </div>
+          {/* ROWS */}
+          {filteredListings.map((listing, index) => (
+            <HomeCard key={listing.id} listing={listing} index={index} image={listingImages[listing.id]} />
           ))}
         </div>
       )}

@@ -89,7 +89,7 @@ export default function ReviewForm({ listingId, userId, bookingId, onSuccess }: 
   return (
     <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Đánh giá:</label>
+        <label className="block font-semibold mb-1">Review:</label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -108,7 +108,7 @@ export default function ReviewForm({ listingId, userId, bookingId, onSuccess }: 
         </div>
       </div>
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Nội dung đánh giá:</label>
+        <label className="block font-semibold mb-1">Your review:</label>
         <textarea
           className="w-full border rounded p-2"
           value={comment}
@@ -117,7 +117,7 @@ export default function ReviewForm({ listingId, userId, bookingId, onSuccess }: 
         />
       </div>
       <div className="mb-2">
-        <label className="block font-semibold mb-1">Ảnh đánh giá:</label>
+        <label className="block font-semibold mb-1">Review images:</label>
         <input
           type="file"
           accept="image/*"
@@ -128,7 +128,7 @@ export default function ReviewForm({ listingId, userId, bookingId, onSuccess }: 
             }
           }}
         />
-        {uploading && <div className="text-blue-500">Đang upload ảnh...</div>}
+        {uploading && <div className="text-blue-500">Uploading images...</div>}
       </div>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       <button
