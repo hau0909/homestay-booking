@@ -8,6 +8,7 @@ import {
   Bell,
   CirclePlus,
   Megaphone,
+  BadgeDollarSign,
 } from "lucide-react";
 import { markOneNotificationAsRead } from "@/src/services/notifications/markNotificationAsRead";
 import { getHostStatus } from "@/src/services/host/getHostStatus.service";
@@ -17,7 +18,7 @@ type Notification = {
   id: string;
   title: string;
   message: string;
-  type: "NEW" | "CONFIRM" | "CANCEL";
+  type: "NEW" | "CONFIRM" | "CANCEL" | "PAID";
   is_read: boolean;
 };
 
@@ -43,6 +44,8 @@ const NotificationDropdown = ({
         return <XCircle className="text-red-500 w-5 h-5" />;
       case "NEW":
         return <CirclePlus className="text-blue-500 w-5 h-5" />;
+      case "PAID":
+        return <BadgeDollarSign className="text-emerald-500 w-5 h-5" />;
       default:
         return <Bell className="text-blue-500 w-5 h-5" />;
     }
