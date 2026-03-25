@@ -31,18 +31,33 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [isHost, setIsHost] = useState<boolean>(true); // null = not fetched yet
+  const [isHost, setIsHost] = useState<boolean>(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [openNoti, setOpenNoti] = useState(false);
   const [redirectedOnLogin, setRedirectedOnLogin] = useState(false);
-  const [mode, setMode] = useState<"host" | "travelling">(
-    pathname.startsWith("/hosting") ? "host" : "travelling",
-  );
+  const [isManualModeSwitch, setIsManualModeSwitch] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const { notifications, setNotifications } = useNotification(user?.id);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  // ===== MODE LOGIC =====
+  const hostRoutePrefixes = [
+    "/hosting",
+    "/hosting/",
+    "/hosting/listing/create",
+    "/hosting/listing/experience/create",
+    "/listing/create",
+    "/listing/experience/create",
+  ];
+
+  const isHostRoute = hostRoutePrefixes.some(
+    (route) => pathname === route || pathname.startsWith(route),
+  );
+
+  const mode: "host" | "travelling" = isHostRoute ? "host" : "travelling";
 
   // ===== MARK AS READ =====
   const markAsRead = async (id: string) => {
@@ -61,8 +76,8 @@ export default function Header() {
     if (!user) {
       queueMicrotask(() => {
         setIsHost(false);
-        setMode("travelling");
         setRedirectedOnLogin(false);
+        setIsManualModeSwitch(false);
       });
       return;
     }
@@ -75,13 +90,26 @@ export default function Header() {
     fetchHostStatus();
   }, [user?.id]);
 
+  // reset manual switch flag after leaving home page
+  useEffect(() => {
+    if (pathname !== "/") {
+      setIsManualModeSwitch(false);
+    }
+  }, [pathname]);
+
   // ===== REDIRECT FOR HOSTS =====
   useEffect(() => {
-    if (user && isHost && !redirectedOnLogin && pathname === "/") {
+    if (
+      user &&
+      isHost &&
+      !redirectedOnLogin &&
+      !isManualModeSwitch &&
+      pathname === "/"
+    ) {
       router.replace("/hosting");
       setRedirectedOnLogin(true);
     }
-  }, [user, isHost, redirectedOnLogin, pathname]);
+  }, [user, isHost, redirectedOnLogin, isManualModeSwitch, pathname, router]);
 
   // ===== CLICK OUTSIDE MENU =====
   useEffect(() => {
@@ -101,27 +129,22 @@ export default function Header() {
       await logoutUser();
       toast.success("Logged out successfully");
       setIsHost(false);
-      setMode("travelling");
       setIsMenuOpen(false);
+      setIsManualModeSwitch(false);
       router.push("/");
     } catch {
       toast.error("Logout failed");
     }
   };
 
-  // Sync mode khi pathname thay đổi
-  useEffect(() => {
-    setMode(pathname.startsWith("/hosting") ? "host" : "travelling");
-  }, [pathname]);
-
   // ===== MODE SWITCH =====
   const handleSwitchMode = () => {
-    if (!isHost) return; // cannot switch mode if user is not host
+    if (!isHost) return;
+
     if (mode === "host") {
-      setMode("travelling");
+      setIsManualModeSwitch(true);
       router.push("/");
     } else {
-      setMode("host");
       router.push("/hosting");
     }
   };
@@ -136,13 +159,11 @@ export default function Header() {
 
   const getInitial = (email: string) => email.charAt(0).toUpperCase();
 
-  // ===== PREVENT FLICKER =====
   if (loading) return <div className="h-[72px] bg-white" />;
 
   return (
     <header className="w-full bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        {/* NAV */}
         {mode === "host" && user ? (
           <nav className="hidden md:flex items-center gap-8 text-[#67AE6E] font-bold">
             <Link
@@ -206,7 +227,6 @@ export default function Header() {
           </nav>
         )}
 
-        {/* RIGHT */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <NotificationBell
@@ -221,12 +241,10 @@ export default function Header() {
               />
             )}
           </div>
+
           {user && isHost ? (
             <button
-              onClick={() => {
-                setMode(mode === "host" ? "travelling" : "host"); // update state ngay lập tức
-                router.push(mode === "host" ? "/" : "/hosting"); // sau đó navigate
-              }}
+              onClick={handleSwitchMode}
               className="rounded-full bg-[#328E6E] px-5 py-3 text-white hover:bg-[#67AE6E] transition cursor-pointer"
             >
               Switch to {mode === "host" ? "Travelling" : "Hosting"}
@@ -240,7 +258,6 @@ export default function Header() {
             </button>
           )}
 
-          {/* USER MENU */}
           <div className="relative" ref={menuRef}>
             <div
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -277,6 +294,7 @@ export default function Header() {
                         {user.user_metadata?.full_name || "User"}
                       </p>
                     </div>
+
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-[#328E6E] hover:bg-gray-200"
@@ -312,24 +330,26 @@ export default function Header() {
                   </>
                 ) : (
                   <>
-                    <button
-                      onClick={() => {
-                        setIsSignUpModalOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-[#328E6E] hover:bg-gray-200"
-                    >
-                      Sign Up
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsLoginModalOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-[#328E6E] hover:bg-gray-200"
-                    >
-                      Login
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          setIsSignUpModalOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-[#328E6E] hover:bg-gray-200"
+                      >
+                        Sign Up
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsLoginModalOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-[#328E6E] hover:bg-gray-200"
+                      >
+                        Login
+                      </button>
+                    </>
                   </>
                 )}
               </div>
@@ -342,6 +362,7 @@ export default function Header() {
         isOpen={isSignUpModalOpen}
         onClose={() => setIsSignUpModalOpen(false)}
       />
+
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
