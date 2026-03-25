@@ -13,15 +13,18 @@ import { getExperienceSlots } from "@/src/services/experience/getExperienceSlots
 import { getProvinceByCode } from "@/src/services/location/getProvinceByCode";
 import { getDistrictByCode } from "@/src/services/location/getDistrictByCode";
 import { getWardByCode } from "@/src/services/location/getWardByCode";
+import { getUserBankAccount } from "@/src/services/banking/getUserBankAccount";
 
 import { Booking } from "@/src/types/booking";
 import { Listing } from "@/src/types/listing";
 import { Home } from "@/src/types/home";
 import { Experience } from "@/src/types/experience";
 import { ExperienceSlot } from "@/src/types/experienceSlot";
+import { BankAccount } from "@/src/types/bankAccount";
 
 import ListingSummary from "@/src/components/booking/ListingSumary";
 import ExperienceListingSummary from "@/src/components/booking/ExperienceListingSummary";
+import toast from "react-hot-toast";
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -38,6 +41,7 @@ export default function PaymentPage() {
   const [home, setHome] = useState<Home | null>(null);
   const [experience, setExperience] = useState<Experience | null>(null);
   const [slot, setSlot] = useState<ExperienceSlot | null>(null);
+  const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +50,10 @@ export default function PaymentPage() {
       try {
         const b = await getBookingById(bookingId);
         if (!b) throw new Error("Booking not found");
+
+        if (b.payment_status === "PAID" || b.payment_status === "REFUNDED")
+          return;
+
         setBooking(b);
 
         let currentListingId = b.listing_id;
@@ -90,6 +98,14 @@ export default function PaymentPage() {
             const h = await getHomeByListingId(currentListingId.toString());
             setHome(h);
           }
+
+          // Fetch host bank account
+          try {
+            const bank = await getUserBankAccount(l.host_id);
+            setBankAccount(bank);
+          } catch (bankErr) {
+            console.error("Failed to fetch host bank account:", bankErr);
+          }
         }
       } catch (err: any) {
         console.error("Failed to load payment tracking data:", err);
@@ -101,6 +117,30 @@ export default function PaymentPage() {
 
     fetchData();
   }, [bookingId, listingIdStr]);
+
+  // Poll for payment status
+  useEffect(() => {
+    if (!bookingId || Array.isArray(bookingId)) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const b = await getBookingById(bookingId);
+        if (b?.payment_status === "PAID") {
+          toast.success("Payment Received Successfully!");
+          setBooking(b);
+          clearInterval(interval);
+          // Optional: redirect after success
+          setTimeout(() => {
+            router.push(`/payment/${bookingId}/success`); // Redirect to success page
+          }, 3000);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [bookingId, router]);
 
   if (loading) {
     return (
@@ -137,9 +177,12 @@ export default function PaymentPage() {
     : undefined;
 
   // Determine actual amount to pay. We'll use the raw value for demo. SePay takes amount in VND.
-  const amountToPay =
-    booking.total_price > 0 ? booking.total_price * 25000 : 500000;
-  const qrCodeUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0852933924&template=compact&amount=${amountToPay}&des=BOOKING${booking.id}&download=true`;
+  const amountToPay = booking.total_price * 25000;
+  const bankName = bankAccount?.bank_name || "MBBank";
+  const accountNumber = bankAccount?.account_number || "0852933924";
+  const accountName = bankAccount?.account_name || "LE DINH HAU";
+
+  const qrCodeUrl = `https://qr.sepay.vn/img?bank=${bankName}&acc=${accountNumber}&template=compact&amount=${amountToPay}&des=BK${booking.id}&download=true`;
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -178,18 +221,18 @@ export default function PaymentPage() {
             <div className="bg-slate-50 rounded-xl p-5 space-y-4">
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Bank</span>
-                <span className="font-semibold text-slate-800">MBBank</span>
+                <span className="font-semibold text-slate-800">{bankName}</span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Account Holder</span>
                 <span className="font-semibold text-slate-800 uppercase">
-                  LE DINH HAU
+                  {accountName}
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Account Number</span>
                 <span className="font-semibold text-teal-600 text-lg">
-                  0903252427
+                  {accountNumber}
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
@@ -201,7 +244,7 @@ export default function PaymentPage() {
               <div className="flex justify-between items-center pt-1">
                 <span className="text-slate-500">Transfer Message</span>
                 <span className="font-semibold bg-amber-100 text-amber-800 px-3 py-1.5 rounded-md tracking-wider">
-                  BOOKING{booking.id}
+                  BK{booking.id}
                 </span>
               </div>
             </div>
@@ -212,7 +255,7 @@ export default function PaymentPage() {
                 <p className="font-semibold mb-1">Important Note</p>
                 <p>
                   Please enter the EXACT transfer message{" "}
-                  <strong>BOOKING{booking.id}</strong> so our system can
+                  <strong>BK{booking.id}</strong> so our system can
                   automatically verify your payment.
                 </p>
               </div>
