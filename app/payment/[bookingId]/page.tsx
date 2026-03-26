@@ -105,6 +105,17 @@ export default function PaymentPage() {
           // Fetch host bank account
           try {
             const bank = await getUserBankAccount(l.host_id);
+            const hasValidBankAccount =
+              bank &&
+              bank.account_name?.trim() &&
+              bank.account_number?.trim() &&
+              bank.bank_name?.trim();
+
+            if (!hasValidBankAccount) {
+              router.push("/bookings");
+              toast.error("This booking only cash payment");
+              return;
+            }
             setBankAccount(bank);
           } catch (bankErr) {
             console.error("Failed to fetch host bank account:", bankErr);
@@ -181,9 +192,9 @@ export default function PaymentPage() {
 
   // Determine actual amount to pay. We'll use the raw value for demo. SePay takes amount in VND.
   const amountToPay = booking.total_price * 25000;
-  const bankName = bankAccount?.bank_name || "MBBank";
-  const accountNumber = bankAccount?.account_number || "0852933924";
-  const accountName = bankAccount?.account_name || "LE DINH HAU";
+  const bankName = bankAccount?.bank_name;
+  const accountNumber = bankAccount?.account_number;
+  const accountName = bankAccount?.account_name;
 
   const qrCodeUrl = `https://qr.sepay.vn/img?bank=${bankName}&acc=${accountNumber}&template=compact&amount=${amountToPay}&des=BK${booking.id}&download=true`;
 
