@@ -2,6 +2,11 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+const DownloadInvoiceButton = dynamic(
+  () => import("@/src/components/booking/DownloadInvoiceButton"),
+  { ssr: false },
+);
 import {
   BookingCard,
   getUserBookingCards,
@@ -13,7 +18,7 @@ import ReviewBookingButton from "@/src/components/booking/ReviewBookingButton";
 import dynamic from "next/dynamic";
 const DownloadInvoiceButton = dynamic(
   () => import("@/src/components/booking/DownloadInvoiceButton"),
-  { ssr: false }
+  { ssr: false },
 );
 import toast from "react-hot-toast";
 import CancelBookingModal from "@/src/components/booking/CancelBookingModal";
@@ -74,7 +79,7 @@ function StatusBadge({
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'HOME' | 'EXPERIENCE'>('HOME');
+  const [activeTab, setActiveTab] = useState<"HOME" | "EXPERIENCE">("HOME");
 
   const handleCancelSuccess = (bookingId: number) => {
     setBookings((prev) =>
@@ -110,8 +115,10 @@ export default function BookingsPage() {
     );
 
   // Filter bookings by type
-  const homeBookings = bookings.filter((b) => b.listingType === 'HOME');
-  const experienceBookings = bookings.filter((b) => b.listingType === 'EXPERIENCE');
+  const homeBookings = bookings.filter((b) => b.listingType === "HOME");
+  const experienceBookings = bookings.filter(
+    (b) => b.listingType === "EXPERIENCE",
+  );
 
   return (
     <div className="bg-white py-10 px-40 pb-20 space-y-8">
@@ -126,14 +133,14 @@ export default function BookingsPage() {
       {/* Tab Navigation */}
       <div className="flex gap-4 mb-6">
         <button
-          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === 'HOME' ? 'bg-[#328E6E] text-white' : 'bg-gray-100 text-[#328E6E]'}`}
-          onClick={() => setActiveTab('HOME')}
+          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === "HOME" ? "bg-[#328E6E] text-white" : "bg-gray-100 text-[#328E6E]"}`}
+          onClick={() => setActiveTab("HOME")}
         >
           Homestay
         </button>
         <button
-          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === 'EXPERIENCE' ? 'bg-[#FF9900] text-white' : 'bg-gray-100 text-[#FF9900]'}`}
-          onClick={() => setActiveTab('EXPERIENCE')}
+          className={`px-6 py-2 rounded-full font-semibold transition-colors duration-200 ${activeTab === "EXPERIENCE" ? "bg-[#FF9900] text-white" : "bg-gray-100 text-[#FF9900]"}`}
+          onClick={() => setActiveTab("EXPERIENCE")}
         >
           Experience
         </button>
@@ -141,62 +148,68 @@ export default function BookingsPage() {
 
       {/* Booking list by tab */}
       <div className="space-y-5">
-        {(activeTab === 'HOME' ? homeBookings : experienceBookings).map((booking) => (
-          <div
-            key={booking.id}
-            className="border rounded-2xl p-5 flex gap-5 items-start"
-          >
-            <img
-              src={booking.thumbnailUrl || "/placeholder-img.png"}
-              alt=""
-              className="w-30 h-30 rounded-xl object-cover"
-            />
+        {(activeTab === "HOME" ? homeBookings : experienceBookings).map(
+          (booking) => (
+            <div
+              key={booking.id}
+              className="border rounded-2xl p-5 flex gap-5 items-start"
+            >
+              <img
+                src={booking.thumbnailUrl || "/placeholder-img.png"}
+                alt=""
+                className="w-30 h-30 rounded-xl object-cover"
+              />
 
-            <div className="flex-1 space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-lg font-semibold">{booking.listingName}</p>
-                  <p
-                    className={
-                      "text-xs font-semibold " +
-                      (booking.listingType === "HOME"
-                        ? "text-[#328E6E]"
-                        : "text-[#FF9900]")
-                    }
-                  >
-                    {booking.listingType === "HOME" ? "Homestay" : "Experience"}
-                  </p>
+              <div className="flex-1 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-lg font-semibold">
+                      {booking.listingName}
+                    </p>
+                    <p
+                      className={
+                        "text-xs font-semibold " +
+                        (booking.listingType === "HOME"
+                          ? "text-[#328E6E]"
+                          : "text-[#FF9900]")
+                      }
+                    >
+                      {booking.listingType === "HOME"
+                        ? "Homestay"
+                        : "Experience"}
+                    </p>
+                  </div>
+                  <StatusBadge
+                    status={booking.status}
+                    bookingId={Number(booking.id)}
+                    userId={booking.userId}
+                    onCancelSuccess={handleCancelSuccess}
+                  />
                 </div>
-                <StatusBadge
-                  status={booking.status}
-                  bookingId={Number(booking.id)}
-                  userId={booking.userId}
-                  onCancelSuccess={handleCancelSuccess}
-                />
+
+                <p className="text-sm text-slate-600">{booking.dateRange}</p>
+                <p className="text-sm text-slate-600">
+                  Guests: {booking.guestsText}
+                </p>
+                <p className="font-medium">Total: {booking.totalText}</p>
+
+                {/* Hiện nút review nếu status là COMPLETED */}
+                {booking.status === "COMPLETED" && (
+                  <ReviewBookingButton
+                    listingId={String((booking as any).listingId || booking.id)}
+                    userId={String((booking as any).userId || "")}
+                    bookingId={String(booking.id)}
+                  />
+                )}
+
+                {/* Hiện nút Download Invoice nếu paymentStatus là PAID */}
+                {booking.paymentStatus === "PAID" && (
+                  <DownloadInvoiceButton booking={booking} />
+                )}
               </div>
-
-              <p className="text-sm text-slate-600">{booking.dateRange}</p>
-              <p className="text-sm text-slate-600">
-                Guests: {booking.guestsText}
-              </p>
-              <p className="font-medium">Total: {booking.totalText}</p>
-
-              {/* Hiện nút review nếu status là COMPLETED */}
-              {booking.status === "COMPLETED" && (
-                <ReviewBookingButton
-                  listingId={String((booking as any).listingId || booking.id)}
-                  userId={String((booking as any).userId || "")}
-                  bookingId={String(booking.id)}
-                />
-              )}
-
-              {/* Hiện nút Download Invoice nếu paymentStatus là PAID */}
-              {booking.paymentStatus === "PAID" && (
-                <DownloadInvoiceButton booking={booking} />
-              )}
             </div>
-          </div>
-        ))}
+          ),
+        )}
       </div>
     </div>
   );
