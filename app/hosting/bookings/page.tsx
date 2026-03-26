@@ -135,7 +135,8 @@ export default function Page() {
                 ...b,
                 status: newStatus,
                 total_price: totalPrice ?? b.total_price,
-                payment_status: newStatus === "COMPLETED" ? "PAID" : b.payment_status,
+                payment_status:
+                  newStatus === "COMPLETED" ? "PAID" : b.payment_status,
               }
             : b,
         ),
@@ -147,7 +148,8 @@ export default function Page() {
                 ...b,
                 status: newStatus,
                 total_price: totalPrice ?? b.total_price,
-                payment_status: newStatus === "COMPLETED" ? "PAID" : b.payment_status,
+                payment_status:
+                  newStatus === "COMPLETED" ? "PAID" : b.payment_status,
               }
             : b,
         ),
