@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -51,9 +52,11 @@ export default function PaymentPage() {
         const b = await getBookingById(bookingId);
         if (!b) throw new Error("Booking not found");
 
-        if (b.payment_status === "PAID" || b.payment_status === "REFUNDED")
+        if (b.payment_status === "PAID" || b.payment_status === "REFUNDED") {
+          router.push("/bookings");
+          toast.error("Booking Not found!");
           return;
-
+        }
         setBooking(b);
 
         let currentListingId = b.listing_id;
