@@ -4,6 +4,9 @@ export async function saveFees(
   listing_id: number,
   fees: { title: string; price: number }[]
 ) {
+  const { error: delErr } = await supabase.from("fees").delete().eq("listing_id", listing_id);
+  if (delErr) throw delErr;
+
   if (!fees || fees.length === 0) return;
 
   for (const fee of fees) {

@@ -48,7 +48,7 @@ export default function HostDashboardPage() {
 
   const totalRevenue = useMemo(() => {
     return bookings
-      .filter((b) => b.status !== "CANCELLED" && b.status === "COMPLETED")
+      .filter((b) => b.status === "PAID" || b.status === "COMPLETED")
       .reduce((sum, b) => sum + (b.total_price || 0), 0);
   }, [bookings]);
 

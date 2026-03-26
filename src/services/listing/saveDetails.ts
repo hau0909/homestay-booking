@@ -5,10 +5,13 @@ export async function saveDetails(
   listingId: number,
   home: Omit<Home, "listing_id">
 ) {
-  const { error } = await supabase.from("homes").insert({
-    ...home,
-    listing_id: listingId,
-  });
+  const { error } = await supabase.from("homes").upsert(
+    {
+      ...home,
+      listing_id: listingId,
+    },
+    { onConflict: "listing_id" }
+  );
 
   if (error) throw error;
 }
