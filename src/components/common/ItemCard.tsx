@@ -1,7 +1,7 @@
 "use client";
 
+import React, { useState } from "react";
 import { Heart, Star } from "lucide-react";
-import { useState } from "react";
 import { ListingType } from "@/src/types/enums";
 
 interface ItemCardProps {
@@ -18,6 +18,7 @@ interface ItemCardProps {
   isGuestFavorite?: boolean;
 }
 
+
 export default function ItemCard({
   title,
   image,
@@ -29,16 +30,23 @@ export default function ItemCard({
   nights = 2,
   isGuestFavorite = false,
 }: ItemCardProps) {
+  // Luôn đồng bộ trạng thái icon với prop isWishlisted (từ context)
   const [wishlist, setWishlist] = useState(isWishlisted);
 
-  const handleWishlistClick = () => {
-    setWishlist(!wishlist);
+  // Nếu prop thay đổi (do context cập nhật), cập nhật lại state local
+  React.useEffect(() => {
+    setWishlist(isWishlisted);
+  }, [isWishlisted]);
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Không trigger click vào link cha
+    setWishlist((prev) => !prev); // Toggle màu icon ngay lập tức
     onWishlistToggle?.();
   };
 
   const formatPrice = (price?: number) => {
-    if (!price) return "";
-    return `₫${price.toLocaleString("vi-VN")}`;
+    if (price === undefined || price === null) return "";
+    return price.toLocaleString("en-US", { style: "currency", currency: "USD" });
   };
 
   return (
@@ -89,8 +97,9 @@ export default function ItemCard({
         {/* Price and Rating Row */}
         <div className="flex items-center gap-2">
           {/* Price */}
-          {price && (
+          {price !== undefined && price !== null && (
             <div className="flex items-baseline gap-1">
+              <span className="text-xs text-gray-600 mr-1">Price:</span>
               <span className="text-sm font-bold text-black">
                 {formatPrice(price)}
               </span>

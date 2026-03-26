@@ -12,7 +12,7 @@ export async function getMostBookedListings() {
 	console.log('getMostBookedListings result:', data, error);
 
 	if (error || !data) {
-		return [];
+		throw new Error(error?.message || JSON.stringify(error));
 	}
 
 	// Tính số lượt book cho từng listing

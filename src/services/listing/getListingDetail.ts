@@ -86,8 +86,13 @@ export async function getListingDetail(listingId: string): Promise<ListingDetail
       .eq("status", "ACTIVE")
       .single();
 
+
     if (error) {
       console.error("getListingDetail error:", error);
+      return null;
+    }
+    if (!data) {
+      console.error("getListingDetail: No data returned for listingId:", listingId);
       return null;
     }
 
