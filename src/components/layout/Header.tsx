@@ -191,12 +191,6 @@ export default function Header() {
               <CalendarCheck size={30} /> Calendar
             </Link>
             <Link
-              href="/hosting/experience-booking-manager"
-              className="flex items-center gap-2 hover:scale-110 transition"
-            >
-              <Binoculars size={30} /> Experiences order
-            </Link>
-            <Link
               href="/hosting/policies"
               className="flex items-center gap-2 hover:scale-110 transition"
             >
@@ -312,12 +306,6 @@ export default function Header() {
                       className="block px-4 py-2 text-[#328E6E] hover:bg-gray-200"
                     >
                       My Host Request
-                    </Link>
-                    <Link
-                      href="/experience-bookings"
-                      className="block px-4 py-2 text-[#328E6E] hover:bg-gray-200"
-                    >
-                      My Experience Bookings
                     </Link>
 
                     <div className="border-t my-2"></div>
