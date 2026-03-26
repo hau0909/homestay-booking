@@ -40,7 +40,7 @@ export async function getRevenueInMonth(hostId: string) {
   if (bookingError) throw bookingError
 
   const validBookings =
-    bookings?.filter(b => b.status === "COMPLETED") ?? []
+    bookings?.filter(b => b.status === "COMPLETED" || b.status === "PAID") ?? []
 
   // 4️⃣ Gom revenue theo ngày
   const revenueMap: Record<string, number> = {}

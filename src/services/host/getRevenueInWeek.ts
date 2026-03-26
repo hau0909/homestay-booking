@@ -46,9 +46,9 @@ export async function getRevenueInWeek(hostId: string) {
 
   if (bookingError) throw bookingError
 
-  // 4️⃣ Filter booking COMPLETED
+  // 4️⃣ Filter booking COMPLETED or PAID
   const validBookings =
-    bookings?.filter(b => b.status === "COMPLETED") ?? []
+    bookings?.filter(b => b.status === "COMPLETED" || b.status === "PAID") ?? []
 
   // 5️⃣ Map revenue theo ngày
   const revenueMap: Record<string, number> = {}

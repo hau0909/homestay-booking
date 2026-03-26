@@ -11,6 +11,8 @@ import PricingStep from "@/src/components/listing/PricingStep";
 import ImagesStep from "@/src/components/listing/ImagesStep";
 import PreviewPublishStep from "@/src/components/listing/PreviewPublishStep";
 import AmenitiesStep from "@/src/components/listing/AmenitiesStep";
+import ExtraFeesStep from "@/src/components/listing/ExtraFeesStep";
+import HouseRulesStep from "@/src/components/listing/HouseRulesStep";
 
 /* ===== services ===== */
 import { createBasicInfo } from "@/src/services/listing/createBasicInfo";
@@ -21,17 +23,16 @@ import { publishListing } from "@/src/services/listing/publishListing";
 import { saveAmenities } from "@/src/services/listing/saveAmenities";
 import { saveRulesFromText } from "@/src/services/listing/saveRules";
 import { saveFees } from "@/src/services/listing/saveFees";
-
+import { updateListing } from "@/src/services/listing/updateListing";
 import { getUser } from "@/src/services/profile/getUserProfile";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import ExtraFeesStep from "@/src/components/listing/ExtraFeesStep";
-import HouseRulesStep from "@/src/components/listing/HouseRulesStep";
 
 /* =======================
    TYPE
 ======================= */
 export type CreateListingForm = {
+  id?: number;
   title: string;
   description: string;
   listing_type: "HOME";
@@ -107,57 +108,177 @@ export default function CreateListingPage() {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   /* =======================
-     PUBLISH
+     HANDLERS
   ======================= */
+  const handleNextBasicInfo = async () => {
+    try {
+      setLoading(true);
+      if (!data.id) {
+        const { user } = await getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        const listing = await createBasicInfo({
+          host_id: user.id,
+          category_id: 1,
+          title: data.title,
+          description: data.description,
+          listing_type: data.listing_type,
+        });
+        setData((prev) => ({ ...prev, id: listing.id }));
+      } else {
+        await updateListing(data.id, {
+          title: data.title,
+          description: data.description,
+          listing_type: data.listing_type,
+        });
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Basic Info");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextLocation = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveLocation(data.id, {
+          province_code: data.province_code,
+          district_code: data.district_code,
+          ward_code: data.ward_code,
+          address_detail: data.address_detail,
+        });
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Location");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextDetails = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveDetails(data.id, {
+          quantity: data.quantity,
+          max_guests: data.max_guests,
+          bed_count: data.bed_count,
+          bath_count: data.bath_count,
+          room_size: data.room_size,
+          price_weekday: data.price_weekday,
+          price_weekend: data.price_weekend,
+        });
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextAmenities = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveAmenities(data.id, data.amenity_ids);
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Amenities");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextHouseRules = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveRulesFromText(data.id, data.rules);
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Rules");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextExtraFees = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveFees(data.id, data.fees);
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Fees");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextPricing = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await saveDetails(data.id, {
+          quantity: data.quantity,
+          max_guests: data.max_guests,
+          bed_count: data.bed_count,
+          bath_count: data.bath_count,
+          room_size: data.room_size,
+          price_weekday: data.price_weekday,
+          price_weekend: data.price_weekend,
+        });
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save Pricing");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNextImages = async () => {
+    try {
+      setLoading(true);
+      if (data.id) {
+        await uploadListingImages(data.id, data.images);
+      }
+      next();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to upload Images");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePublish = async () => {
     try {
       setLoading(true);
-
-      const { user } = await getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      /* BASIC INFO */
-      const listing = await createBasicInfo({
-        host_id: user.id,
-        category_id: 1,
-        title: data.title,
-        description: data.description,
-        listing_type: data.listing_type,
-      });
-
-      /* LOCATION */
-      await saveLocation(listing.id, {
-        province_code: data.province_code,
-        district_code: data.district_code,
-        ward_code: data.ward_code,
-        address_detail: data.address_detail,
-      });
-
-      /* HOME DETAILS */
-      await saveDetails(listing.id, {
-        quantity: data.quantity,
-        max_guests: data.max_guests,
-        bed_count: data.bed_count,
-        bath_count: data.bath_count,
-        room_size: data.room_size,
-        price_weekday: data.price_weekday,
-        price_weekend: data.price_weekend,
-      });
-      await saveAmenities(listing.id, data.amenity_ids);
-      await saveRulesFromText(listing.id, data.rules);
-      await saveFees(listing.id, data.fees);
-
-      /* IMAGES */
-      await uploadListingImages(listing.id, data.images);
-
-      /* PUBLISH */
-      await publishListing(listing.id);
-
+      if (!data.id) throw new Error("No draft listing found");
+      
+      await publishListing(data.id);
+      
       toast.success("Listing created successfully!");
       router.push("/hosting/listing");
     } catch (err: any) {
-      console.error("CREATE LISTING FAILED:", err);
-      alert(err.message || "Create listing failed");
+      console.error("PUBLISH LISTING FAILED:", err);
+      toast.error(err.message || "Publish listing failed");
     } finally {
       setLoading(false);
     }
@@ -170,14 +291,14 @@ export default function CreateListingPage() {
       <Progress value={((step + 1) / steps.length) * 100} />
 
       {step === 0 && (
-        <BasicInfoStep data={data} onChange={setData} onNext={next} /> //cho component con nhận data, cho conpoment con sửa data
+        <BasicInfoStep data={data} onChange={setData} onNext={handleNextBasicInfo} />
       )}
 
       {step === 1 && (
         <LocationStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextLocation}
           onBack={back}
         />
       )}
@@ -186,7 +307,7 @@ export default function CreateListingPage() {
         <DetailsStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextDetails}
           onBack={back}
         />
       )}
@@ -194,7 +315,7 @@ export default function CreateListingPage() {
         <AmenitiesStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextAmenities}
           onBack={back}
         />
       )}
@@ -202,7 +323,7 @@ export default function CreateListingPage() {
         <HouseRulesStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextHouseRules}
           onBack={back}
         />
       )}
@@ -210,7 +331,7 @@ export default function CreateListingPage() {
         <ExtraFeesStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextExtraFees}
           onBack={back}
         />
       )}
@@ -219,7 +340,7 @@ export default function CreateListingPage() {
         <PricingStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextPricing}
           onBack={back}
         />
       )}
@@ -228,7 +349,7 @@ export default function CreateListingPage() {
         <ImagesStep
           data={data}
           onChange={setData}
-          onNext={next}
+          onNext={handleNextImages}
           onBack={back}
         />
       )}
