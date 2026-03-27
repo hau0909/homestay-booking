@@ -2,11 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-const DownloadInvoiceButton = dynamic(
-  () => import("@/src/components/booking/DownloadInvoiceButton"),
-  { ssr: false },
-);
+
 import {
   BookingCard,
   getUserBookingCards,
