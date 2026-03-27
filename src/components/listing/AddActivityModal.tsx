@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { addExperienceActivitiesKeepOld } from "@/src/services/experience/addExperienceActivitiesKeepOld";
 
 interface Props {
+  listingId: number;
   experienceId: number;
   activities: ExperienceActivity[];
   onClose: () => void;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function AddActivityModal({
+  listingId,
   experienceId,
   activities,
   onClose,
@@ -59,6 +61,7 @@ export default function AddActivityModal({
 
       // 🔹 Thêm activity + upload ảnh
       const result = await addExperienceActivitiesKeepOld(
+        listingId,
         experienceId,
         newActivity,
         file || undefined,

@@ -8,6 +8,7 @@ interface AddActivityResult {
 }
 
 export async function addExperienceActivitiesKeepOld(
+  listingId: number,
   experienceId: number,
   newActivity: Omit<ExperienceActivity, "id">,
   file?: File
@@ -34,7 +35,7 @@ export async function addExperienceActivitiesKeepOld(
       .from("listing_images")
       .insert([
         {
-          listing_id: experienceId,
+          listing_id: listingId,
           url: imageUrl,
           is_thumbnail: false,
         },
