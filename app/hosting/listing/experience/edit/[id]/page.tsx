@@ -769,17 +769,18 @@ export default function EditExperiencePage() {
       )}
 
       {/* ADD MODALS */}
-      {showAddSlotModal && (
+      {showAddSlotModal && experience && (
         <AddSlotModal
-          experienceId={id}
+          experienceId={experience.id}
           onClose={() => setShowAddSlotModal(false)}
           onAdd={(newSlots) => setSlots((prev) => [...prev, ...newSlots])}
         />
       )}
 
-      {showAddActivityModal && (
+      {showAddActivityModal && experience && (
         <AddActivityModal
-          experienceId={id}
+          listingId={id}
+          experienceId={experience.id}
           activities={activities}
           onClose={() => setShowAddActivityModal(false)}
           onUpdate={(updatedActivities) => setActivities(updatedActivities)}
