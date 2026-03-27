@@ -6,7 +6,6 @@ export const getListingById = async (listingId: string): Promise<Listing> => {
     .from("listings")
     .select("*")
     .eq("id", Number(listingId))
-    .eq("status", "ACTIVE")
     .single();
 
   if (error) {

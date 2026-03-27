@@ -44,11 +44,13 @@ export function generateInvoicePDF({
   // Nếu tên có dấu, in ra tên không dấu
   const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(customerName);
   const displayName = hasVietnamese ? removeVietnameseDiacritics(customerName) : customerName;
+  const hasVietnameseRoom = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(roomOrExperience);
+  const displayRoom = hasVietnameseRoom ? removeVietnameseDiacritics(roomOrExperience) : roomOrExperience;
   doc.text(`Customer: ${displayName}`, 20, y); y += lineHeight;
   doc.text(`Phone: ${phone}`, 20, y); y += lineHeight;
   doc.text(`Email: ${email}`, 20, y); y += lineHeight;
   doc.text(`Identity Card: ${identityCard}`, 20, y); y += lineHeight;
-  doc.text(`Home/Experience: ${roomOrExperience}`, 20, y); y += lineHeight;
+  doc.text(`Home/Experience: ${displayRoom}`, 20, y); y += lineHeight;
   doc.text(`Check-in: ${checkIn}`, 20, y); y += lineHeight;
   doc.text(`Check-out: ${checkOut}`, 20, y); y += lineHeight;
   doc.text(`Total: $${total}`, 20, y); y += lineHeight;
