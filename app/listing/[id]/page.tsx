@@ -871,7 +871,7 @@ function ReviewForm({
         className="bg-[#328E6E] text-white px-4 py-2 rounded hover:bg-[#256b52]"
         disabled={loading}
       >
-        {loading ? "Đang gửi..." : "Gửi đánh giá"}
+        {loading ? "Submitting..." : "Submit Review"}
       </button>
     </form>
   );

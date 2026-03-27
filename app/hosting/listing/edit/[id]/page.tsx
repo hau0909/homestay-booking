@@ -9,6 +9,7 @@ import { Rule } from "@/src/types/rule";
 import { useEffect, useState } from "react";
 import { getHomeByListingId } from "@/src/services/home/getHomeByListingId";
 import { updateHomeByListingId } from "@/src/services/home/updateHomeByListingId";
+import { createHome } from "@/src/services/home/createHome";
 import { useRouter, useParams } from "next/navigation";
 import { Listing } from "@/src/types/listing";
 import { getHostListings } from "@/src/services/listing/getHostListings";
@@ -19,6 +20,8 @@ import { useAuth } from "@/src/hooks/useAuth";
 
 import { getListingImages } from "@/src/services/listing/getListingImages";
 import { uploadListingImages } from "@/src/services/listing/uploadListingImages";
+import { addListingImages } from "@/src/services/listing/addListingImages";
+import { replaceListingImage } from "@/src/services/listing/replaceListingImage";
 import { deleteListingImage } from "@/src/services/listing/deleteListingImage";
 import { Button } from "../../../../../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "../../../../../components/ui/dialog";
@@ -31,6 +34,7 @@ import { getAmenities } from "@/src/services/listing/getAmenities";
 import { getListingAmenities } from "@/src/services/listing/getListingAmenities";
 import { saveAmenities } from "@/src/services/listing/saveAmenities";
 import { Amenity } from "@/src/types/amenity";
+import AddressSelect, { AddressValue } from "@/src/components/common/AddressSelect";
 
 export default function EditListingPage() {
   // Rules state
@@ -45,8 +49,13 @@ export default function EditListingPage() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     title: "",
-    address_detail: "",
     description: "",
+  });
+  const [address, setAddress] = useState<AddressValue>({
+    address_detail: "",
+    province_code: "",
+    district_code: "",
+    ward_code: "",
   });
   const [isHost, setIsHost] = useState(false);
   const [home, setHome] = useState<any>(null);
@@ -57,6 +66,7 @@ export default function EditListingPage() {
   const [imgLoading, setImgLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const multiFileInputRef = useRef<HTMLInputElement | null>(null);
   const [voucherModalOpen, setVoucherModalOpen] = useState(false);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
@@ -89,8 +99,13 @@ export default function EditListingPage() {
           } catch {}
           setForm({
             title: found.title || "",
-            address_detail: found.address_detail || "",
             description: found.description || "",
+          });
+          setAddress({
+            address_detail: found.address_detail || "",
+            province_code: found.province_code || "",
+            district_code: found.district_code || "",
+            ward_code: found.ward_code || "",
           });
           // Lấy ảnh
           try {
@@ -143,15 +158,31 @@ export default function EditListingPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+  const handleAddressChange = (value: AddressValue) => {
+    setAddress(value);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!listing) return;
     try {
-      await updateListing(listing.id, form);
-      // Update home price fields
+      await updateListing(listing.id, {
+        ...form,
+        address_detail: address.address_detail,
+        province_code: address.province_code,
+        district_code: address.district_code,
+        ward_code: address.ward_code,
+        status: "PENDING",
+      });
+      // Update or create home price fields
       if (home) {
         await updateHomeByListingId(listing.id, {
+          price_weekday: Number(homePrice.price_weekday),
+          price_weekend: Number(homePrice.price_weekend),
+        });
+      } else {
+        await createHome({
+          listing_id: listing.id,
           price_weekday: Number(homePrice.price_weekday),
           price_weekend: Number(homePrice.price_weekend),
         });
@@ -180,6 +211,42 @@ export default function EditListingPage() {
       {isHost && (
         <div className="mb-8 p-4 bg-slate-50 rounded-xl shadow border border-slate-100">
           <h2 className="font-semibold mb-3 text-lg text-[#328E6E]">Listing Images</h2>
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => multiFileInputRef.current?.click()}
+              disabled={imgLoading || images.length >= 5}
+            >
+              Add Images (max 5)
+            </Button>
+            <input
+              ref={multiFileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={async (e) => {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+                if (images.length + files.length > 5) {
+                  toast.error("Tối đa 5 ảnh cho mỗi listing!");
+                  return;
+                }
+                setImgLoading(true);
+                try {
+                  await addListingImages(listing.id, files);
+                  const imgs = await getListingImages(listing.id);
+                  setImages(imgs);
+                  toast.success("Đã thêm ảnh!");
+                } catch (err: any) {
+                  toast.error(err.message || "Thêm ảnh thất bại!");
+                } finally {
+                  setImgLoading(false);
+                  if (multiFileInputRef.current) multiFileInputRef.current.value = "";
+                }
+              }}
+            />
+          </div>
           <div className="flex flex-wrap gap-4">
             {images.map((img) => (
               <Dialog key={img.id}>
@@ -203,22 +270,22 @@ export default function EditListingPage() {
                         try {
                           await deleteListingImage(img.id, img.url);
                           setImages((prev) => prev.filter((i) => i.id !== img.id));
-                          toast.success("Đã xóa ảnh!");
+                          toast.success("Image deleted!");
                         } catch (err: any) {
-                          toast.error(err.message || "Xóa ảnh thất bại!");
+                          toast.error(err.message || "Delete failed!");
                         } finally {
                           setImgLoading(false);
                         }
                       }}
                     >
-                      Xóa ảnh này
+                      Delete image
                     </Button>
                     <Button
                       variant="outline"
                       disabled={imgLoading}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      Thay thế ảnh
+                      Replace image
                     </Button>
                     <input
                       ref={fileInputRef}
@@ -230,11 +297,7 @@ export default function EditListingPage() {
                         if (!file) return;
                         setImgLoading(true);
                         try {
-                          // Upload ảnh mới
-                          await uploadListingImages(listing.id, [file]);
-                          // Xóa ảnh cũ
-                          await deleteListingImage(img.id, img.url);
-                          // Reload ảnh
+                          await replaceListingImage(listing.id, img.id, img.url, file);
                           const imgs = await getListingImages(listing.id);
                           setImages(imgs);
                           toast.success("Đã thay thế ảnh!");
@@ -242,6 +305,7 @@ export default function EditListingPage() {
                           toast.error(err.message || "Thay thế ảnh thất bại!");
                         } finally {
                           setImgLoading(false);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
                         }
                       }}
                     />
@@ -264,15 +328,7 @@ export default function EditListingPage() {
               required
             />
           </div>
-          <div>
-            <label className="block font-semibold mb-1 text-slate-700">Address</label>
-            <input
-              name="address_detail"
-              value={form.address_detail}
-              onChange={handleChange}
-              className="w-full border border-slate-300 px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-[#328E6E] outline-none transition"
-            />
-          </div>
+          <AddressSelect value={address} onChange={handleAddressChange} />
           <div>
             <label className="block font-semibold mb-1 text-slate-700">Description</label>
             <textarea
@@ -478,7 +534,7 @@ export default function EditListingPage() {
           </div>
           <div className="mb-4">
             <label className="block font-medium mb-1">Address</label>
-            <div className="w-full border px-3 py-2 rounded bg-gray-100">{form.address_detail}</div>
+            <div className="w-full border px-3 py-2 rounded bg-gray-100">{address.address_detail}</div>
           </div>
           <div className="mb-4">
             <label className="block font-medium mb-1">Description</label>

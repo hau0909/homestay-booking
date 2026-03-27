@@ -17,10 +17,10 @@ export const getHomeByListingId = async (
 
   console.log("getHomeByListingId - data:", data, "error:", error);
 
-  if (error) {
+  if (error && error.message) {
     console.error("getHomeByListingId error:", error);
     throw error;
   }
 
-  return data as Home;
+  return data as Home | null;
 };
