@@ -56,53 +56,53 @@ export async function updateExperienceActivities(
         // ---------- 3. Cập nhật lại record ở listing_images ----------
         let updated = false;
         if (activity.image_url) {
-           // a. Thử exact match trước
-           const { data: updatedImgs } = await supabase
+          // a. Thử exact match trước
+          const { data: updatedImgs } = await supabase
             .from("listing_images")
             .update({ url: newUrl })
             .eq("listing_id", experienceId)
             .eq("url", activity.image_url)
             .select();
-           
-           if (updatedImgs && updatedImgs.length > 0) {
-             updated = true;
-           } else {
-             // b. Nếu không khớp (ảnh lúc tạo ở bucket listing_images), tìm theo tên file gốc
-             const filenameSegment = decodeURIComponent(activity.image_url.split('/').pop() || "");
-             const nameParts = filenameSegment.split('-');
-             
-             if (nameParts.length >= 3) {
-               const originalName = nameParts.slice(2).join('-');
-               
-               const { data: searchImgs } = await supabase
+
+          if (updatedImgs && updatedImgs.length > 0) {
+            updated = true;
+          } else {
+            // b. Nếu không khớp (ảnh lúc tạo ở bucket listing_images), tìm theo tên file gốc
+            const filenameSegment = decodeURIComponent(activity.image_url.split('/').pop() || "");
+            const nameParts = filenameSegment.split('-');
+
+            if (nameParts.length >= 3) {
+              const originalName = nameParts.slice(2).join('-');
+
+              const { data: searchImgs } = await supabase
+                .from("listing_images")
+                .select("id, url")
+                .eq("listing_id", experienceId)
+                .ilike("url", `%-${originalName}`);
+
+              if (searchImgs && searchImgs.length > 0) {
+                // Cập nhật record tìm thấy
+                const { data: updatedWildcard } = await supabase
                   .from("listing_images")
-                  .select("id, url")
-                  .eq("listing_id", experienceId)
-                  .ilike("url", `%-${originalName}`);
-                  
-               if (searchImgs && searchImgs.length > 0) {
-                  // Cập nhật record tìm thấy
-                  const { data: updatedWildcard } = await supabase
-                    .from("listing_images")
-                    .update({ url: newUrl })
-                    .eq("id", searchImgs[0].id)
-                    .select();
-                    
-                  if (updatedWildcard && updatedWildcard.length > 0) {
-                    updated = true;
-                    // Xóa file thừa bên listing_images
-                    try {
-                      const oldListingPath = searchImgs[0].url.split("/storage/v1/object/public/listing_images/")[1];
-                      if (oldListingPath) {
-                        await supabase.storage.from("listing_images").remove([oldListingPath]);
-                      }
-                    } catch (e) {
-                      console.error("Clean old listing image failed", e);
+                  .update({ url: newUrl })
+                  .eq("id", searchImgs[0].id)
+                  .select();
+
+                if (updatedWildcard && updatedWildcard.length > 0) {
+                  updated = true;
+                  // Xóa file thừa bên listing_images
+                  try {
+                    const oldListingPath = searchImgs[0].url.split("/storage/v1/object/public/listing_images/")[1];
+                    if (oldListingPath) {
+                      await supabase.storage.from("listing_images").remove([oldListingPath]);
                     }
+                  } catch (e) {
+                    console.error("Clean old listing image failed", e);
                   }
-               }
-             }
-           }
+                }
+              }
+            }
+          }
         }
 
         if (!updated) {
