@@ -26,7 +26,7 @@ export async function getTopRatedListings() {
       id: Number(listingId),
       avg: value.total / value.count,
     }))
-    .filter((item) => item.avg >= 4.5 && item.avg <= 5)
+    .filter((item) => item.avg >= 4 && item.avg <= 5)
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 20)
     .map((item) => item.id);
